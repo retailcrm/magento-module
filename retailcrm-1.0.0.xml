@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+    <name>retailcrm</name>
+    <version>1.1.0</version>
+    <stability>stable</stability>
+    <license uri="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</license>
+    <channel>community</channel>
+    <extends/>
+    <summary>RetailCRM.</summary>
+    <description>Description</description>
+    <notes>Notes</notes>
+    <authors><author><name>Alex Lushpai</name><user>gwinn</user><email>lushpai@gmail.com</email></author></authors>
+    <date>2015-01-28</date>
+    <time>16:22:48</time>
+    <contents>
+        <target name="magecommunity">
+            <dir name="Retailcrm">
+                <dir name="Retailcrm"></dir>
+            </dir>
+        </target>
+    </contents>
+    <compatible/>
+    <dependencies><required><php><min>5.3.0</min><max>7.0.0</max></php></required></dependencies>
+</package>

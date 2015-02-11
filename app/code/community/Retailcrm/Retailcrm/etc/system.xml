@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright 2012 RetailCRM.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<config>
+    <tabs>
+        <retailcrm_extension>
+            <label>RetailCRM</label>
+            <sort_order>1000</sort_order>
+        </retailcrm_extension>
+    </tabs>
+    <sections>
+        <retailcrm translate="label" module="retailcrm">
+            <label>Settings</label>
+            <class>retailcrm-section</class>
+            <tab>retailcrm_extension</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>10</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <general translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>General</label>
+                    <comment>General settings that are required to connect retailcrm and Magento.</comment>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>10</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <api_url translate="label comment">
+                            <label>API URL</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <tooltip><![CDATA[https://<i><b>YourCrmName</b></i>.retailcrm.ru]]></tooltip>
+                        </api_url>
+                        <api_key translate="label comment">
+                            <label>API Key</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <tooltip><![CDATA[To generate an API Key, log in to RetailCRM then select Admin > Integration > API Keys]]></tooltip>
+                        </api_key>
+                    </fields>
+                </general>
+                <shipping translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>Shipping methods</label>
+                    <comment>Comparison of shipping methods</comment>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>11</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_shipping</frontend_model>
+                </shipping>
+                <payment translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>Payment methods</label>
+                    <comment>Comparison of payment methods</comment>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>12</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_payment</frontend_model>
+                </payment>
+                <payment_status translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>Payment statuses</label>
+                    <comment>Comparison of payment statuses</comment>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>13</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_paymentstatus</frontend_model>
+                </payment_status>
+                <status translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>Order statuses</label>
+                    <comment>Comparison of order statuses</comment>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>14</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_status</frontend_model>
+                </status>
+            </groups>
+        </retailcrm>
+    </sections>
+</config>
