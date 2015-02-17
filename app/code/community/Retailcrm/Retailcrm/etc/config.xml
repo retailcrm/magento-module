@@ -44,25 +44,25 @@
                     <retailcrm_retailcrm_model_observer>
                         <type>singleton</type>
                         <class>Retailcrm_Retailcrm_Model_Observer</class>
-                        <method>orderSave</method>
+                        <method>orderCreate</method>
                     </retailcrm_retailcrm_model_observer>
                 </observers>
             </sales_order_place_after>
-            <sales_order_save_after>
-                <observers>
-                    <retailcrm_retailcrm_model_observer>
-                        <type>singleton</type>
-                        <class>Retailcrm_Retailcrm_Model_Observer</class>
-                        <method>orderUpdate</method>
-                    </retailcrm_retailcrm_model_observer>
-                </observers>
-            </sales_order_save_after>
+            <!--<sales_order_save_after>-->
+                <!--<observers>-->
+                    <!--<retailcrm_retailcrm_model_observer>-->
+                        <!--<type>singleton</type>-->
+                        <!--<class>Retailcrm_Retailcrm_Model_Observer</class>-->
+                        <!--<method>orderUpdate</method>-->
+                    <!--</retailcrm_retailcrm_model_observer>-->
+                <!--</observers>-->
+            <!--</sales_order_save_after>-->
         </events>
     </global>
     <crontab>
         <jobs>
             <icml>
-                <schedule><cron_expr>* */6 * * *</cron_expr></schedule>
+                <schedule><cron_expr>* */4 * * *</cron_expr></schedule>
                 <run><model>retailcrm/observer::exportCatalog</model></run>
             </icml>
         </jobs>

@@ -117,8 +117,12 @@ class Retailcrm_Retailcrm_Model_Icml
                 $e->setAttribute('quantity', (int)$offer['quantity']);
             }
 
-            foreach ($offer['categoryId'] as $categoryId) {
-                $e->appendChild($this->_dd->createElement('categoryId', $categoryId));
+            if (!empty($offer['categoryId'])) {
+                foreach ($offer['categoryId'] as $categoryId) {
+                    $e->appendChild($this->_dd->createElement('categoryId', $categoryId));
+                }
+            } else {
+                $e->appendChild($this->_dd->createElement('categoryId', 1));
             }
 
             $e->appendChild($this->_dd->createElement('name'))->appendChild($this->_dd->createTextNode($offer['name']));

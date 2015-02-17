@@ -30,7 +30,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $this->_config = Mage::getStoreConfig('retailcrm', $order->getStoreId());
 
         $statuses = array_flip(array_filter($this->_config['status']));
-        $paymentsStatuses = array_flip(array_filter($this->_config['paymentstatuses']));
+        $paymentsStatuses = array_flip(array_filter($this->_config['paymentstatus']));
         $payments = array_filter($this->_config['payment']);
         $shippings = array_filter($this->_config['shipping']);
 
@@ -93,18 +93,132 @@ class Retailcrm_Retailcrm_Model_Exchange
         );
 
         try {
-            $this->_api->ordersCreate($preparedOrder);
+            $response = $this->_api->ordersCreate($preparedOrder);
+            if ($response->isSuccessful() && 201 === $response->getStatusCode()) {
+                Mage::log($response->id);
+            } else {
+                Mage::log(
+                    sprintf(
+                        "Order create error: [HTTP status %s] %s",
+                        $response->getStatusCode(),
+                        $response->getErrorMsg()
+                    )
+                );
+
+                if (isset($response['errors'])) {
+                    Mage::log(implode(' :: ', $response['errors']));
+                }
+            }
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
         }
     }
 
     /**
-     * @param mixed $order
-     *
-     * @return bool
+     * @param $customer
+     * @return mixed
      */
-    public function orderEdit($order)
+    private function setCustomerId($customer)
+    {
+        $customerId = $this->searchCustomer($customer);
+
+        if (is_array($customerId) && !empty($customerId)) {
+            if ($customerId['success']) {
+                return $customerId['result'];
+            } else {
+                $this->fixCustomer($customerId['result'], $customer['externalId']);
+                return $customer['externalId'];
+            }
+        } else {
+            $this->createCustomer(
+                array(
+                    'externalId' => $customer['externalId'],
+                    'firstName' => $customer['firstName'],
+                    'lastName' => isset($customer['lastName']) ? $customer['lastName'] : '',
+                    'patronymic' => isset($customer['patronymic']) ? $customer['patronymic'] : '',
+                    'phones' => isset($customer['phone']) ? array($customer['phone']) : array(),
+                )
+            );
+
+            return $customer['externalId'];
+        }
+    }
+
+    /**
+     * @param $data
+     * @return array|bool
+     */
+    private function searchCustomer($data)
+    {
+        try {
+            $customers = $this->_api->customersList(
+                array(
+                    'name' => isset($data['phone']) ? $data['phone'] : $data['name'],
+                    'email' => $data['email']
+                ),
+                1,
+                100
+            );
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log($e->getMessage());
+        }
+
+        if ($customers->isSuccessful()) {
+            return (count($customers['customers']) > 0)
+                ? $this->defineCustomer($customers['customers'])
+                : false
+                ;
+        }
+    }
+
+    private function createCustomer($customer)
+    {
+        try {
+            $this->_api->customersCreate($customer);
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log('RestApi::CustomersCreate::Curl: ' . $e->getMessage());
+        }
+    }
+
+    private function fixCustomer($id, $extId)
+    {
+        try {
+            $this->_api->customersFixExternalIds(
+                array(
+                    array(
+                        'id' => $id,
+                        'externalId' => $extId
+                    )
+                )
+            );
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log('RestApi::CustomersFixExternalIds::Curl: ' . $e->getMessage());
+        }
+    }
+
+    private function defineCustomer($searchResult)
+    {
+        $result = '';
+        foreach ($searchResult as $customer) {
+            if (isset($customer['externalId']) && $customer['externalId'] != '') {
+                $result = $customer['externalId'];
+                break;
+            }
+        }
+
+        return ($result != '')
+            ? array('success' => true, 'result' => $result)
+            : array('success' => false, 'result' => $searchResult[0]['id']);
+    }
+
+
+    /**
+     * @param $data
+     * @return bool
+     * @internal param mixed $order
+     *
+     */
+    /*public function orderEdit($order)
     {
         $this->_config = Mage::getStoreConfig('retailcrm', $order->getStoreId());
 
@@ -163,9 +277,9 @@ class Retailcrm_Retailcrm_Model_Exchange
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
         }
-    }
+    }*/
 
-    public function processOrders($orders, $nocheck = false)
+    /*public function processOrders($orders, $nocheck = false)
     {
 
         if (!$nocheck) {
@@ -211,9 +325,9 @@ class Retailcrm_Retailcrm_Model_Exchange
                 return false;
             }
         }
-    }
+    }*/
 
-    public function orderHistory()
+    /*public function orderHistory()
     {
         try {
             $orders = $this->_api->ordersHistory(new DateTime($this->getDate($this->historyLog)));
@@ -223,9 +337,13 @@ class Retailcrm_Retailcrm_Model_Exchange
             Mage::log('RestApi::orderHistory::Curl: ' . $e->getMessage());
             return false;
         }
-    }
+    }*/
 
-    public function orderFixExternalIds($data)
+    /**
+     * @param $data
+     * @return bool
+     */
+    /*public function orderFixExternalIds($data)
     {
         try {
             $this->_api->ordersFixExternalIds($data);
@@ -235,9 +353,13 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         return true;
-    }
+    }*/
 
-    public function customerFixExternalIds($data)
+    /**
+     * @param $data
+     * @return bool
+     */
+    /*public function customerFixExternalIds($data)
     {
         try {
             $this->_api->customersFixExternalIds($data);
@@ -247,7 +369,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         return true;
-    }
+    }*/
 
     /**
      * Export References to CRM
@@ -257,7 +379,7 @@ class Retailcrm_Retailcrm_Model_Exchange
      * @param array $statuses   statuses data
      *
      */
-    public function processReference($deliveries = null, $payments = null, $statuses = null)
+    /*public function processReference($deliveries = null, $payments = null, $statuses = null)
     {
         if ($deliveries != null) {
             $this->processDeliveries($deliveries);
@@ -270,7 +392,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         if ($statuses != null) {
             $this->processStatuses($statuses);
         }
-    }
+    }*/
 
     /**
      * Export deliveries
@@ -279,7 +401,7 @@ class Retailcrm_Retailcrm_Model_Exchange
      *
      * @return bool
      */
-    protected function processDeliveries($deliveries)
+    /*protected function processDeliveries($deliveries)
     {
         foreach ($deliveries as $delivery) {
             try {
@@ -291,7 +413,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         return true;
-    }
+    }*/
 
     /**
      * Export payments
@@ -300,7 +422,7 @@ class Retailcrm_Retailcrm_Model_Exchange
      *
      * @return bool
      */
-    protected function processPayments($payments)
+    /*protected function processPayments($payments)
     {
         foreach ($payments as $payment) {
             try {
@@ -312,7 +434,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         return true;
-    }
+    }*/
 
     /**
      * Export statuses
@@ -321,7 +443,7 @@ class Retailcrm_Retailcrm_Model_Exchange
      *
      * @return bool
      */
-    protected function processStatuses($statuses)
+    /*protected function processStatuses($statuses)
     {
         foreach ($statuses as $status) {
             try {
@@ -333,95 +455,5 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         return true;
-    }
-
-    private function setCustomerId($customer)
-    {
-        $customerId = $this->searchCustomer($customer);
-
-        if (is_array($customerId) && !empty($customerId)) {
-            if ($customerId['success']) {
-                return $customerId['result'];
-            } else {
-                $this->fixCustomer($customerId['result'], $customer['externalId']);
-                return $customer['externalId'];
-            }
-        } else {
-            $this->createCustomer(
-                array(
-                    'externalId' => $customer['externalId'],
-                    'firstName' => $customer['firstName'],
-                    'lastName' => isset($customer['lastName']) ? $customer['lastName'] : '',
-                    'patronymic' => isset($customer['patronymic']) ? $customer['patronymic'] : '',
-                    'phones' => isset($customer['phone']) ? array($customer['phone']) : array(),
-                )
-            );
-
-            return $customer['externalId'];
-        }
-    }
-
-    private function searchCustomer($data)
-    {
-        try {
-            $customers = $this->api->customersList(
-                array(
-                    'name' => isset($data['phone']) ? $data['phone'] : $data['name'],
-                    'email' => $data['email']
-                ),
-                1,
-                100
-            );
-        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
-            Mage::log($e->getMessage());
-        }
-
-        if ($customers->isSuccessful()) {
-            return (count($customers['customers']) > 0)
-                ? $this->defineCustomer($customers['customers'])
-                : false
-                ;
-        }
-    }
-
-    private function createCustomer($customer)
-    {
-        try {
-            $this->api->customersCreate($customer);
-        } catch (CurlException $e) {
-            $this->curlErrorHandler($e->getMessage(), 'CustomersCreate::Curl: ');
-        }
-    }
-
-    private function fixCustomer($id, $extId)
-    {
-        try {
-            $this->api->customersFixExternalIds(
-                array(
-                    array(
-                        'id' => $id,
-                        'externalId' => $extId
-                    )
-                )
-            );
-        } catch (CurlException $e) {
-            $this->curlErrorHandler($e->getMessage(), 'CustomersFixExternalIds::Curl: ');
-        }
-    }
-
-    private function defineCustomer($searchResult)
-    {
-        $result = '';
-        foreach ($searchResult as $customer) {
-            if (isset($customer['externalId']) && $customer['externalId'] != '') {
-                $result = $customer['externalId'];
-                break;
-            }
-        }
-        return ($result != '')
-            ? array('success' => true, 'result' => $result)
-            : array('success' => false, 'result' => $searchResult[0]['id'])
-            ;
-    }
-
+    }*/
 }
