@@ -1,2 +1,2 @@
-# module-magento
-Модуль Magento для интеграции с retailCRM через REST API
+# Magento RetailCRM module
+Модуль Magento интеграции с RetailCRM

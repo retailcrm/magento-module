@@ -20,27 +20,6 @@ class Retailcrm_Retailcrm_Model_Observer
         return true;
     }
 
-    /**
-     * Event after order updated
-     *
-     * @param Varien_Event_Observer $observer
-     * @return bool
-     */
-    public function orderUpdate(Varien_Event_Observer $observer)
-    {
-        $order = $observer->getEvent()->getOrder();
-
-        if($order->getExportProcessed()){ //check if flag is already set for prevent triggering twice.
-            return;
-        }
-
-        Mage::getModel('retailcrm/exchange')->orderEdit($order);
-
-        $order->setExportProcessed(true);
-
-        return true;
-    }
-
     public function exportCatalog()
     {
         foreach (Mage::app()->getWebsites() as $website) {

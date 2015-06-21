@@ -4,26 +4,43 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
         $html = $this->_getHeaderHtml($element);
+        $warn = '
+            <div style="margin-left: 15px;">
+                <b><i>Please check your API Url & API Key</i></b>
+            </div>
+        ';
+
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
+            $orderEntity = Mage::getModel('sales/order');
+            $reflection  = new ReflectionClass($orderEntity);
+            $constants = $reflection->getConstants();
+            $values = array();
 
-            $client = Mage::getModel(
-                'retailcrm/ApiClient',
-                array('url' => $this->_apiUrl, 'key' => $this->_apiKey, 'site' => null)
-            );
+            foreach ($constants as $key => $value)
+            {
+                if (preg_match("/state_/i", $key)) {
+                    $label = implode(
+                        ' ',
+                        $arr = array_map(
+                            function($word) {
+                               return ucfirst($word);
+                            },
+                            explode('_', $value)
+                        )
+                    );
 
-            try {
-                $statuses = $client->statusesList();
-            } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
-                Mage::log($e->getMessage());
+                    $values[] = array('code' => $value, 'name' => $label);
+                }
             }
 
-            if ($statuses->isSuccessful() && !empty($statuses)) {
-                foreach ($statuses['statuses'] as $group) {
+            if (!empty($values)) {
+                foreach ($values as $group) {
                     $html.= $this->_getFieldHtml($element, $group);
                 }
             }
+
         } else {
-            $html .= '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+            $html .= $warn;
         }
 
         $html .= $this->_getFooterHtml($element);
@@ -34,7 +51,9 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
     protected function _getFieldRenderer()
     {
         if (empty($this->_fieldRenderer)) {
-            $this->_fieldRenderer = Mage::getBlockSingleton('adminhtml/system_config_form_field');
+            $this->_fieldRenderer = Mage::getBlockSingleton(
+                'adminhtml/system_config_form_field'
+            );
         }
         return $this->_fieldRenderer;
     }
@@ -44,12 +63,35 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
      */
     protected function _getValues()
     {
-        $values = Mage::getModel('sales/order_status')->getResourceCollection()->getData();
+        $client = Mage::getModel(
+            'retailcrm/ApiClient',
+            array(
+                'url' => $this->_apiUrl,
+                'key' => $this->_apiKey,
+                'site' => null
+            )
+        );
+
+        try {
+            $statuses = $client->statusesList();
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log($e->getMessage());
+        }
 
         if (empty($this->_values)) {
-            $this->_values[] = array('label'=>Mage::helper('adminhtml')->__('===Select status==='), 'value'=>'');
-            foreach ($values as $value) {
-                $this->_values[] = array('label'=>Mage::helper('adminhtml')->__($value['label']), 'value'=>$value['status']);
+            $this->_values[] = array(
+                'label' => Mage::helper('adminhtml')
+                    ->__('===Select status==='),
+                'value' => ''
+            );
+            if ($statuses->isSuccessful() && !empty($statuses)) {
+                foreach ($statuses['statuses'] as $status) {
+                    $this->_values[] = array(
+                        'label' => Mage::helper('adminhtml')
+                            ->__($status['name']),
+                        'value' => $status['code']
+                    );
+                }
             }
         }
 
@@ -66,17 +108,18 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
             $data = $configData[$path];
             $inherit = false;
         } else {
-            $data = (int)(string)$this->getForm()->getConfigRoot()->descend($path);
+            $data = (int) (string) $this->getForm()
+                ->getConfigRoot()->descend($path);
             $inherit = true;
         }
 
         $field = $fieldset->addField($group['code'], 'select',
             array(
-                'name'          => 'groups[status][fields]['.$group['code'].'][value]',
-                'label'         => $group['name'],
-                'value'         => $data,
-                'values'        => $this->_getValues(),
-                'inherit'       => $inherit,
+                'name' => 'groups[status][fields]['.$group['code'].'][value]',
+                'label' => $group['name'],
+                'value' => $data,
+                'values' => $this->_getValues(),
+                'inherit' => $inherit,
                 'can_use_default_value' => 1,
                 'can_use_website_value' => 1
             ))->setRenderer($this->_getFieldRenderer());

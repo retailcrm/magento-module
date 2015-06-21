@@ -10,6 +10,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Base exten
     public function __construct()
     {
         parent::__construct();
+
         $this->_apiUrl = Mage::getStoreConfig('retailcrm/general/api_url');
         $this->_apiKey = Mage::getStoreConfig('retailcrm/general/api_key');
 
