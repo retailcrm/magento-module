@@ -25,7 +25,7 @@ class Retailcrm_Retailcrm_Model_Exchange
      *
      * @return bool
      */
-    public function orderCreate($order)
+    public function ordersCreate($order)
     {
         $this->_config = Mage::getStoreConfig('retailcrm', $order->getStoreId());
 
@@ -120,6 +120,18 @@ class Retailcrm_Retailcrm_Model_Exchange
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
         }
+    }
+
+    public function ordersHistory()
+    {
+        $this->_config = Mage::getStoreConfig('retailcrm');
+
+        $statuses = array_flip(array_filter($this->_config['status']));
+        $paymentsStatuses = array_flip(array_filter($this->_config['paymentstatus']));
+        $payments = array_filter($this->_config['payment']);
+        $shippings = array_filter($this->_config['shipping']);
+
+        Mage::log(var_export($this->_config, TRUE), null, 'history.log');
     }
 
     /**

@@ -15,7 +15,7 @@ class Retailcrm_Retailcrm_Model_Observer
     public function orderCreate(Varien_Event_Observer $observer)
     {
         $order = $observer->getEvent()->getOrder();
-        Mage::getModel('retailcrm/exchange')->orderCreate($order);
+        Mage::getModel('retailcrm/exchange')->ordersCreate($order);
 
         return true;
     }
@@ -27,5 +27,10 @@ class Retailcrm_Retailcrm_Model_Observer
                 Mage::getModel('retailcrm/icml')->generate((int)$group->getId());
             }
         }
+    }
+
+    public function importHistory()
+    {
+        Mage::getModel('retailcrm/exchange')->ordersHistory();
     }
 }
