@@ -31,6 +31,23 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Base exten
             if ($response->isSuccessful()) {
                 $this->_isCredentialCorrect = true;
             }
+
+            $lastRun = Mage::getStoreConfig('retailcrm/general/history');
+
+            if (!empty($lastRun)) {
+                $lastRun = new DateTime(
+                    date(
+                        'Y-m-d H:i:s',
+                        strtotime('-1 days', strtotime(date('Y-m-d H:i:s')))
+                    )
+                );
+            } else {
+                $lastRun = new DateTime($lastRun);
+            }
+
+            $history = $client->ordersHistory($lastRun);
+            var_dump($history);
+            Mage::getModel('core/config')->saveConfig('retailcrm/general/history', $history->getGeneratedAt());
         }
     }
 }

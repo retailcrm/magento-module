@@ -15,16 +15,16 @@ class Retailcrm_Retailcrm_Model_ApiClient
     protected $siteCode;
 
     /**
-     * Client creating
+     * Retailcrm_Retailcrm_Model_Http_Client init
      *
-     * @param  array $parameters
-     * @internal param string $siteCode
+     * @param  string $url
+     * @param  string $apiKey
+     * @param  string $siteCode
+     * @return mixed
      */
-    public function __construct($parameters)
+    public function __construct($params)
     {
-        $url = $parameters['url'];
-        $apiKey = $parameters['key'];
-        $site = $parameters['site'];
+        $url = $params['url'];
 
         if ('/' != substr($url, strlen($url) - 1, 1)) {
             $url .= '/';
@@ -32,8 +32,8 @@ class Retailcrm_Retailcrm_Model_ApiClient
 
         $url = $url . 'api/' . self::VERSION;
 
-        $this->client = new Retailcrm_Retailcrm_Model_Http_Client($url, array('apiKey' => $apiKey));
-        $this->siteCode = $site;
+        $this->client = new Retailcrm_Retailcrm_Model_Http_Client($url, array('apiKey' => $params['key']));
+        $this->siteCode = $params['site'];
     }
 
     /**
@@ -41,12 +41,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      *
      * @param  array       $order
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersCreate(array $order, $site = null)
     {
         if (!sizeof($order)) {
-            throw new InvalidArgumentException('Parameter `order` must contains a data');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `order` must contains a data');
         }
 
         return $this->client->makeRequest("/orders/create", Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST, $this->fillSite($site, array(
@@ -57,21 +57,20 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Edit a order
      *
-     * @param  array $order
-     * @param  string $by
-     * @param  string $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @param  array       $order
+     * @param  string      $site (default: null)
+     * @return ApiResponse
      */
     public function ordersEdit(array $order, $by = 'externalId', $site = null)
     {
         if (!sizeof($order)) {
-            throw new InvalidArgumentException('Parameter `order` must contains a data');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `order` must contains a data');
         }
 
         $this->checkIdParameter($by);
 
         if (!isset($order[$by])) {
-            throw new InvalidArgumentException(sprintf('Order array must contain the "%s" parameter.', $by));
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException(sprintf('Order array must contain the "%s" parameter.', $by));
         }
 
         return $this->client->makeRequest(
@@ -89,12 +88,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      *
      * @param  array       $orders
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersUpload(array $orders, $site = null)
     {
         if (!sizeof($orders)) {
-            throw new InvalidArgumentException('Parameter `orders` must contains array of the orders');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `orders` must contains array of the orders');
         }
 
         return $this->client->makeRequest("/orders/upload", Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST, $this->fillSite($site, array(
@@ -108,7 +107,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * @param  string      $id
      * @param  string      $by (default: 'externalId')
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersGet($id, $by = 'externalId', $site = null)
     {
@@ -127,7 +126,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * @param  int         $limit (default: 100)
      * @param  int         $offset (default: 0)
      * @param  bool        $skipMyChanges (default: true)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersHistory(
         DateTime $startDate = null,
@@ -163,7 +162,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * @param  array       $filter (default: array())
      * @param  int         $page (default: null)
      * @param  int         $limit (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersList(array $filter = array(), $page = null, $limit = null)
     {
@@ -187,7 +186,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
      *
      * @param  array       $ids (default: array())
      * @param  array       $externalIds (default: array())
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersStatuses(array $ids = array(), array $externalIds = array())
     {
@@ -207,12 +206,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Save order IDs' (id and externalId) association in the CRM
      *
      * @param  array       $ids
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function ordersFixExternalIds(array $ids)
     {
         if (!sizeof($ids)) {
-            throw new InvalidArgumentException('Method parameter must contains at least one IDs pair');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Method parameter must contains at least one IDs pair');
         }
 
         return $this->client->makeRequest("/orders/fix-external-ids", Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST, array(
@@ -221,16 +220,41 @@ class Retailcrm_Retailcrm_Model_ApiClient
     }
 
     /**
+     * Get orders assembly history
+     *
+     * @param  array       $filter (default: array())
+     * @param  int         $page (default: null)
+     * @param  int         $limit (default: null)
+     * @return ApiResponse
+     */
+    public function ordersPacksHistory(array $filter = array(), $page = null, $limit = null)
+    {
+        $parameters = array();
+
+        if (sizeof($filter)) {
+            $parameters['filter'] = $filter;
+        }
+        if (null !== $page) {
+            $parameters['page'] = (int) $page;
+        }
+        if (null !== $limit) {
+            $parameters['limit'] = (int) $limit;
+        }
+
+        return $this->client->makeRequest('/orders/packs/history', Retailcrm_Retailcrm_Model_Http_Client::METHOD_GET, $parameters);
+    }
+
+    /**
      * Create a customer
      *
      * @param  array       $customer
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function customersCreate(array $customer, $site = null)
     {
         if (!sizeof($customer)) {
-            throw new InvalidArgumentException('Parameter `customer` must contains a data');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `customer` must contains a data');
         }
 
         return $this->client->makeRequest("/customers/create", Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST, $this->fillSite($site, array(
@@ -244,28 +268,31 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * @param  array       $customer
      * @param  string      $by (default: 'externalId')
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function customersEdit(array $customer, $by = 'externalId', $site = null)
     {
         if (!sizeof($customer)) {
-            throw new InvalidArgumentException('Parameter `customer` must contains a data');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `customer` must contains a data');
         }
 
         $this->checkIdParameter($by);
 
         if (!isset($customer[$by])) {
-            throw new InvalidArgumentException(sprintf('Customer array must contain the "%s" parameter.', $by));
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException(sprintf('Customer array must contain the "%s" parameter.', $by));
         }
 
         return $this->client->makeRequest(
             "/customers/" . $customer[$by] . "/edit",
             Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST,
-            $this->fillSite($site, array(
-                'customer' => json_encode($customer),
-                'by' => $by,
+            $this->fillSite(
+                $site,
+                array(
+                    'customer' => json_encode($customer),
+                    'by' => $by
+                )
             )
-        ));
+        );
     }
 
     /**
@@ -273,12 +300,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      *
      * @param  array       $customers
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function customersUpload(array $customers, $site = null)
     {
         if (!sizeof($customers)) {
-            throw new InvalidArgumentException('Parameter `customers` must contains array of the customers');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `customers` must contains array of the customers');
         }
 
         return $this->client->makeRequest("/customers/upload", Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST, $this->fillSite($site, array(
@@ -292,7 +319,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * @param  string      $id
      * @param  string      $by (default: 'externalId')
      * @param  string      $site (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function customersGet($id, $by = 'externalId', $site = null)
     {
@@ -309,7 +336,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * @param  array       $filter (default: array())
      * @param  int         $page (default: null)
      * @param  int         $limit (default: null)
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function customersList(array $filter = array(), $page = null, $limit = null)
     {
@@ -332,12 +359,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Save customer IDs' (id and externalId) association in the CRM
      *
      * @param  array       $ids
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function customersFixExternalIds(array $ids)
     {
         if (!sizeof($ids)) {
-            throw new InvalidArgumentException('Method parameter must contains at least one IDs pair');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Method parameter must contains at least one IDs pair');
         }
 
         return $this->client->makeRequest("/customers/fix-external-ids", Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST, array(
@@ -346,9 +373,55 @@ class Retailcrm_Retailcrm_Model_ApiClient
     }
 
     /**
+     * Get purchace prices & stock balance
+     *
+     * @param  array  $filter (default: array())
+     * @param  int    $page (default: null)
+     * @param  int    $limit (default: null)
+     * @param  string $site (default: null)
+     * @return ApiResponse
+     */
+    public function storeInventories(array $filter = array(), $page = null, $limit = null, $site = null)
+    {
+        $parameters = array();
+
+        if (sizeof($filter)) {
+            $parameters['filter'] = $filter;
+        }
+        if (null !== $page) {
+            $parameters['page'] = (int) $page;
+        }
+        if (null !== $limit) {
+            $parameters['limit'] = (int) $limit;
+        }
+
+        return $this->client->makeRequest('/store/inventories', Retailcrm_Retailcrm_Model_Http_Client::METHOD_GET, $this->fillSite($site, $parameters));
+    }
+
+    /**
+     * Upload store inventories
+     *
+     * @param  array       $offers
+     * @param  string      $site (default: null)
+     * @return ApiResponse
+     */
+    public function storeInventoriesUpload(array $offers, $site = null)
+    {
+        if (!sizeof($offers)) {
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Parameter `offers` must contains array of the customers');
+        }
+
+        return $this->client->makeRequest(
+            "/store/inventories/upload",
+            Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST,
+            $this->fillSite($site, array('offers' => json_encode($offers)))
+        );
+    }
+
+    /**
      * Returns deliveryServices list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function deliveryServicesList()
     {
@@ -358,7 +431,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns deliveryTypes list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function deliveryTypesList()
     {
@@ -368,7 +441,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns orderMethods list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function orderMethodsList()
     {
@@ -378,7 +451,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns orderTypes list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function orderTypesList()
     {
@@ -388,7 +461,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns paymentStatuses list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function paymentStatusesList()
     {
@@ -398,7 +471,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns paymentTypes list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function paymentTypesList()
     {
@@ -408,7 +481,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns productStatuses list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function productStatusesList()
     {
@@ -418,7 +491,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns statusGroups list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function statusGroupsList()
     {
@@ -428,7 +501,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns statuses list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function statusesList()
     {
@@ -438,7 +511,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     /**
      * Returns sites list
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function sitesList()
     {
@@ -446,15 +519,25 @@ class Retailcrm_Retailcrm_Model_ApiClient
     }
 
     /**
+     * Returns stores list
+     *
+     * @return ApiResponse
+     */
+    public function storesList()
+    {
+        return $this->client->makeRequest('/reference/stores', Retailcrm_Retailcrm_Model_Http_Client::METHOD_GET);
+    }
+
+    /**
      * Edit deliveryService
      *
      * @param array $data delivery service data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function deliveryServicesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -470,12 +553,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit deliveryType
      *
      * @param array $data delivery type data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function deliveryTypesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -491,12 +574,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit orderMethod
      *
      * @param array $data order method data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function orderMethodsEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -512,12 +595,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit orderType
      *
      * @param array $data order type data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function orderTypesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -533,12 +616,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit paymentStatus
      *
      * @param array $data payment status data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function paymentStatusesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -554,12 +637,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit paymentType
      *
      * @param array $data payment type data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function paymentTypesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -575,12 +658,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit productStatus
      *
      * @param array $data product status data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function productStatusesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -596,12 +679,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit order status
      *
      * @param array $data status data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function statusesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -617,12 +700,12 @@ class Retailcrm_Retailcrm_Model_ApiClient
      * Edit site
      *
      * @param array $data site data
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function sitesEdit(array $data)
     {
         if (!isset($data['code'])) {
-            throw new InvalidArgumentException('Data must contain "code" parameter.');
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
         }
 
         return $this->client->makeRequest(
@@ -635,9 +718,34 @@ class Retailcrm_Retailcrm_Model_ApiClient
     }
 
     /**
+     * Edit store
+     *
+     * @param array $data site data
+     * @return ApiResponse
+     */
+    public function storesEdit(array $data)
+    {
+        if (!isset($data['code'])) {
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "code" parameter.');
+        }
+
+        if (!isset($data['name'])) {
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException('Data must contain "name" parameter.');
+        }
+
+        return $this->client->makeRequest(
+            '/reference/stores/' . $data['code'] . '/edit',
+            Retailcrm_Retailcrm_Model_Http_Client::METHOD_POST,
+            array(
+                'store' => json_encode($data)
+            )
+        );
+    }
+
+    /**
      * Update CRM basic statistic
      *
-     * @return Retailcrm_Retailcrm_Model_Response_ApiResponse
+     * @return ApiResponse
      */
     public function statisticUpdate()
     {
@@ -675,7 +783,7 @@ class Retailcrm_Retailcrm_Model_ApiClient
     {
         $allowedForBy = array('externalId', 'id');
         if (!in_array($by, $allowedForBy)) {
-            throw new InvalidArgumentException(sprintf(
+            throw new Retailcrm_Retailcrm_Model_Exception_InvalidJsonException(sprintf(
                 'Value "%s" for parameter "by" is not valid. Allowed values are %s.',
                 $by,
                 implode(', ', $allowedForBy)

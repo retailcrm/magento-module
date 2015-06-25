@@ -124,14 +124,29 @@ class Retailcrm_Retailcrm_Model_Exchange
 
     public function ordersHistory()
     {
-        $this->_config = Mage::getStoreConfig('retailcrm');
-
+        /*$this->_config = Mage::getStoreConfig('retailcrm');
         $statuses = array_flip(array_filter($this->_config['status']));
         $paymentsStatuses = array_flip(array_filter($this->_config['paymentstatus']));
         $payments = array_filter($this->_config['payment']);
         $shippings = array_filter($this->_config['shipping']);
+        */
 
-        Mage::log(var_export($this->_config, TRUE), null, 'history.log');
+        $timeMark = date('Y-m-d H:i:s');
+        $lastRun = Mage::getStoreConfig('retailcrm/general/history');
+
+        if (!empty($lastRun)) {
+            $lastRun = new DateTime(
+                date(
+                    'Y-m-d H:i:s',
+                    strtotime('-1 days', strtotime(date('Y-m-d H:i:s')))
+                )
+            );
+        } else {
+            $lastRun = new DateTime($lastRun);
+        }
+
+        $history = $client->ordersHistory($lastRun);
+        Mage::getModel('core/config')->saveConfig('retailcrm/general/history', $timeMark);
     }
 
     /**
