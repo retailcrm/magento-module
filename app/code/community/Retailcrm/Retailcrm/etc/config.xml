@@ -63,7 +63,7 @@ SOFTWARE.
                 <run><model>retailcrm/observer::exportCatalog</model></run>
             </icml>
             <history>
-                <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
+                <schedule><cron_expr>*/15 * * * *</cron_expr></schedule>
                 <run><model>retailcrm/observer::importHistory</model></run>
             </history>
         </jobs>

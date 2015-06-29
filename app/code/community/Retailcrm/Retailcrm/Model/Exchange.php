@@ -147,6 +147,7 @@ class Retailcrm_Retailcrm_Model_Exchange
 
         $history = $client->ordersHistory($lastRun);
         Mage::getModel('core/config')->saveConfig('retailcrm/general/history', $timeMark);
+        Mage::log($timeMark, null, 'history.log');
     }
 
     /**

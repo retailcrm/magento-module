@@ -43,7 +43,6 @@ SOFTWARE.
                 <general translate="label comment" module="retailcrm">
                     <expanded>1</expanded>
                     <label>General</label>
-                    <comment>General settings that are required to connect RetailCRM and Magento.</comment>
                     <frontend_type>text</frontend_type>
                     <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
@@ -72,8 +71,7 @@ SOFTWARE.
                 </general>
                 <shipping translate="label comment" module="retailcrm">
                     <expanded>0</expanded>
-                    <label>Shipping methods</label>
-                    <comment>Comparison of shipping methods</comment>
+                    <label>Shipping</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>11</sort_order>
                     <show_in_default>1</show_in_default>
@@ -83,8 +81,7 @@ SOFTWARE.
                 </shipping>
                 <payment translate="label comment" module="retailcrm">
                     <expanded>0</expanded>
-                    <label>Payment methods</label>
-                    <comment>Comparison of payment methods</comment>
+                    <label>Payment Method</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>12</sort_order>
                     <show_in_default>1</show_in_default>
@@ -94,8 +91,7 @@ SOFTWARE.
                 </payment>
                 <payment_status translate="label comment" module="retailcrm">
                     <expanded>0</expanded>
-                    <label>Payment statuses</label>
-                    <comment>Comparison of payment statuses</comment>
+                    <label>Payment Information</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>13</sort_order>
                     <show_in_default>1</show_in_default>
@@ -105,8 +101,7 @@ SOFTWARE.
                 </payment_status>
                 <status translate="label comment" module="retailcrm">
                     <expanded>0</expanded>
-                    <label>Order statuses</label>
-                    <comment>Comparison of order statuses</comment>
+                    <label>Order Statuses</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>14</sort_order>
                     <show_in_default>1</show_in_default>
