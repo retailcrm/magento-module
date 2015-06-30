@@ -74,8 +74,8 @@ class Retailcrm_Retailcrm_Model_Exchange
             'email' => $order->getCustomerEmail(),
             'phone' => $address['telephone'],
             'paymentType' => $payments[$order->getPayment()->getMethodInstance()->getCode()],
-            'paymentStatus' => $paymentsStatuses[$order->getStatus()],
-            'status' => $statuses[$order->getStatus()],
+            //'paymentStatus' => $paymentsStatuses[$order->getStatus()],
+            //'status' => $statuses[$order->getStatus()],
             'discount' => abs($order->getDiscountAmount()),
             'items' => $items,
             'delivery' => array(
@@ -88,7 +88,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                     'street' => $address['street'],
                     'region' => $address['region'],
                     'text' => implode(
-                        ','
+                        ',',
                         array(
                             $address['postcode'],
                             $address['country_id'],
@@ -122,32 +122,141 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
     }
 
+    /**
+     * Get orders history & modify orders into shop
+     *
+     */
     public function ordersHistory()
     {
-        /*$this->_config = Mage::getStoreConfig('retailcrm');
-        $statuses = array_flip(array_filter($this->_config['status']));
-        $paymentsStatuses = array_flip(array_filter($this->_config['paymentstatus']));
-        $payments = array_filter($this->_config['payment']);
-        $shippings = array_filter($this->_config['shipping']);
-        */
+        $runTime = $this->getExchangeTime($this->_config['general']['history']);
 
-        $timeMark = date('Y-m-d H:i:s');
-        $lastRun = Mage::getStoreConfig('retailcrm/general/history');
+        try {
+            $response = $this->_api->ordersHistory($runTime);
+            if (
+                $response->isSuccessful()
+                &&
+                200 === $response->getStatusCode()
+            ) {
+                $nowTime = $response->getGeneratedAt();
+                $this->processOrders($response->orders, $nowTime);
+            } else {
+                Mage::log(
+                    sprintf(
+                        "Orders history error: [HTTP status %s] %s",
+                        $response->getStatusCode(),
+                        $response->getErrorMsg()
+                    )
+                );
 
-        if (!empty($lastRun)) {
-            $lastRun = new DateTime(
-                date(
-                    'Y-m-d H:i:s',
-                    strtotime('-1 days', strtotime(date('Y-m-d H:i:s')))
-                )
-            );
-        } else {
-            $lastRun = new DateTime($lastRun);
+                if (isset($response['errors'])) {
+                    Mage::log(implode(' :: ', $response['errors']));
+                }
+            }
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log($e->getMessage());
         }
+    }
 
-        $history = $client->ordersHistory($lastRun);
-        Mage::getModel('core/config')->saveConfig('retailcrm/general/history', $timeMark);
-        Mage::log($timeMark, null, 'history.log');
+    /**
+     * @param array $orders
+     */
+    private function processOrders($orders, $time)
+    {
+        if(!empty($orders)) {
+            /*Mage::getModel('core/config')->saveConfig(
+                'retailcrm/general/history', $time
+            );*/
+
+            foreach ($orders as $order) {
+                if(!empty($order['externalId'])) {
+                    $this->doUpdate($order);
+                } else {
+                    $this->doCreate($order);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array $order
+     */
+    private function doCreate($order)
+    {
+        $this->_config = Mage::getStoreConfig('retailcrm');
+        $statuses = array_flip(array_filter($this->_config['status']));
+        $paymentsStatuses = array_filter($this->_config['paymentstatus']);
+        $payments = array_flip(array_filter($this->_config['payment']));
+        $shippings = array_flip(array_filter($this->_config['shipping']));
+
+        // create new order & fix externalId
+
+        Mage::log("Create: ", null, 'history.log');
+    }
+
+    /**
+     * @param array $order
+     */
+    private function doUpdate($order)
+    {
+        $magentoOrder = Mage::getModel('sales/order')->load($order['externalId']);
+
+        if (!empty($order['status'])) {
+            try {
+                $response = $this->_api->statusesList();
+                if (
+                    $response->isSuccessful()
+                    &&
+                    200 === $response->getStatusCode()
+                ) {
+                    $code = $order['status'];
+                    $group = $response->statuses[$code]['group'];
+
+                    if (in_array($group, array('approval', 'assembling', 'delivery'))) {
+                        $magentoOrder->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
+                        $magentoOrder->save();
+
+                        $invoice = $magentoOrder->prepareInvoice()
+                            ->setTransactionId($magentoOrder->getId())
+                            ->register()
+                            ->pay();
+
+                        $transaction_save = Mage::getModel('core/resource_transaction')
+                            ->addObject($invoice)
+                            ->addObject($invoice->getOrder());
+
+                        $transaction_save->save();
+                    }
+
+                    if (in_array($group, array('complete'))) {
+                        $itemQty =  $magentoOrder->getItemsCollection()->count();
+                        Mage::getModel('sales/service_order', $magentoOrder)->prepareShipment($itemQty);
+                        $shipment = new Mage_Sales_Model_Order_Shipment_Api();
+                        $shipment->create($order['externalId']);
+                    }
+
+                    if (in_array($group, array('cancel'))) {
+                        $magentoOrder->cancel();
+                        $magentoOrder->save();
+                    }
+
+                    Mage::log("Update: " . $order['externalId'], null, 'history.log');
+                } else {
+                    Mage::log(
+                        sprintf(
+                            "Statuses list error: [HTTP status %s] %s",
+                            $response->getStatusCode(),
+                            $response->getErrorMsg()
+                        )
+                    );
+
+                    if (isset($response['errors'])) {
+                        Mage::log(implode(' :: ', $response['errors']));
+                    }
+                }
+            } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+                Mage::log($e->getMessage());
+            }
+        }
     }
 
     /**
@@ -245,5 +354,21 @@ class Retailcrm_Retailcrm_Model_Exchange
         return ($result != '')
             ? array('success' => true, 'result' => $result)
             : array('success' => false, 'result' => $searchResult[0]['id']);
+    }
+
+    private function getExchangeTime($datetime)
+    {
+        if (empty($datetime)) {
+            $datetime = new DateTime(
+                date(
+                    'Y-m-d H:i:s',
+                    strtotime('-1 days', strtotime(date('Y-m-d H:i:s')))
+                )
+            );
+        } else {
+            $datetime = new DateTime($datetime);
+        }
+
+        return $datetime;
     }
 }
