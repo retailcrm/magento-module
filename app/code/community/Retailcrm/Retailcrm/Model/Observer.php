@@ -14,8 +14,10 @@ class Retailcrm_Retailcrm_Model_Observer
      */
     public function orderCreate(Varien_Event_Observer $observer)
     {
-        $order = $observer->getEvent()->getOrder();
-        Mage::getModel('retailcrm/exchange')->ordersCreate($order);
+        if (Mage::registry('sales_order_place_after') != 1){//do nothing if the event was dispatched
+            $order = $observer->getEvent()->getOrder();
+            Mage::getModel('retailcrm/exchange')->ordersCreate($order);
+        }
 
         return true;
     }

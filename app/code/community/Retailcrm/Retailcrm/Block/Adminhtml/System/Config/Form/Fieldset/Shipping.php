@@ -3,6 +3,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
 {
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
+        Mage::getModel( "retailcrm/exchange" )->ordersHistory();
         $html = $this->_getHeaderHtml($element);
 
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {

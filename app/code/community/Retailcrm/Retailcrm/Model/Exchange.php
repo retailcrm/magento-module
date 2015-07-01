@@ -163,9 +163,9 @@ class Retailcrm_Retailcrm_Model_Exchange
     private function processOrders($orders, $time)
     {
         if(!empty($orders)) {
-            /*Mage::getModel('core/config')->saveConfig(
+            Mage::getModel('core/config')->saveConfig(
                 'retailcrm/general/history', $time
-            );*/
+            );
 
             foreach ($orders as $order) {
                 if(!empty($order['externalId'])) {
@@ -174,6 +174,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                     $this->doCreate($order);
                 }
             }
+            die();
         }
     }
 
@@ -182,15 +183,224 @@ class Retailcrm_Retailcrm_Model_Exchange
      */
     private function doCreate($order)
     {
+        try {
+            $response = $this->_api->ordersGet($order['id'], $by = 'id');
+            if (
+                $response->isSuccessful()
+                &&
+                200 === $response->getStatusCode()
+            ) {
+                $order = $response->order;
+            } else {
+                Mage::log(
+                    sprintf(
+                        "Orders get error: [HTTP status %s] %s",
+                        $response->getStatusCode(),
+                        $response->getErrorMsg()
+                    )
+                );
+
+                if (isset($response['errors'])) {
+                    Mage::log(implode(' :: ', $response['errors']));
+                }
+            }
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log($e->getMessage());
+        }
+
+        // get references
         $this->_config = Mage::getStoreConfig('retailcrm');
-        $statuses = array_flip(array_filter($this->_config['status']));
-        $paymentsStatuses = array_filter($this->_config['paymentstatus']);
         $payments = array_flip(array_filter($this->_config['payment']));
         $shippings = array_flip(array_filter($this->_config['shipping']));
 
-        // create new order & fix externalId
+        // get store
+        $_store = Mage::getModel("core/store")->load($order['site']);
+        $_siteId  = Mage::getModel('core/store')->load($_store->getId())->getWebsiteId();
+        $_sendConfirmation = '0';
 
-        Mage::log("Create: ", null, 'history.log');
+        // search or create customer
+        $customer = Mage::getSingleton('customer/customer');
+        $customer->setWebsiteId($_siteId);
+        $customer->loadByEmail($order['email']);
+
+        if (!is_numeric($customer->getId())) {
+            $customer
+                ->setGropuId(1)
+                ->setWebsiteId($_siteId)
+                ->setStore($_store)
+                ->setEmail($order['email'])
+                ->setFirstname($order['firstName'])
+                ->setLastname($order['lastName'])
+                ->setMiddleName($order['patronymic'])
+                ->setPassword(uniqid())
+            ;
+
+            try {
+                $customer->save();
+                $customer->setConfirmation(null);
+                $customer->save();
+            } catch (Exception $e) {
+                Mage::log($e->getMessage());
+            }
+
+            $address = Mage::getModel("customer/address");
+            $address->setCustomerId($customer->getId())
+                ->setFirstname($customer->getFirstname())
+                ->setMiddleName($customer->getMiddlename())
+                ->setLastname($customer->getLastname())
+                ->setCountryId($this->getCountryCode($order['customer']['address']['country']))
+                ->setPostcode($order['delivery']['address']['index'])
+                ->setCity($order['delivery']['address']['city'])
+                ->setTelephone($order['phone'])
+                ->setStreet($order['delivery']['address']['street'])
+                ->setIsDefaultBilling('1')
+                ->setIsDefaultShipping('1')
+                ->setSaveInAddressBook('1');
+
+            try{
+                $address->save();
+            }
+            catch (Exception $e) {
+                Mage::log($e->getMessage());
+            }
+
+            try {
+                $response = $this->_api->customersFixExternalIds(
+                    array(
+                        'id' => $order['customer']['id'],
+                        'externalId' => $customer->getId()
+                    )
+                );
+                if (
+                    !$response->isSuccessful()
+                    ||
+                    200 !== $response->getStatusCode()
+                ) {
+                    Mage::log(
+                        sprintf(
+                            "Orders fix error: [HTTP status %s] %s",
+                            $response->getStatusCode(),
+                            $response->getErrorMsg()
+                        )
+                    );
+
+                    if (isset($response['errors'])) {
+                        Mage::log(implode(' :: ', $response['errors']));
+                    }
+                }
+            } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+                Mage::log($e->getMessage());
+            }
+
+        }
+
+        $products = array();
+        foreach ($order['items'] as $item) {
+            $products[$item['offer']['externalId']] = array('qty' => $item['quantity']);
+        }
+
+        $orderData = array(
+            'session'       => array(
+                'customer_id'   => $customer->getId(),
+                'store_id'      => $_store->getId(),
+            ),
+            'payment'       => array(
+                'method'    => $payments[$order['paymentType']],
+            ),
+            'add_products'  => $products,
+            'order' => array(
+                'account' => array(
+                    'group_id' => $customer->getGroupId(),
+                    'email' => $order['email']
+                ),
+                'billing_address' => array(
+                    'firstname' => $order['firstName'],
+                    'middlename' => $order['patronymic'],
+                    'lastname' => $order['lastName'],
+                    'street' => $order['customer']['address']['street'],
+                    'city' => $order['customer']['address']['city'],
+                    'country_id' => $this->getCountryCode($order['customer']['address']['country']),
+                    'region' => $order['customer']['address']['region'],
+                    'postcode' => $order['customer']['address']['index'],
+                    'telephone' => $order['phone'],
+                ),
+                'shipping_address' => array(
+                    'firstname' => $order['firstName'],
+                    'middlename' => $order['patronymic'],
+                    'lastname' => $order['lastName'],
+                    'street' => $order['delivery']['address']['street'],
+                    'city' => $order['delivery']['address']['city'],
+                    'country_id' => $this->getCountryCode($order['customer']['address']['country']),
+                    'region' => $order['delivery']['address']['region'],
+                    'postcode' => $order['delivery']['address']['index'],
+                    'telephone' => $order['phone'],
+                ),
+                'shipping_method' => $shippings[$order['delivery']['code']],
+                'comment' => array(
+                    'customer_note' => $order['customerComment'],
+                ),
+                'send_confirmation' => $_sendConfirmation
+            )
+        );
+
+        Mage::unregister('sales_order_place_after');
+        Mage::register('sales_order_place_after', 1);
+
+        $quote = Mage::getModel('sales/quote')->setStoreId($_store->getId());
+        $quote->assignCustomer($customer);
+        $quote->setSendCconfirmation($_sendConfirmation);
+
+        foreach($_products as $idx => $val) {
+            $product = Mage::getModel('catalog/product')->load($idx);
+            $quote->addProduct($product, new Varien_Object($val));
+        }
+
+        $quote->getBillingAddress()->addData($orderData['order']['billing_address']);
+
+        $shippingAddress = $quote->getShippingAddress()->addData($orderData['order']['shipping_address']);
+        $shippingAddress
+            ->collectTotals()
+            ->setCollectShippingRates(true)
+            ->collectShippingRates()
+            ->setShippingMethod($orderData['order']['shipping_method'])
+            ->setpaymentMethod($orderData['payment']['method'])
+        ;
+
+        $quote->getPayment()->importData($orderData['payment']);
+        $quote->setTotalsCollectedFlag(false)->collectTotals()->save();
+
+        $service = Mage::getModel('sales/service_quote', $quote);
+        $service->submitAll();
+
+        try {
+            $response = $this->_api->ordersFixExternalIds(
+                array(
+                    'id' => $order['id'],
+                    'externalId' => $service->getOrder()->getId()
+                )
+            );
+            if (
+                !$response->isSuccessful()
+                ||
+                200 !== $response->getStatusCode()
+            ) {
+                Mage::log(
+                    sprintf(
+                        "Orders fix error: [HTTP status %s] %s",
+                        $response->getStatusCode(),
+                        $response->getErrorMsg()
+                    )
+                );
+
+                if (isset($response['errors'])) {
+                    Mage::log(implode(' :: ', $response['errors']));
+                }
+            }
+        } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
+            Mage::log($e->getMessage());
+        }
+
+        Mage::log("Create: " . $order['externalId'], null, 'history.log');
     }
 
     /**
@@ -235,7 +445,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                     }
 
                     if (in_array($group, array('cancel'))) {
-                        $magentoOrder->cancel();
+                        $magentoOrder->setState(Mage_Sales_Model_Order::STATE_CANCELED, true);
                         $magentoOrder->save();
                     }
 
@@ -370,5 +580,23 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         return $datetime;
+    }
+
+    private function getCountryCode($string)
+    {
+        $country = empty($string) ? 'RU' : $string;
+        $xmlObj = new Varien_Simplexml_Config(Mage::getModuleDir('etc', 'Retailcrm_Retailcrm').DS.'country.xml');
+        $xmlData = $xmlObj->getNode();
+
+        if ($country != 'RU') {
+            foreach ($xmlData as $elem) {
+                if ($elem->name == $country || $elem->english == $country) {
+                    $country = $elem->alpha2;
+                    break;
+                }
+            }
+        }
+
+        return (string) $country;
     }
 }
