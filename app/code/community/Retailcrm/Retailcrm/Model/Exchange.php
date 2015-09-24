@@ -30,23 +30,56 @@ class Retailcrm_Retailcrm_Model_Exchange
         $this->_config = Mage::getStoreConfig('retailcrm', $order->getStoreId());
 
         $statuses = array_flip(array_filter($this->_config['status']));
-        $paymentsStatuses = array_flip(array_filter($this->_config['paymentstatus']));
         $payments = array_filter($this->_config['payment']);
         $shippings = array_filter($this->_config['shipping']);
 
         $address = $order->getShippingAddress()->getData();
 
-        $orderItems = $order->getItemsCollection();
-        $items = array();
+        $orderItems = $order->getAllItems();
+        $simpleItems = array();
+        $confItems = array();
 
-        foreach ($orderItems as $item){
-            $items[] = array(
+        foreach ($orderItems as $item) {
+            if ($item->getProductType() == 'simple') {
+                $simpleItems[] = $item;
+            } else {
+                $confItems[$item->getData('item_id')] = $item;
+            }
+        }
+
+        $items = array();
+        
+        foreach ($simpleItems as $item) {
+
+            $product = array(
                 'productId' => $item->product_id,
-                'initialPrice' => $item->getPrice(),
-                'taxPrice' => $item->getPriceInclTax(),
                 'productName' => $item->getName(),
                 'quantity' => (int) $item->getData('qty_ordered')
             );
+                
+            if ($item->getData('parent_item_id')) {
+                $product['initialPrice'] = $confItems[$item->getData('parent_item_id')]->getPrice();
+                
+                /*if ($confItems[$item->getData('parent_item_id')]->getDiscountAmount() > 0) {
+                    $product['discount'] = $confItems[$item->getData('parent_item_id')]->getDiscountAmount();
+                }
+                
+                if ($confItems[$item->getData('parent_item_id')]->getDiscountPercent() > 0) {
+                    $product['discountPercent'] = $confItems[$item->getData('parent_item_id')]->getDiscountPercent();
+                }*/
+            } else {
+                $product['initialPrice'] = $item->getPrice();
+                
+                /*if ($item->getDiscountAmount() > 0) {
+                    $product['discount'] = $item->getDiscountAmount();
+                }
+                
+                if ($item->getDiscountPercent() > 0) {
+                    $product['discountPercent'] = $item->getDiscountPercent();
+                }*/
+            }
+            
+            $items[] = $product;
         }
 
         $customer = array(
@@ -74,8 +107,7 @@ class Retailcrm_Retailcrm_Model_Exchange
             'email' => $order->getCustomerEmail(),
             'phone' => $address['telephone'],
             'paymentType' => $payments[$order->getPayment()->getMethodInstance()->getCode()],
-            //'paymentStatus' => $paymentsStatuses[$order->getStatus()],
-            //'status' => $statuses[$order->getStatus()],
+            'status' => $statuses[$order->getStatus()],
             'discount' => abs($order->getDiscountAmount()),
             'items' => $items,
             'delivery' => array(

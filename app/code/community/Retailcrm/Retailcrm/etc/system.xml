@@ -89,21 +89,11 @@ SOFTWARE.
                     <show_in_store>1</show_in_store>
                     <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_payment</frontend_model>
                 </payment>
-                <payment_status translate="label comment" module="retailcrm">
-                    <expanded>0</expanded>
-                    <label>Payment Information</label>
-                    <frontend_type>text</frontend_type>
-                    <sort_order>13</sort_order>
-                    <show_in_default>1</show_in_default>
-                    <show_in_website>1</show_in_website>
-                    <show_in_store>1</show_in_store>
-                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_paymentstatus</frontend_model>
-                </payment_status>
                 <status translate="label comment" module="retailcrm">
                     <expanded>0</expanded>
                     <label>Order Statuses</label>
                     <frontend_type>text</frontend_type>
-                    <sort_order>14</sort_order>
+                    <sort_order>13</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>

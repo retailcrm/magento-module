@@ -3,7 +3,6 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
 {
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
-        Mage::getModel( "retailcrm/exchange" )->ordersHistory();
         $html = $this->_getHeaderHtml($element);
 
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
@@ -63,7 +62,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
     {
         $configData = $this->getConfigData();
 
-        $path = 'retailcrm/shipping/'.$group->getId();
+        $path = 'retailcrm/shipping/' . $group->getId();
         if (isset($configData[$path])) {
             $data = $configData[$path];
             $inherit = false;
@@ -73,7 +72,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
         }
 
 
-        $field = $fieldset->addField($group->getId(), 'select',
+        $field = $fieldset->addField('shipping_' . $group->getId(), 'select',
             array(
                 'name'          => 'groups[shipping][fields]['.$group->getId().'][value]',
                 'label'         => Mage::getStoreConfig('carriers/'.$group->getId().'/title'),

@@ -61,7 +61,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Payment ex
     {
         $configData = $this->getConfigData();
 
-        $path = 'retailcrm/payment/'.$group->getId();
+        $path = 'retailcrm/payment/' . $group->getId();
         if (isset($configData[$path])) {
             $data = $configData[$path];
             $inherit = false;
@@ -71,7 +71,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Payment ex
         }
 
 
-        $field = $fieldset->addField($group->getId(), 'select',
+        $field = $fieldset->addField('payment_' . $group->getId(), 'select',
             array(
                 'name'          => 'groups[payment][fields]['.$group->getId().'][value]',
                 'label'         => Mage::getStoreConfig('payment/'.$group->getId().'/title'),
