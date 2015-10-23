@@ -27,11 +27,16 @@ class Retailcrm_Retailcrm_Model_Exchange
      */
     public function ordersCreate($order)
     {
+
         $this->_config = Mage::getStoreConfig('retailcrm', $order->getStoreId());
 
         $statuses = array_flip(array_filter($this->_config['status']));
         $payments = array_filter($this->_config['payment']);
         $shippings = array_filter($this->_config['shipping']);
+
+        $shipment = $order->getShippingMethod();
+        $shipment = explode('_', $shipment);
+        $shipment = $shipment[0];
 
         $address = $order->getShippingAddress()->getData();
 
@@ -48,7 +53,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         $items = array();
-        
+
         foreach ($simpleItems as $item) {
 
             $product = array(
@@ -56,29 +61,29 @@ class Retailcrm_Retailcrm_Model_Exchange
                 'productName' => $item->getName(),
                 'quantity' => (int) $item->getData('qty_ordered')
             );
-                
+
             if ($item->getData('parent_item_id')) {
                 $product['initialPrice'] = $confItems[$item->getData('parent_item_id')]->getPrice();
-                
+
                 /*if ($confItems[$item->getData('parent_item_id')]->getDiscountAmount() > 0) {
                     $product['discount'] = $confItems[$item->getData('parent_item_id')]->getDiscountAmount();
                 }
-                
+
                 if ($confItems[$item->getData('parent_item_id')]->getDiscountPercent() > 0) {
                     $product['discountPercent'] = $confItems[$item->getData('parent_item_id')]->getDiscountPercent();
                 }*/
             } else {
                 $product['initialPrice'] = $item->getPrice();
-                
+
                 /*if ($item->getDiscountAmount() > 0) {
                     $product['discount'] = $item->getDiscountAmount();
                 }
-                
+
                 if ($item->getDiscountPercent() > 0) {
                     $product['discountPercent'] = $item->getDiscountPercent();
                 }*/
             }
-            
+
             $items[] = $product;
         }
 
@@ -95,6 +100,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $customerId = $this->setCustomerId($customer);
         unset($customer);
 
+        $comment = $order->getStatusHistoryCollection()->getFirstItem();
         $preparedOrder = array(
             'site' => $order->getStore()->getCode(),
             'externalId' => $order->getId(),
@@ -110,8 +116,9 @@ class Retailcrm_Retailcrm_Model_Exchange
             'status' => $statuses[$order->getStatus()],
             'discount' => abs($order->getDiscountAmount()),
             'items' => $items,
+            'customerComment' => $comment->getComment(),
             'delivery' => array(
-                'code' => $shippings[$order->getShippingMethod()],
+                'code' => $shippings[$shipment],
                 'cost' => $order->getShippingAmount(),
                 'address' => array(
                     'index' => $address['postcode'],
