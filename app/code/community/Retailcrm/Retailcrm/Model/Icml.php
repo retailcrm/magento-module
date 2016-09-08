@@ -23,7 +23,7 @@ class Retailcrm_Retailcrm_Model_Icml
 
         $xml = new SimpleXMLElement(
             $string,
-            LIBXML_NOENT |LIBXML_NOCDATA | LIBXML_COMPACT | LIBXML_PARSEHUGE
+            LIBXML_NOENT | LIBXML_NOCDATA | LIBXML_COMPACT | LIBXML_PARSEHUGE
         );
 
         $this->_dd = new DOMDocument();
@@ -90,15 +90,20 @@ class Retailcrm_Retailcrm_Model_Icml
         $helper = Mage::helper('retailcrm');
         $picUrl = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA);
 
+        $customAdditionalAttributes = Mage::getStoreConfig('retailcrm/attributes_to_export_into_icml');
+        $customAdditionalAttributes = explode(',', $customAdditionalAttributes);
+
         $collection = Mage::getModel('catalog/product')
             ->getCollection()
             ->addAttributeToSelect('*')
             ->addUrlRewrite();
+        $collection->addFieldToFilter('visibility', Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH);
 
         foreach ($collection as $product) {
-
+            /** @var Mage_Catalog_Model_Product $product */
             $offer = array();
-            $offer['id'] = $product->getId();
+
+            $offer['id'] = $product->getTypeId() != 'configurable' ? $product->getId() : null;
             $offer['productId'] = $product->getId();
             $offer['productActivity'] = $product->isAvailable() ? 'Y' : 'N';
             $offer['name'] = $product->getName();
@@ -120,11 +125,151 @@ class Retailcrm_Retailcrm_Model_Icml
 
             $offer['vendor'] = $product->getAttributeText('manufacturer');
 
-            $offer['article'] = $product->getSku();
-            $offer['weight'] = $product->getWeight();
+            $offer['params'] = array();
+
+            $article = $product->getSku();
+            if(!empty($article)) {
+                $offer['params'][] = array(
+                    'name' => 'Article',
+                    'code' => 'article',
+                    'value' => $article
+                );
+            }
+
+            $weight = $product->getWeight();
+            if(!empty($weight)) {
+                $offer['params'][] = array(
+                    'name' => 'Weight',
+                    'code' => 'weight',
+                    'value' => $weight
+                );
+            }
+
+            if(!empty($customAdditionalAttributes)) {
+                foreach($customAdditionalAttributes as $customAdditionalAttribute) {
+                    $alreadyExists = false;
+                    foreach($offer['params'] as $param) {
+                        if($param['code'] == $customAdditionalAttribute) {
+                            $alreadyExists = true;
+                            break;
+                        }
+                    }
+
+                    if($alreadyExists) continue;
+
+                    $attribute = $product->getAttributeText($customAdditionalAttribute);
+                    if(!empty($attribute)) {
+                        $offer['params'][] = array(
+                            'name' => $customAdditionalAttribute,
+                            'code' => $customAdditionalAttribute,
+                            'value' => $attribute
+                        );
+                    }
+                }
+            }
 
             $offers[] = $offer;
 
+            if($product->getTypeId() == 'configurable') {
+                /** @var Mage_Catalog_Model_Product_Type_Configurable $product */
+                $associatedProducts = Mage::getModel('catalog/product_type_configurable')->getUsedProducts(null, $product);
+
+                $productAttributeOptions = $product->getTypeInstance(true)->getConfigurableAttributesAsArray($product);
+
+                foreach($associatedProducts as $associatedProduct) {
+                    $associatedProduct = Mage::getModel('catalog/product')->load($associatedProduct->getId());
+
+                    $attributes = array();
+                    foreach($productAttributeOptions as $productAttributeOption) {
+                        $attributes[$productAttributeOption['label']] = $associatedProduct->getAttributeText($productAttributeOption['attribute_code']);
+                    }
+
+                    $attributesString = array();
+                    foreach($attributes AS $attributeName=>$attributeValue) {
+                        $attributesString[] = $attributeName.': '.$attributeValue;
+                    }
+                    $attributesString = ' (' . implode(', ', $attributesString) . ')';
+
+                    $offer = array();
+
+                    $offer['id'] = $associatedProduct->getId();
+                    $offer['productId'] = $product->getId();
+                    $offer['productActivity'] = $associatedProduct->isAvailable() ? 'Y' : 'N';
+                    $offer['name'] = $associatedProduct->getName().$attributesString;
+                    $offer['productName'] = $product->getName();
+                    $offer['initialPrice'] = (float) $associatedProduct->getFinalPrice();
+
+                    $offer['url'] = $helper->rewrittenProductUrl(
+                        $associatedProduct->getId(), $associatedProduct->getCategoryId(), $this->_shop
+                    );
+
+                    $offer['picture'] = $picUrl.'catalog/product'.$associatedProduct->getImage();
+
+                    $offer['quantity'] = Mage::getModel('cataloginventory/stock_item')
+                        ->loadByProduct($associatedProduct)->getQty();
+
+                    foreach ($associatedProduct->getCategoryIds() as $category_id) {
+                        $offer['categoryId'][] = $category_id;
+                    }
+
+                    $offer['vendor'] = $associatedProduct->getAttributeText('manufacturer');
+
+                    $offer['params'] = array();
+
+                    $article = $associatedProduct->getSku();
+                    if(!empty($article)) {
+                        $offer['params'][] = array(
+                            'name' => 'Article',
+                            'code' => 'article',
+                            'value' => $article
+                        );
+                    }
+
+                    $weight = $associatedProduct->getWeight();
+                    if(!empty($weight)) {
+                        $offer['params'][] = array(
+                            'name' => 'Weight',
+                            'code' => 'weight',
+                            'value' => $weight
+                        );
+                    }
+
+                    if(!empty($attributes)) {
+                        foreach($attributes as $attributeName => $attributeValue) {
+                            $offer['params'][] = array(
+                                'name' => $attributeName,
+                                'code' => str_replace(' ', '_', strtolower($attributeName)),
+                                'value' => $attributeValue
+                            );
+                        }
+                    }
+
+                    if(!empty($customAdditionalAttributes)) {
+                        foreach($customAdditionalAttributes as $customAdditionalAttribute) {
+                            $alreadyExists = false;
+                            foreach($offer['params'] as $param) {
+                                if($param['code'] == $customAdditionalAttribute) {
+                                    $alreadyExists = true;
+                                    break;
+                                }
+                            }
+
+                            if($alreadyExists) continue;
+
+                            $attribute = $associatedProduct->getAttributeText($customAdditionalAttribute);
+                            if(!empty($attribute)) {
+                                $offer['params'][] = array(
+                                    'name' => $customAdditionalAttribute,
+                                    'code' => $customAdditionalAttribute,
+                                    'value' => $attribute
+                                );
+                            }
+                        }
+                    }
+
+                    $offers[] = $offer;
+                }
+            }
         }
 
         foreach ($offers as $offer) {
@@ -205,25 +350,16 @@ class Retailcrm_Retailcrm_Model_Icml
                 );
             }
 
-
-            if (!empty($offer['article'] )) {
-                $sku = $this->_dd->createElement('param');
-                $sku->setAttribute('name', 'article');
-                $sku->setAttribute('code', 'Article');
-                $sku->appendChild(
-                    $this->_dd->createTextNode($offer['article'])
-                );
-                $e->appendChild($sku);
-            }
-
-            if (!empty($offer['weight'] )) {
-                $weight = $this->_dd->createElement('param');
-                $weight->setAttribute('name', 'weight');
-                $weight->setAttribute('code', 'Weight');
-                $weight->appendChild(
-                    $this->_dd->createTextNode($offer['weight'])
-                );
-                $e->appendChild($weight);
+            if(!empty($offer['params'])) {
+                foreach($offer['params'] as $param) {
+                    $paramNode = $this->_dd->createElement('param');
+                    $paramNode->setAttribute('name', $param['name']);
+                    $paramNode->setAttribute('code', $param['code']);
+                    $paramNode->appendChild(
+                        $this->_dd->createTextNode($param['value'])
+                    );
+                    $e->appendChild($paramNode);
+                }
             }
         }
     }

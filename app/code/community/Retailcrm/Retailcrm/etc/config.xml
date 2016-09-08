@@ -54,6 +54,24 @@ SOFTWARE.
                     </retailcrm_retailcrm_model_observer>
                 </observers>
             </sales_order_place_after>
+            <sales_order_save_commit_after>
+                <observers>
+                    <retailcrm_retailcrm_model_observer>
+                        <type>singleton</type>
+                        <class>Retailcrm_Retailcrm_Model_Observer</class>
+                        <method>orderUpdate</method>
+                    </retailcrm_retailcrm_model_observer>
+                </observers>
+            </sales_order_save_commit_after>
+            <customer_save_after>
+                <observers>
+                    <retailcrm_retailcrm_model_observer>
+                        <type>singleton</type>
+                        <class>Retailcrm_Retailcrm_Model_Observer</class>
+                        <method>customerRegister</method>
+                    </retailcrm_retailcrm_model_observer>
+                </observers>
+            </customer_save_after>
         </events>
     </global>
     <crontab>
