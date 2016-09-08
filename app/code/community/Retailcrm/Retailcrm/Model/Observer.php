@@ -16,7 +16,33 @@ class Retailcrm_Retailcrm_Model_Observer
     {
         if (Mage::registry('sales_order_place_after') != 1){//do nothing if the event was dispatched
             $order = $observer->getEvent()->getOrder();
-            Mage::getModel('retailcrm/exchange')->ordersCreate($order);
+            Mage::getModel('retailcrm/order')->orderCreate($order);
+        }
+
+        return true;
+    }
+
+    public function orderUpdate(Varien_Event_Observer $observer)
+    {
+        $order = $observer->getEvent()->getOrder();
+        Mage::getModel('retailcrm/order')->orderUpdate($order);
+        return true;
+    }
+
+    /**
+     * Event after customer created
+     *
+     * @param Varien_Event_Observer $observer
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @return bool
+     */
+    public function customerRegister(Varien_Event_Observer $observer)
+    {
+        if (Mage::registry('customer_save_after') != 1) {
+            $customer = $observer->getEvent()->getCustomer();
+            Mage::getModel('retailcrm/customer')->customerRegister($customer);
         }
 
         return true;
