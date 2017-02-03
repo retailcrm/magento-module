@@ -4,7 +4,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
         $html = $this->_getHeaderHtml($element);
-
+                
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
             $groups = Mage::getSingleton('shipping/config')->getActiveCarriers();
 
@@ -25,6 +25,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
         if (empty($this->_fieldRenderer)) {
             $this->_fieldRenderer = Mage::getBlockSingleton('adminhtml/system_config_form_field');
         }
+        
         return $this->_fieldRenderer;
     }
 
@@ -34,9 +35,9 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
     protected function _getValues()
     {
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
-            $client = Mage::getModel(
-                'retailcrm/ApiClient',
-                array('url' => $this->_apiUrl, 'key' => $this->_apiKey, 'site' => null)
+            $client = new Retailcrm_Retailcrm_Model_ApiClient(
+                $this->_apiUrl,
+                $this->_apiKey
             );
 
             try {
@@ -52,7 +53,6 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
                     }
                 }
             }
-
         }
 
         return $this->_values;
@@ -71,8 +71,8 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
             $inherit = true;
         }
 
-
-        $field = $fieldset->addField('shipping_' . $group->getId(), 'select',
+        $field = $fieldset->addField(
+            'shipping_' . $group->getId(), 'select',
             array(
                 'name'          => 'groups[shipping][fields]['.$group->getId().'][value]',
                 'label'         => Mage::getStoreConfig('carriers/'.$group->getId().'/title'),
@@ -81,7 +81,8 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Shipping e
                 'inherit'       => $inherit,
                 'can_use_default_value' => 1,
                 'can_use_website_value' => 1
-            ))->setRenderer($this->_getFieldRenderer());
+            )
+        )->setRenderer($this->_getFieldRenderer());
 
         return $field->toHtml();
     }

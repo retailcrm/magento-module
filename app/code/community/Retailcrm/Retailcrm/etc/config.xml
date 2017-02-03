@@ -45,6 +45,7 @@ SOFTWARE.
             </retailcrm>
         </blocks>
         <events>
+            
             <sales_order_place_after>
                 <observers>
                     <retailcrm_retailcrm_model_observer>
@@ -54,6 +55,8 @@ SOFTWARE.
                     </retailcrm_retailcrm_model_observer>
                 </observers>
             </sales_order_place_after>
+            
+            
             <sales_order_save_commit_after>
                 <observers>
                     <retailcrm_retailcrm_model_observer>
@@ -63,6 +66,19 @@ SOFTWARE.
                     </retailcrm_retailcrm_model_observer>
                 </observers>
             </sales_order_save_commit_after>
+            
+           
+            <sales_order_save_after>
+                <observers>
+                    <retailcrm_retailcrm_model_observer>
+                        <type>singleton</type>
+                        <class>Retailcrm_Retailcrm_Model_Observer</class>
+                        <method>orderStatusHistoryCheck</method>
+                    </retailcrm_retailcrm_model_observer>
+                </observers>
+            </sales_order_save_after>
+            
+            
             <customer_save_after>
                 <observers>
                     <retailcrm_retailcrm_model_observer>
@@ -72,8 +88,21 @@ SOFTWARE.
                     </retailcrm_retailcrm_model_observer>
                 </observers>
             </customer_save_after>
+            
+            
         </events>
     </global>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <Retailcrmbutton after="Mage_Adminhtml">Retailcrm_Retailcrm</Retailcrmbutton>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
     <crontab>
         <jobs>
             <icml>

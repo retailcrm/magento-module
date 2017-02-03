@@ -1,13 +1,11 @@
 <?php
 class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status extends Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Base
 {
-
     public function render(Varien_Data_Form_Element_Abstract $element)
     {
         $html = $this->_getHeaderHtml($element);
 
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
-
             $statuses = Mage::getModel('sales/order_status')->getResourceCollection()->getData();
             
             foreach ($statuses as $status) {
@@ -27,6 +25,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
         if (empty($this->_fieldRenderer)) {
             $this->_fieldRenderer = Mage::getBlockSingleton('adminhtml/system_config_form_field');
         }
+        
         return $this->_fieldRenderer;
     }
 
@@ -36,9 +35,9 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
     protected function _getValues()
     {
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
-            $client = Mage::getModel(
-                'retailcrm/ApiClient',
-                array('url' => $this->_apiUrl, 'key' => $this->_apiKey, 'site' => null)
+            $client = new Retailcrm_Retailcrm_Model_ApiClient(
+                $this->_apiUrl,
+                $this->_apiKey
             );
 
             try {
@@ -54,7 +53,6 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
                     }
                 }
             }
-
         }
 
         return $this->_values;
@@ -73,7 +71,8 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
             $inherit = true;
         }
 
-        $field = $fieldset->addField('status_' . $group['status'], 'select',
+        $field = $fieldset->addField(
+            'status_' . $group['status'], 'select',
             array(
                 'name'          => 'groups[status][fields]['.$group['status'].'][value]',
                 'label'         => $group['label'],
@@ -82,7 +81,8 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Status ext
                 'inherit'       => $inherit,
                 'can_use_default_value' => 1,
                 'can_use_website_value' => 1
-            ))->setRenderer($this->_getFieldRenderer());
+            )
+        )->setRenderer($this->_getFieldRenderer());
 
         return $field->toHtml();
     }

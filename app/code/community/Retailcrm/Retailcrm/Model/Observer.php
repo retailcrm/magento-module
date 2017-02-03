@@ -21,14 +21,22 @@ class Retailcrm_Retailcrm_Model_Observer
 
         return true;
     }
-
+    
     public function orderUpdate(Varien_Event_Observer $observer)
     {
         $order = $observer->getEvent()->getOrder();
         Mage::getModel('retailcrm/order')->orderUpdate($order);
         return true;
     }
-
+    
+    public function orderStatusHistoryCheck(Varien_Event_Observer $observer)
+    {
+        $order = $observer->getEvent()->getOrder();
+        Mage::getModel('retailcrm/order')->orderStatusHistoryCheck($order);
+        
+        return true;
+    }
+    
     /**
      * Event after customer created
      *
@@ -47,7 +55,7 @@ class Retailcrm_Retailcrm_Model_Observer
 
         return true;
     }
-
+    
     public function exportCatalog()
     {
         foreach (Mage::app()->getWebsites() as $website) {

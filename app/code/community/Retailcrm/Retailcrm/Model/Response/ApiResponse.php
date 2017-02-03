@@ -1,7 +1,15 @@
 <?php
 
 /**
+ * PHP version 5.3
+ *
  * Response from retailCRM API
+ *
+ * @category RetailCrm
+ * @package  RetailCrm
+ * @author   RetailCrm <integration@retailcrm.ru>
+ * @license  https://opensource.org/licenses/MIT MIT License
+ * @link     http://www.retailcrm.ru/docs/Developers/ApiVersion4
  */
 class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
 {
@@ -11,6 +19,14 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     // response assoc array
     protected $response;
 
+    /**
+     * ApiResponse constructor.
+     *
+     * @param int   $statusCode   HTTP status code
+     * @param mixed $responseBody HTTP body
+     *
+     * @throws InvalidJsonException
+     */
     public function __construct($statusCode, $responseBody = null)
     {
         $this->statusCode = (int) $statusCode;
@@ -52,7 +68,11 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     /**
      * Allow to access for the property throw class method
      *
-     * @param  string $name
+     * @param string $name      method name
+     * @param mixed  $arguments method parameters
+     *
+     * @throws \InvalidArgumentException
+     *
      * @return mixed
      */
     public function __call($name, $arguments)
@@ -70,7 +90,10 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     /**
      * Allow to access for the property throw object property
      *
-     * @param  string $name
+     * @param string $name property name
+     *
+     * @throws \InvalidArgumentException
+     *
      * @return mixed
      */
     public function __get($name)
@@ -83,8 +106,13 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     }
 
     /**
-     * @param mixed $offset
-     * @param mixed $value
+     * Offset set
+     *
+     * @param mixed $offset offset
+     * @param mixed $value  value
+     *
+     * @throws \BadMethodCallException
+     * @return void
      */
     public function offsetSet($offset, $value)
     {
@@ -92,7 +120,12 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     }
 
     /**
-     * @param mixed $offset
+     * Offset unset
+     *
+     * @param mixed $offset offset
+     *
+     * @throws \BadMethodCallException
+     * @return void
      */
     public function offsetUnset($offset)
     {
@@ -100,7 +133,10 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     }
 
     /**
-     * @param mixed $offset
+     * Check offset
+     *
+     * @param mixed $offset offset
+     *
      * @return bool
      */
     public function offsetExists($offset)
@@ -109,7 +145,12 @@ class Retailcrm_Retailcrm_Model_Response_ApiResponse implements ArrayAccess
     }
 
     /**
-     * @param mixed $offset
+     * Get offset
+     *
+     * @param mixed $offset offset
+     *
+     * @throws \InvalidArgumentException
+     *
      * @return mixed
      */
     public function offsetGet($offset)

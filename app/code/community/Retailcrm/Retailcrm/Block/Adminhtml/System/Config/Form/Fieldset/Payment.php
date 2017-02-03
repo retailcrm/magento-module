@@ -25,6 +25,7 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Payment ex
         if (empty($this->_fieldRenderer)) {
             $this->_fieldRenderer = Mage::getBlockSingleton('adminhtml/system_config_form_field');
         }
+        
         return $this->_fieldRenderer;
     }
 
@@ -34,9 +35,9 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Payment ex
     protected function _getValues()
     {
         if(!empty($this->_apiUrl) && !empty($this->_apiKey) && $this->_isCredentialCorrect) {
-            $client = Mage::getModel(
-                'retailcrm/ApiClient',
-                array('url' => $this->_apiUrl, 'key' => $this->_apiKey, 'site' => null)
+            $client = new Retailcrm_Retailcrm_Model_ApiClient(
+                $this->_apiUrl,
+                $this->_apiKey
             );
 
             try {
@@ -70,8 +71,8 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Payment ex
             $inherit = true;
         }
 
-
-        $field = $fieldset->addField('payment_' . $group->getId(), 'select',
+        $field = $fieldset->addField(
+            'payment_' . $group->getId(), 'select',
             array(
                 'name'          => 'groups[payment][fields]['.$group->getId().'][value]',
                 'label'         => Mage::getStoreConfig('payment/'.$group->getId().'/title'),
@@ -80,7 +81,8 @@ class Retailcrm_Retailcrm_Block_Adminhtml_System_Config_Form_Fieldset_Payment ex
                 'inherit'       => $inherit,
                 'can_use_default_value' => 1,
                 'can_use_website_value' => 1
-            ))->setRenderer($this->_getFieldRenderer());
+            )
+        )->setRenderer($this->_getFieldRenderer());
 
         return $field->toHtml();
     }
