@@ -29,9 +29,8 @@ class Retailcrm_Retailcrm_Model_Customer extends Retailcrm_Retailcrm_Model_Excha
             'firstName' => $data->getFirstname(),
             'patronymic' => $data->getMiddlename(),
             'lastName' => $data->getLastname(),
-            'createdAt' => date('Y-m-d H:i:s', strtotime($data->getCreatedAt()))
+            'createdAt' => Mage::getSingleton('core/date')->date()
         );
-
         $this->_api->customersEdit($customer);
     }
 
@@ -51,8 +50,7 @@ class Retailcrm_Retailcrm_Model_Customer extends Retailcrm_Retailcrm_Model_Excha
         ->addAttributeToSelect('email')
         ->addAttributeToSelect('firstname')
         ->addAttributeToSelect('lastname');
-        foreach ($customerCollection as $customerData)
-        {
+        foreach ($customerCollection as $customerData) {
             $customer = array(
                 'externalId' => $customerData->getId(),
                 'email' => $customerData->getData('email'),
@@ -61,15 +59,17 @@ class Retailcrm_Retailcrm_Model_Customer extends Retailcrm_Retailcrm_Model_Excha
             );
             $customers[] = $customer;
         }
+        
         unset($customerCollection);
         $chunked = array_chunk($customers, 50);
         unset($customers);
-        foreach ($chunked as $chunk) {
-//file_put_contents('/var/www/konzeptual/data/www/konzeptual.ru/tempC.txt', var_export($chunk,true)); die();            
+        foreach ($chunked as $chunk) {            
             $this->_api->customersUpload($chunk);
             time_nanosleep(0, 250000000);
         }
+        
         unset($chunked);
+        
         return true;
     }
 }

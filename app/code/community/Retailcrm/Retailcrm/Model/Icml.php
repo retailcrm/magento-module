@@ -10,7 +10,7 @@ class Retailcrm_Retailcrm_Model_Icml
     public function generate($shop)
     {
         $this->_shop = $shop;
-
+        
         $string = '<?xml version="1.0" encoding="UTF-8"?>
             <yml_catalog date="'.date('Y-m-d H:i:s').'">
                 <shop>
@@ -43,6 +43,7 @@ class Retailcrm_Retailcrm_Model_Icml
         $baseDir = Mage::getBaseDir();
         $shopCode = Mage::app()->getStore($shop)->getCode();
         $this->_dd->save($baseDir . DS . 'retailcrm_' . $shopCode . '.xml');
+            
     }
 
     private function addCategories()
@@ -82,14 +83,15 @@ class Retailcrm_Retailcrm_Model_Icml
                 $e->setAttribute('parentId', $category['parentId']);
             }
         }
-     }
+    }
 
     private function addOffers()
     {
         $offers = array();
         $helper = Mage::helper('retailcrm');
         $picUrl = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA);
-
+        $baseUrl = Mage::getBaseUrl();
+        
         $customAdditionalAttributes = Mage::getStoreConfig('retailcrm/attributes_to_export_into_icml');
         $customAdditionalAttributes = explode(',', $customAdditionalAttributes);
 
@@ -97,8 +99,11 @@ class Retailcrm_Retailcrm_Model_Icml
             ->getCollection()
             ->addAttributeToSelect('*')
             ->addUrlRewrite();
+        
+        $collection->addFieldToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
         $collection->addFieldToFilter('visibility', Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH);
-
+        $collection->addAttributeToFilter('type_id', array('eq' => 'simple'));
+        
         foreach ($collection as $product) {
             /** @var Mage_Catalog_Model_Product $product */
             $offer = array();
@@ -109,13 +114,8 @@ class Retailcrm_Retailcrm_Model_Icml
             $offer['name'] = $product->getName();
             $offer['productName'] = $product->getName();
             $offer['initialPrice'] = (float) $product->getPrice();
-
-            $offer['url'] = $helper->rewrittenProductUrl(
-                $product->getId(), $product->getCategoryId(), $this->_shop
-            );
-
+            $offer['url'] = $product->getProductUrl();
             $offer['picture'] = $picUrl.'catalog/product'.$product->getImage();
-
             $offer['quantity'] = Mage::getModel('cataloginventory/stock_item')
                 ->loadByProduct($product)->getQty();
 
@@ -188,6 +188,7 @@ class Retailcrm_Retailcrm_Model_Icml
                     foreach($attributes AS $attributeName=>$attributeValue) {
                         $attributesString[] = $attributeName.': '.$attributeValue;
                     }
+                    
                     $attributesString = ' (' . implode(', ', $attributesString) . ')';
 
                     $offer = array();
@@ -198,13 +199,8 @@ class Retailcrm_Retailcrm_Model_Icml
                     $offer['name'] = $associatedProduct->getName().$attributesString;
                     $offer['productName'] = $product->getName();
                     $offer['initialPrice'] = (float) $associatedProduct->getFinalPrice();
-
-                    $offer['url'] = $helper->rewrittenProductUrl(
-                        $associatedProduct->getId(), $associatedProduct->getCategoryId(), $this->_shop
-                    );
-
+                    $offer['url'] = $associatedProduct->getProductUrl();
                     $offer['picture'] = $picUrl.'catalog/product'.$associatedProduct->getImage();
-
                     $offer['quantity'] = Mage::getModel('cataloginventory/stock_item')
                         ->loadByProduct($associatedProduct)->getQty();
 
@@ -273,7 +269,6 @@ class Retailcrm_Retailcrm_Model_Icml
         }
 
         foreach ($offers as $offer) {
-
             $e = $this->_eOffers->appendChild(
                 $this->_dd->createElement('offer')
             );
@@ -322,9 +317,8 @@ class Retailcrm_Retailcrm_Model_Icml
             if (!empty($offer['purchasePrice'])) {
                 $e->appendChild($this->_dd->createElement('purchasePrice'))
                     ->appendChild(
-                        $this->_dd->createTextNode($offer['purchasePrice']
-                    )
-                );
+                        $this->_dd->createTextNode($offer['purchasePrice'])
+                    );
             }
 
             if (!empty($offer['picture'])) {
@@ -337,17 +331,15 @@ class Retailcrm_Retailcrm_Model_Icml
             if (!empty($offer['url'])) {
                 $e->appendChild($this->_dd->createElement('url'))
                     ->appendChild(
-                        $this->_dd->createTextNode($offer['url']
-                    )
-                );
+                        $this->_dd->createTextNode($offer['url'])
+                    );
             }
 
             if (!empty($offer['vendor'])) {
                 $e->appendChild($this->_dd->createElement('vendor'))
                     ->appendChild(
-                        $this->_dd->createTextNode($offer['vendor']
-                    )
-                );
+                        $this->_dd->createTextNode($offer['vendor'])
+                    );
             }
 
             if(!empty($offer['params'])) {

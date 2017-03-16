@@ -78,18 +78,13 @@ class Retailcrm_Retailcrm_Helper_Data extends Mage_Core_Helper_Abstract
      *
      * @return string
      */
-    public function rewrittenProductUrl(
-        $baseUrl,
-        $coreUrl,
-        $productId,
-        $storeId,
-        $categoryId = null
-    )
+    public function rewrittenProductUrl($baseUrl,$coreUrl,$productId,$storeId,$categoryId = null)
     {
         $idPath = sprintf('product/%d', $productId);
         if ($categoryId) {
              $idPath = sprintf('%s/%d', $idPath, $categoryId);
         }
+    
         $coreUrl->setStoreId($storeId);
         $coreUrl->loadByIdPath($idPath);
 
@@ -165,6 +160,7 @@ class Retailcrm_Retailcrm_Helper_Data extends Mage_Core_Helper_Abstract
             if (is_array($value)) {
                 $haystack[$key] = self::filterRecursive($haystack[$key]);
             }
+            
             if (is_null($haystack[$key])
                 || $haystack[$key] === ''
                 || count($haystack[$key]) == 0

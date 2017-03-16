@@ -121,6 +121,39 @@ SOFTWARE.
                     <show_in_store>1</show_in_store>
                     <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_status</frontend_model>
                 </status>
+                
+                <load_order translate="label comment" module="retailcrm">
+                	<expanded>0</expanded>
+                    <label>Order Load</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>15</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_order</frontend_model>
+               		<fields>
+                        <numberOrder translate="label comment">
+                            <label>Number orders</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <tooltip><![CDATA[Enter your order number, separated by commas]]></tooltip>
+                        </numberOrder>
+                        
+                        <button translate="label comment">
+                            <frontend_type>button</frontend_type>
+                            <frontend_model>retailcrm/adminhtml_system_config_form_button</frontend_model>
+              				<sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>      
+                        </button>
+                        
+                    </fields>
+                </load_order>
+            	
             </groups>
         </retailcrm>
     </sections>
