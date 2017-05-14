@@ -321,7 +321,7 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
 
     protected function prepareOrder($order)
     {
-        $config = Mage::getModel('retailcrm/settings', $order->getStoreId());
+        $config = Mage::getModel('retailcrm/settings', ['storeId' => $order->getStoreId()]);
         $address = $order->getShippingAddress();
         
         $orderItems = $order->getItemsCollection()
