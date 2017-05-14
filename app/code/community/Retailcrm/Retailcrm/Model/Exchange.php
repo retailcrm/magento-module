@@ -138,7 +138,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $siteid = Mage::getModel('core/store')->load($storeId)->getWebsiteId();
         
         // search or create customer
-        $customer = Mage::getSingleton('customer/customer');
+        $customer = Mage::getModel('customer/customer');
         $customer->setWebsiteId($siteid);
         $customer->loadByEmail($order['email']);
         
@@ -360,7 +360,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $siteid = Mage::getModel('core/store')->load($storeId)->getWebsiteId();
     
         // search or create customer
-        $customer = Mage::getSingleton('customer/customer');
+        $customer = Mage::getModel('customer/customer');
         $customer->setWebsiteId($siteid);
         $customer->loadByEmail($order['email']);
      
