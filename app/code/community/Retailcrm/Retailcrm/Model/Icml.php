@@ -114,6 +114,9 @@ class Retailcrm_Retailcrm_Model_Icml
             $offer['name'] = $product->getName();
             $offer['productName'] = $product->getName();
             $offer['initialPrice'] = (float) $product->getPrice();
+            if($product->hasCost())
+                $offer['purchasePrice'] = (float) $product->getCost();
+
             $offer['url'] = $product->getProductUrl();
             $offer['picture'] = $picUrl.'catalog/product'.$product->getImage();
             $offer['quantity'] = Mage::getModel('cataloginventory/stock_item')
@@ -199,6 +202,8 @@ class Retailcrm_Retailcrm_Model_Icml
                     $offer['name'] = $associatedProduct->getName().$attributesString;
                     $offer['productName'] = $product->getName();
                     $offer['initialPrice'] = (float) $associatedProduct->getFinalPrice();
+                    if($associatedProduct->hasCost())
+                        $offer['purchasePrice'] = (float) $associatedProduct->getCost();
                     $offer['url'] = $associatedProduct->getProductUrl();
                     $offer['picture'] = $picUrl.'catalog/product'.$associatedProduct->getImage();
                     $offer['quantity'] = Mage::getModel('cataloginventory/stock_item')
