@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="create_icml" instance="Retailcrm\Retailcrm\Cron\Icml" method="execute">
+            <schedule>* */4 * * *</schedule>
+        </job>
+        
+        <job name="order_hystory" instance="Retailcrm\Retailcrm\Cron\OrderHistory" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+        
+    </group>
+</config>

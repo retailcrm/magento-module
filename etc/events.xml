@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+ 
+  <!-- Order create -->
+ 
+  <event name="sales_order_place_after"> 
+     <observer name="sales_order_place_after" instance="Retailcrm\Retailcrm\Model\Observer\OrderCreate" />
+  </event>
+  
+  <!-- Order update -->
+  
+  <event name="sales_order_save_commit_after"> 
+     <observer name="sales_order_save_commit_after" instance="Retailcrm\Retailcrm\Model\Observer\OrderUpdate" />
+  </event>
+  
+  <!-- after customer save -->
+  
+  <event name="customer_save_after"> 
+     <observer name="customer_save_after" instance="Retailcrm\Retailcrm\Model\Observer\Customer" />
+  </event>
+  
+
+</config>
+
+
