@@ -1,7 +1,7 @@
 Magento module
 ==============
 
-Magento module for interaction with [RetailCRM](http://www.retailcrm.ru) through [REST API](http://retailcrm.ru/docs/Разработчики).
+Magento 1.9.x module for interaction with [RetailCRM](http://www.retailcrm.ru) through [REST API](http://retailcrm.ru/docs/Разработчики).
 
 Module allows:
 
