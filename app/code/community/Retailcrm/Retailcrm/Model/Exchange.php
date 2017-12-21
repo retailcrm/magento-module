@@ -144,7 +144,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         
         if (!is_numeric($customer->getId())) {        
             $customer
-                ->setGropuId(1)
+                ->setGroupId(1)
                 ->setWebsiteId($siteid)
                 ->setStore($storeId)
                 ->setEmail($order['email'])
