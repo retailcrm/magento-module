@@ -4,9 +4,8 @@
   <!-- Order create -->
  
   <event name="sales_order_place_after"> 
-     <observer  name="sales_order_place_after" disabled="true"/>
+    <observer  name="sales_order_place_after" disabled="true"/>
   </event>
   
-
 </config>
 

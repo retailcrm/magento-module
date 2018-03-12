@@ -11,15 +11,22 @@
             <resource>Retailcrm_Retailcrm::retailcrm_configuration</resource>
             <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>General Configuration</label>
-                
-                <field id="api_url" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+
+                <field id="api_url" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>API URL</label>
                     <comment>https://YourCrmName.retailcrm.ru</comment>
+                    <backend_model>Retailcrm\Retailcrm\Model\Config\Backend\ApiUrl</backend_model>
                 </field>
-                
-                <field id="api_key" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+
+                <field id="api_key" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>API Key</label>
                     <comment>To generate an API Key, log in to RetailCRM then select Admin > Integration > API Keys</comment>
+                </field>
+
+                <field id="api_version" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>API Version</label>
+                    <source_model>Retailcrm\Retailcrm\Model\Setting\ApiVersions</source_model>
+                    <backend_model>Retailcrm\Retailcrm\Model\Config\Backend\ApiVersion</backend_model>
                 </field>
             </group>
             

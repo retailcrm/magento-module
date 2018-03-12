@@ -1,4 +1,5 @@
 <?php
+
 namespace Retailcrm\Retailcrm\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
@@ -47,21 +48,21 @@ class Data extends AbstractHelper
     */
     public function filterRecursive($haystack)
     {
-    	foreach ($haystack as $key => $value) {
-    		if (is_array($value)) {
-    			$haystack[$key] = self::filterRecursive($haystack[$key]);
-    		}
-    
-    		if (is_null($haystack[$key])
-    				|| $haystack[$key] === ''
-    				|| count($haystack[$key]) == 0
-    				) {
-    					unset($haystack[$key]);
-    				} elseif (!is_array($value)) {
-    					$haystack[$key] = trim($value);
-    				}
-    	}
-    
-    	return $haystack;
+        foreach ($haystack as $key => $value) {
+            if (is_array($value)) {
+                $haystack[$key] = self::filterRecursive($haystack[$key]);
+            }
+
+            if (is_null($haystack[$key])
+                || $haystack[$key] === ''
+                || count($haystack[$key]) == 0
+            ) {
+                unset($haystack[$key]);
+            } elseif (!is_array($value)) {
+                $haystack[$key] = trim($value);
+            }
+        }
+
+        return $haystack;
     }
 }
