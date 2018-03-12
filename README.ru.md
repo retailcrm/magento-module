@@ -1,7 +1,7 @@
 Magento module
 ==============
 
-Модуль Magento 2 для интеграции с [RetailCRM](http://www.retailcrm.ru).
+Модуль Magento 2 для интеграции с [retailCRM](http://www.retailcrm.ru).
 
 Модуль позволяет:
 
