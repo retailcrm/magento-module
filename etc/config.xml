@@ -3,22 +3,13 @@
     <default>
         <retailcrm>
             <general>
-               
-                 <api_url>test</api_url>
+                <api_url>test</api_url>
             </general>
-            
             <section>
                 <general>
                     <api_key>{value}</api_key>
-                </general>
-                
-                
-                
+                </general>                
             </section>
-            
         </retailcrm>
-    
-	    
-	    
     </default>
 </config>

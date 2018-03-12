@@ -9,12 +9,9 @@ class Status extends \Magento\Config\Model\Config\Backend\Serialized\ArraySerial
         // For value validations
         $exceptions = $this->getValue();
  
-        // Validations
- 
+        // Validations 
         $this->setValue($exceptions);
  
         return parent::beforeSave();
     }
-    
-    
 }
