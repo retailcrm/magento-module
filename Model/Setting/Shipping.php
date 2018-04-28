@@ -4,23 +4,26 @@ namespace Retailcrm\Retailcrm\Model\Setting;
 
 class Shipping implements \Magento\Framework\Option\ArrayInterface
 {
-    protected $_entityType;
-    protected $_store;
+    private $entityType;
+    private $store;
+    private $config;
+    private $shippingConfig;
 
     public function __construct(
         \Magento\Store\Model\Store $store,
-        \Magento\Eav\Model\Entity\Type $entityType
+        \Magento\Eav\Model\Entity\Type $entityType,
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
+        \Magento\Shipping\Model\Config $shippingConfig
     ) {
-        $this->_store = $store;
-        $this->_entityType = $entityType;
+        $this->store = $store;
+        $this->entityType = $entityType;
+        $this->config = $config;
+        $this->shippingConfig = $shippingConfig;
     }
 
     public function toOptionArray()
     {
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $activeShipping = $objectManager->create('Magento\Shipping\Model\Config')->getActiveCarriers();
-
-        $config = $objectManager->get('Magento\Framework\App\Config\ScopeConfigInterface');
+        $activeShipping = $this->shippingConfig->getActiveCarriers();
 
         foreach ($activeShipping as $carrierCode => $carrierModel) {
             $options = [];
@@ -36,7 +39,7 @@ class Shipping implements \Magento\Framework\Option\ArrayInterface
                     ];
                 }
 
-                $carrierTitle = $config->getValue('carriers/' . $carrierCode . '/title');
+                $carrierTitle = $this->config->getValue('carriers/' . $carrierCode . '/title');
             }
 
             $methods[] = [

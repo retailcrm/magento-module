@@ -7,52 +7,45 @@ use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
 
 class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 {
-    protected $_api;
-    protected $_objectManager;
-    protected $_config;
-    protected $_helper;
-    protected $_logger;
-    protected $_registry;
+    private $api;
+    private $config;
+    private $logger;
+    private $registry;
+    private $product;
 
     /**
      * Constructor
-     * 
-     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     *
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param \Retailcrm\Retailcrm\Model\Logger\Logger $logger
      * @param \Magento\Framework\Registry $registry
      */
     public function __construct(
-        \Magento\Framework\ObjectManagerInterface $objectManager,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
-        \Magento\Framework\Registry $registry
+        \Magento\Framework\Registry $registry,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
+        \Magento\Catalog\Model\ProductRepository $product,
+        ApiClient $api
     ) {
-        $helper = $objectManager->get('\Retailcrm\Retailcrm\Helper\Data');
-        $this->_logger = $objectManager->get('\Retailcrm\Retailcrm\Model\Logger\Logger');
-        $this->_helper = $helper;
-        $this->_objectManager = $objectManager;
-        $this->_config = $config;
-        $this->_registry = $registry;
-
-        $url = $config->getValue('retailcrm/general/api_url');
-        $key = $config->getValue('retailcrm/general/api_key');
-        $apiVersion = $config->getValue('retailcrm/general/api_version');
-
-        if (!empty($url) && !empty($key)) {
-            $this->_api = new ApiClient($url, $key, $apiVersion);
-        }
+        $this->logger = $logger;
+        $this->config = $config;
+        $this->registry = $registry;
+        $this->product = $product;
+        $this->api = $api;
     }
 
     /**
      * Execute send order in CRM
-     * 
+     *
      * @param Observer $observer
-     * 
+     *
      * @return $this
      */
     public function execute(Observer $observer)
     {
-        if ($this->_registry->registry('RETAILCRM_HISTORY') === true) {
+        if ($this->registry->registry('RETAILCRM_HISTORY') === true
+            || !$this->api->isConfigured()
+        ) {
             return;
         }
 
@@ -62,35 +55,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             return;
         }
 
-        $items = [];
         $addressObj = $order->getBillingAddress();
-
-        foreach ($order->getAllItems() as $item) {
-            if ($item->getProductType() == "simple") {
-                $price = $item->getPrice();
-
-                if ($price == 0) {
-                    $omproduct = $this->_objectManager->get('Magento\Catalog\Model\ProductRepository')
-                        ->getById($item->getProductId());
-                    $price = $omproduct->getPrice();
-                }
-
-                $product = [
-                    'productId' => $item->getProductId(),
-                    'productName' => $item->getName(),
-                    'quantity' => $item->getQtyOrdered(),
-                    'initialPrice' => $price,
-                    'offer' => [
-                        'externalId' => $item->getProductId()
-                    ]
-                ];
-
-                unset($omproduct);
-                unset($price);
-
-                $items[] = $product;
-            }  
-        }
 
         $shippingCode = $this->getShippingCode($order->getShippingMethod());
 
@@ -99,15 +64,21 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             'externalId' => $order->getId(),
             'number' => $order->getRealOrderId(),
             'createdAt' => $order->getCreatedAt(),
-            'lastName' => $order->getCustomerLastname() ? $order->getCustomerLastname() : $addressObj->getLastname(),
-            'firstName' => $order->getCustomerFirstname() ? $order->getCustomerFirstname() : $addressObj->getFirstname(),
-            'patronymic' => $order->getCustomerMiddlename() ? $order->getCustomerMiddlename() : $addressObj->getMiddlename(),
+            'lastName' => $order->getCustomerLastname()
+                ? $order->getCustomerLastname()
+                : $addressObj->getLastname(),
+            'firstName' => $order->getCustomerFirstname()
+                ? $order->getCustomerFirstname()
+                : $addressObj->getFirstname(),
+            'patronymic' => $order->getCustomerMiddlename()
+                ? $order->getCustomerMiddlename()
+                : $addressObj->getMiddlename(),
             'email' => $order->getCustomerEmail(),
             'phone' => $addressObj->getTelephone(),
-            'status' => $this->_config->getValue('retailcrm/Status/' . $order->getStatus()),
-            'items' => $items,
+            'status' => $this->config->getValue('retailcrm/Status/' . $order->getStatus()),
+            'items' => $this->getOrderItems($order),
             'delivery' => [
-                'code' => $this->_config->getValue('retailcrm/Shipping/' . $shippingCode),
+                'code' => $this->config->getValue('retailcrm/Shipping/' . $shippingCode),
                 'cost' => $order->getShippingAmount(),
                 'address' => [
                     'index' => $addressObj->getData('postcode'),
@@ -133,14 +104,18 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             $preparedOrder['countryIso'] = $addressObj->getData('country_id');
         }
 
-        if ($this->_api->getVersion() == 'v4') {
-            $preparedOrder['paymentType'] = $this->_config->getValue('retailcrm/Payment/'.$order->getPayment()->getMethodInstance()->getCode());
+        if ($this->api->getVersion() == 'v4') {
+            $preparedOrder['paymentType'] = $this->config->getValue(
+                'retailcrm/Payment/' . $order->getPayment()->getMethodInstance()->getCode()
+            );
             $preparedOrder['discount'] = abs($order->getDiscountAmount());
-        } elseif ($this->_api->getVersion() == 'v5') {
+        } elseif ($this->api->getVersion() == 'v5') {
             $preparedOrder['discountManualAmount'] = abs($order->getDiscountAmount());
 
             $payment = [
-                'type' => $this->_config->getValue('retailcrm/Payment/' . $order->getPayment()->getMethodInstance()->getCode()),
+                'type' => $this->config->getValue(
+                    'retailcrm/Payment/' . $order->getPayment()->getMethodInstance()->getCode()
+                ),
                 'externalId' => $order->getId(),
                 'order' => [
                     'externalId' => $order->getId(),
@@ -166,13 +141,37 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             unset($preparedOrder['status']);
         }
 
+        $this->setCustomer(
+            $order,
+            $addressObj,
+            $preparedOrder
+        );
+
+        \Retailcrm\Retailcrm\Helper\Data::filterRecursive($preparedOrder);
+
+        $this->logger->writeDump($preparedOrder, 'CreateOrder');
+
+        $this->api->ordersCreate($preparedOrder);
+
+        return $this;
+    }
+
+    /**
+     * @param $order
+     * @param $addressObj
+     * @param $preparedOrder
+     */
+    private function setCustomer($order, $addressObj, &$preparedOrder)
+    {
         if ($order->getCustomerIsGuest() == 1) {
             $customer = $this->getCustomerByEmail($order->getCustomerEmail());
 
             if ($customer !== false) {
                 $preparedOrder['customer']['id'] = $customer['id'];
             }
-        } elseif ($order->getCustomerIsGuest() == 0) {
+        }
+
+        if ($order->getCustomerIsGuest() == 0) {
             if ($this->existsInCrm($order->getCustomerId(), 'customersGet')) {
                 $preparedOrder['customer']['externalId'] = $order->getCustomerId();
             } else {
@@ -189,29 +188,61 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
                     ];
                 }
 
-                if ($this->_api->customersCreate($preparedCustomer)) {
+                if ($this->api->customersCreate($preparedCustomer)) {
                     $preparedOrder['customer']['externalId'] = $order->getCustomerId();
                 }
             }
         }
+    }
 
-        $this->_helper->filterRecursive($preparedOrder);
+    /**
+     * Get order products
+     *
+     * @param object $order
+     *
+     * @return array $items
+     */
+    private function getOrderItems($order)
+    {
+        $items = [];
 
-        $this->_logger->writeDump($preparedOrder,'CreateOrder');
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getProductType() == "simple") {
+                $price = $item->getPrice();
 
-        $this->_api->ordersCreate($preparedOrder);
+                if ($price == 0) {
+                    $magentoProduct = $this->product->getById($item->getProductId());
+                    $price = $magentoProduct->getPrice();
+                }
 
-        return $this;
-    }    
+                $product = [
+                    'productId' => $item->getProductId(),
+                    'productName' => $item->getName(),
+                    'quantity' => $item->getQtyOrdered(),
+                    'initialPrice' => $price,
+                    'offer' => [
+                        'externalId' => $item->getProductId()
+                    ]
+                ];
+
+                unset($magentoProduct);
+                unset($price);
+
+                $items[] = $product;
+            }
+        }
+
+        return $items;
+    }
 
     /**
      * Get shipping code
-     * 
+     *
      * @param string $string
-     * 
+     *
      * @return string
      */
-    protected function getShippingCode($string)
+    public function getShippingCode($string)
     {
         $split = array_values(explode('_', $string));
         $length = count($split);
@@ -222,20 +253,20 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 
     /**
      * Check exists order or customer in CRM
-     * 
+     *
      * @param int $id
-     * 
+     *
      * @return boolean
      */
-    protected function existsInCrm($id, $method = 'ordersGet', $by = 'externalId')
+    private function existsInCrm($id, $method = 'ordersGet', $by = 'externalId')
     {
-        $response = $this->_api->{$method}($id, $by);
+        $response = $this->api->{$method}($id, $by);
 
         if ($response === false) {
             return;
         }
 
-        if (!$response->isSuccessful() && $response->errorMsg == $this->_api->getErrorText('errorNotFound')) {
+        if (!$response->isSuccessful() && $response->errorMsg == $this->api->getErrorText('errorNotFound')) {
             return false;
         }
 
@@ -244,14 +275,14 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 
     /**
      * Get customer by email from CRM
-     * 
+     *
      * @param string $email
-     * 
+     *
      * @return mixed
      */
-    protected function getCustomerByEmail($email)
+    private function getCustomerByEmail($email)
     {
-        $response = $this->_api->customersList(['email' => $email]);
+        $response = $this->api->customersList(['email' => $email]);
 
         if ($response === false) {
             return false;

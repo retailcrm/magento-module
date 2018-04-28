@@ -2,102 +2,100 @@
 
 namespace Retailcrm\Retailcrm\Model\History;
 
-use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
-
 class Exchange
 {
-    protected $_api;
-    protected $_config;
-    protected $_helper;
-    protected $_logger;
-    protected $_resourceConfig;
-    protected $_customerFactory;
-    protected $_quote;
-    protected $_customerRepository;
-    protected $_product;
-    protected $_shipconfig;
-    protected $_quoteManagement;
-    protected $_registry;
-    protected $_cacheTypeList;
-    protected $_order;
-    protected $_orderManagement;
-    //protected $_transaction; 
-    //protected $_invoiceService;
-    protected $_eventManager;
-    protected $_objectManager;
+    private $api;
+    private $config;
+    private $helper;
+    private $logger;
+    private $resourceConfig;
+    private $customerFactory;
+    private $quote;
+    private $customerRepository;
+    private $product;
+    private $shipconfig;
+    private $quoteManagement;
+    private $registry;
+    private $cacheTypeList;
+    private $order;
+    private $orderManagement;
+    private $eventManager;
+    private $objectManager;
+    private $orderInterface;
+    private $storeManager;
+    private $regionFactory;
 
-    public function __construct()
-    {
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $helper = $objectManager->get('\Retailcrm\Retailcrm\Helper\Data');
-        $config = $objectManager->get('\Magento\Framework\App\Config\ScopeConfigInterface');
-        $resourceConfig = $objectManager->get('Magento\Config\Model\ResourceModel\Config');
-        $customerFactory = $objectManager->get('\Magento\Customer\Model\CustomerFactory');
-        $quote = $objectManager->get('\Magento\Quote\Model\QuoteFactory');
-        $customerRepository = $objectManager->get('\Magento\Customer\Api\CustomerRepositoryInterface');
-        $product = $objectManager->get('\Magento\Catalog\Model\Product');
-        $shipconfig = $objectManager->get('\Magento\Shipping\Model\Config');
-        $quoteManagement = $objectManager->get('\Magento\Quote\Model\QuoteManagement');
-        $registry = $objectManager->get('\Magento\Framework\Registry');
-        $cacheTypeList = $objectManager->get('\Magento\Framework\App\Cache\TypeListInterface');
-        $order = $objectManager->get('\Magento\Sales\Api\Data\OrderInterface');
-        $orderManagement = $objectManager->get('\Magento\Sales\Api\OrderManagementInterface');		
-        //$invoiceService = $objectManager->get('\Magento\Sales\Model\Service\InvoiceService');
-        //$transaction = $objectManager->get('\Magento\Framework\DB\Transaction');
-        $eventManager = $objectManager->get('\Magento\Framework\Event\Manager');
-        $logger = new \Retailcrm\Retailcrm\Model\Logger\Logger($objectManager);
-
-        $this->_shipconfig = $shipconfig;
-        $this->_logger = $logger;
-        $this->_helper = $helper;
-        $this->_config = $config;
-        $this->_resourceConfig = $resourceConfig;
-        $this->_customerFactory = $customerFactory;
-        $this->_quote = $quote;
-        $this->_customerRepository = $customerRepository;
-        $this->_product = $product;
-        $this->_quoteManagement = $quoteManagement;
-        $this->_registry = $registry;
-        $this->_cacheTypeList = $cacheTypeList;
-        $this->_order = $order;
-        $this->_orderManagement = $orderManagement;
-        //$this->_transaction = $transaction;
-        //$this->_invoiceService = $invoiceService;
-        $this->_eventManager = $eventManager;
-        $this->_objectManager = $objectManager;
-
-        $url = $config->getValue('retailcrm/general/api_url');
-        $key = $config->getValue('retailcrm/general/api_key');
-        $version = $config->getValue('retailcrm/general/api_version');
-
-        if (!empty($url) && !empty($key)) {
-            $this->_api = new ApiClient($url, $key, $version);
-        }
+    public function __construct(
+        \Magento\Framework\App\ObjectManager $objectManager,
+        \Retailcrm\Retailcrm\Helper\Data $helper,
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
+        \Magento\Config\Model\ResourceModel\Config $resourceConfig,
+        \Magento\Customer\Model\CustomerFactory $customerFactory,
+        \Magento\Quote\Model\QuoteFactory $quote,
+        \Magento\Customer\Api\CustomerRepositoryInterface $customerRepository,
+        \Magento\Catalog\Model\Product $product,
+        \Magento\Shipping\Model\Config $shipconfig,
+        \Magento\Quote\Model\QuoteManagement $quoteManagement,
+        \Magento\Framework\Registry $registry,
+        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
+        \Magento\Sales\Api\Data\OrderInterface $orderInterface,
+        \Magento\Sales\Api\OrderManagementInterface $orderManagement,
+        \Magento\Framework\Event\Manager $eventManager,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
+        \Magento\Sales\Model\Order $order,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Directory\Model\RegionFactory $regionFactory,
+        \Retailcrm\Retailcrm\Helper\Proxy $api
+    ) {
+        $this->shipconfig = $shipconfig;
+        $this->logger = $logger;
+        $this->helper = $helper;
+        $this->config = $config;
+        $this->resourceConfig = $resourceConfig;
+        $this->customerFactory = $customerFactory;
+        $this->quote = $quote;
+        $this->customerRepository = $customerRepository;
+        $this->product = $product;
+        $this->quoteManagement = $quoteManagement;
+        $this->registry = $registry;
+        $this->cacheTypeList = $cacheTypeList;
+        $this->orderInterface = $orderInterface;
+        $this->orderManagement = $orderManagement;
+        $this->eventManager = $eventManager;
+        $this->objectManager = $objectManager;
+        $this->order = $order;
+        $this->storeManager = $storeManager;
+        $this->regionFactory = $regionFactory;
+        $this->api = $api;
     }
 
     /**
      * Get orders history from CRM
-     * 
+     *
      * @return boolean
      */
     public function ordersHistory()
     {
-        $this->_registry->register('RETAILCRM_HISTORY', true);
+        if (!$this->api->isConfigured()) {
+            return false;
+        }
+
+        $this->registry->register('RETAILCRM_HISTORY', true);
 
         $historyFilter = [];
         $historyOrder = [];
 
-        $historyStart = $this->_config->getValue('retailcrm/general/filter_history');
+        $historyStart = $this->config->getValue('retailcrm/general/filter_history');
 
         if ($historyStart && $historyStart > 0) {
             $historyFilter['sinceId'] = $historyStart;
         }
 
         while (true) {
-            $response = $this->_api->ordersHistory($historyFilter);
+            $response = $this->api->ordersHistory($historyFilter);
 
             if ($response === false) {
-                return;
+                return false;
             }
 
             if (!$response->isSuccessful()) {
@@ -106,7 +104,7 @@ class Exchange
 
             $orderH = isset($response['history']) ? $response['history'] : [];
 
-            if (count($orderH) == 0) {
+            if (empty($orderH)) {
                 return true;
             }
 
@@ -115,32 +113,37 @@ class Exchange
             $historyFilter['sinceId'] = $end['id'];
 
             if ($response['pagination']['totalPageCount'] == 1) {
-                $this->_resourceConfig->saveConfig('retailcrm/general/filter_history', $historyFilter['sinceId'], 'default', 0);
-                $this->_cacheTypeList->cleanType('config');
+                $this->resourceConfig->saveConfig(
+                    'retailcrm/general/filter_history',
+                    $historyFilter['sinceId'],
+                    'default',
+                    0
+                );
+                $this->cacheTypeList->cleanType('config');
 
                 $orders = self::assemblyOrder($historyOrder);
 
-                $this->_logger->writeDump($orders,'OrderHistory');
+                $this->logger->writeDump($orders, 'OrderHistory');
 
                 $this->processOrders($orders);
 
                 return true;
             }
-        }//endwhile
+        }
 
-        $this->_registry->register('RETAILCRM_HISTORY', false);
+        $this->registry->register('RETAILCRM_HISTORY', false);
     }
 
     /**
      * Process orders
-     * 
+     *
      * @param array $orders
-     * 
+     *
      * @return void
      */
     private function processOrders($orders)
     {
-        $this->_logger->writeDump($orders,'processOrders');
+        $this->logger->writeDump($orders, 'processOrders');
 
         if (!empty($orders)) {
             foreach ($orders as $order) {
@@ -155,24 +158,23 @@ class Exchange
 
     /**
      * Create new order from CRM
-     * 
+     *
      * @param array $order
-     * 
+     *
      * @return void
      */
     private function doCreate($order)
     {
-        $this->_logger->writeDump($order,'doCreate');
+        $this->logger->writeDump($order, 'doCreate');
 
-        $payments = $this->_config->getValue('retailcrm/Payment');
-        $shippings = $this->_config->getValue('retailcrm/Shipping');
+        $payments = $this->config->getValue('retailcrm/Payment');
+        $shippings = $this->config->getValue('retailcrm/Shipping');
 
-        $manager = $this->_objectManager->get('Magento\Store\Model\StoreManagerInterface');
-        $region = $this->_objectManager->get('Magento\Directory\Model\RegionFactory')->create();
-        $store = $manager->getStore();
-        $websiteId = $manager->getStore()->getWebsiteId();
+        $region = $this->regionFactory->create();
+        $store = $this->storeManager->getStore();
+        $websiteId = $this->storeManager->getStore()->getWebsiteId();
 
-        $customer = $this->_customerFactory->create();
+        $customer = $this->customerFactory->create();
         $customer->setWebsiteId($websiteId);
 
         if (isset($order['customer']['externalId'])) {
@@ -190,10 +192,10 @@ class Exchange
             try {
                 $customer->save();
             } catch (\Exception $exception) {
-                $this->_logger->writeRow($exception->getMessage());
+                $this->logger->writeRow($exception->getMessage());
             }
 
-            $this->_api->customersFixExternalIds(
+            $this->api->customersFixExternalIds(
                 [
                     [
                         'id' => $order['customer']['id'],
@@ -204,23 +206,23 @@ class Exchange
         }
 
         //Create object of quote
-        $quote = $this->_quote->create();
+        $quote = $this->quote->create();
 
         //set store for which you create quote
-        $quote->setStore($store); 
+        $quote->setStore($store);
 
         // if you have allready buyer id then you can load customer directly
-        $customer = $this->_customerRepository->getById($customer->getId());
+        $customer = $this->customerRepository->getById($customer->getId());
         $quote->setCurrency();
         $quote->assignCustomer($customer); //Assign quote to customer
 
         //add items in quote
-        foreach($order['items'] as $item){
-            $product = $this->_product->load($item['offer']['externalId']);
+        foreach ($order['items'] as $item) {
+            $product = $this->product->load($item['offer']['externalId']);
             $product->setPrice($item['initialPrice']);
             $quote->addProduct(
                 $product,
-                intval($item['quantity'])
+                (int)$item['quantity']
             );
         }
 
@@ -231,7 +233,7 @@ class Exchange
         }
 
         $orderData = [
-            'currency_id' => $manager->getStore()->getCurrentCurrency()->getCode(),
+            'currency_id' => $this->storeManager->getStore()->getCurrentCurrency()->getCode(),
             'email' => $order['email'],
             'shipping_address' => [
                 'firstname' => $order['firstName'],
@@ -267,9 +269,9 @@ class Exchange
             ->collectShippingRates()
             ->setShippingMethod($ShippingMethods);
 
-        if ($this->_api->getVersion() == 'v4') {
+        if ($this->api->getVersion() == 'v4') {
             $paymentType = $order['paymentType'];
-        } elseif ($this->_api->getVersion() == 'v5') {
+        } elseif ($this->api->getVersion() == 'v5') {
             if ($order['payments']) {
                 $paymentType = $this->getPaymentMethod($order['payments']);
             }
@@ -287,11 +289,11 @@ class Exchange
         $quote->collectTotals()->save();
 
         // Create Order From Quote
-        $magentoOrder = $this->_quoteManagement->submit($quote);
+        $magentoOrder = $this->quoteManagement->submit($quote);
 
         $increment_id = $magentoOrder->getId();
 
-        $this->_api->ordersFixExternalIds(
+        $this->api->ordersFixExternalIds(
             [
                 [
                     'id' => $order['id'],
@@ -303,16 +305,16 @@ class Exchange
 
     /**
      * Create old edited order
-     * 
+     *
      * @param array $order
-     * 
+     *
      * @return void
      */
     private function doCreateUp($order)
     {
-        $this->_logger->writeDump($order,'doCreateUp');
+        $this->logger->writeDump($order, 'doCreateUp');
 
-        $response = $this->_api->ordersGet($order['id'], $by = 'id');
+        $response = $this->api->ordersGet($order['id'], $by = 'id');
 
         if (!$response->isSuccessful()) {
             return;
@@ -322,15 +324,14 @@ class Exchange
             $order = $response['order'];
         }
 
-        $payments = $this->_config->getValue('retailcrm/Payment');
-        $shippings = $this->_config->getValue('retailcrm/Shipping');
+        $payments = $this->config->getValue('retailcrm/Payment');
+        $shippings = $this->config->getValue('retailcrm/Shipping');
 
-        $manager = $this->_objectManager->get('Magento\Store\Model\StoreManagerInterface');
-        $region = $this->_objectManager->get('Magento\Directory\Model\RegionFactory')->create();
-        $store = $manager->getStore();
-        $websiteId = $manager->getStore()->getWebsiteId();
+        $region = $this->regionFactory->create();
+        $store = $this->storeManager->getStore();
+        $websiteId = $this->storeManager->getStore()->getWebsiteId();
 
-        $customer = $this->_customerFactory->create();
+        $customer = $this->customerFactory->create();
         $customer->setWebsiteId($websiteId);
 
         if (isset($order['customer']['externalId'])) {
@@ -338,7 +339,7 @@ class Exchange
         }
 
         //Create object of quote
-        $quote = $this->_quote->create();
+        $quote = $this->quote->create();
 
         //set store for which you create quote
         $quote->setStore($store);
@@ -346,7 +347,7 @@ class Exchange
 
         // if you have allready buyer id then you can load customer directly
         if ($customer->getId()) {
-            $customer = $this->_customerRepository->getById($customer->getId());
+            $customer = $this->customerRepository->getById($customer->getId());
             $quote->assignCustomer($customer); //Assign quote to customer
         } else {
             $quote->setCustomerEmail($order['email']);
@@ -354,12 +355,12 @@ class Exchange
         }
 
         //add items in quote
-        foreach($order['items'] as $item){
-            $product = $this->_product->load($item['offer']['externalId']);
+        foreach ($order['items'] as $item) {
+            $product = $this->product->load($item['offer']['externalId']);
             $product->setPrice($item['initialPrice']);
             $quote->addProduct(
                 $product,
-                intval($item['quantity'])
+                (int)$item['quantity']
             );
         }
 
@@ -370,9 +371,9 @@ class Exchange
         }
 
         $orderData = [
-            'currency_id' => $manager->getStore()->getCurrentCurrency()->getCode(),
+            'currency_id' => $this->storeManager->getStore()->getCurrentCurrency()->getCode(),
             'email' => $order['email'],
-            'shipping_address' =>array(
+            'shipping_address' => [
                 'firstname' => $order['firstName'],
                 'lastname' => $order['lastName'],
                 'street' => $order['delivery']['address']['street'],
@@ -382,7 +383,7 @@ class Exchange
                 'postcode' => $order['delivery']['address']['index'],
                 'telephone' => $order['phone'],
                 'save_in_address_book' => 1
-            ),
+            ],
             'items'=> $products
         ];
 
@@ -406,18 +407,17 @@ class Exchange
             ->collectShippingRates()
             ->setShippingMethod($ShippingMethods);
 
-        if ($this->_api->getVersion() == 'v4') {
+        if ($this->api->getVersion() == 'v4') {
             $paymentType = $order['paymentType'];
-        } elseif ($this->_api->getVersion() == 'v5') {
+        } elseif ($this->api->getVersion() == 'v5') {
             $paymentType = $this->getPaymentMethod($order['payments'], false);
         }
 
         $quote->setPaymentMethod($payments[$paymentType]);
         $quote->setInventoryProcessed(false);
 
-
         $originalId = $order['externalId'];
-        $oldOrder = $this->_order->load($originalId);
+        $oldOrder = $this->orderInterface->load($originalId);
 
         $orderDataUp = [
             'original_increment_id'     => $oldOrder->getIncrementId(),
@@ -437,11 +437,11 @@ class Exchange
         $quote->collectTotals()->save();
 
         // Create Order From Quote
-        $magentoOrder = $this->_quoteManagement->submit($quote,$orderDataUp);
+        $magentoOrder = $this->quoteManagement->submit($quote, $orderDataUp);
         $oldOrder->setStatus('canceled')->save();
         $increment_id = $magentoOrder->getId();
 
-        $this->_api->ordersFixExternalIds(
+        $this->api->ordersFixExternalIds(
             [
                 [
                     'id' => $order['id'],
@@ -453,23 +453,23 @@ class Exchange
 
     /**
      * Edit order
-     * 
+     *
      * @param array $order
-     * 
+     *
      * @return void
      */
     private function doUpdate($order)
     {
-        $this->_logger->writeDump($order,'doUpdate');
+        $this->logger->writeDump($order, 'doUpdate');
 
-        $Status = $this->_config->getValue('retailcrm/Status');
+        $Status = $this->config->getValue('retailcrm/Status');
         $Status = array_flip(array_filter($Status));
 
-        $magentoOrder = $this->_order->load($order['externalId']);
+        $magentoOrder = $this->order->load($order['externalId']);
         $magentoOrderArr = $magentoOrder->getData();
 
-        $this->_logger->writeDump($magentoOrderArr, 'magentoOrderArr');
-        $this->_logger->writeDump($Status, 'status');
+        $this->logger->writeDump($magentoOrderArr, 'magentoOrderArr');
+        $this->logger->writeDump($Status, 'status');
 
         if ((!empty($order['order_edit'])) && ($order['order_edit'] == 1)) {
             $this->doCreateUp($order);
@@ -478,88 +478,21 @@ class Exchange
         if (!empty($order['status'])) {
             $change = $Status[$order['status']];
 
-            if($change == 'canceled'){
-                $this->_orderManagement->cancel($magentoOrderArr['entity_id']);
+            if ($change == 'canceled') {
+                $this->orderManagement->cancel($magentoOrderArr['entity_id']);
             }
 
-            if($change == 'holded'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('holded');
-                $order_status->save();
-            }
-
-            if(($change == 'complete')||($order['status']== 'complete')){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('complete');
-                $order_status->save();
-            }
-
-            if($change == 'closed'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('closed');
-                $order_status->save();
-            }
-
-            if($change == 'processing'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('processing');
-                $order_status->save();
-
-            }
-
-            if($change == 'fraud'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('fraud');
-                $order_status->save();
-            }
-
-            if($change == 'payment_review'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('payment_review');
-                $order_status->save();
-            }
-
-            if($change == 'paypal_canceled_reversal'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('paypal_canceled_reversal');
-                $order_status->save();
-            }
-
-            if($change == 'paypal_reversed'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('paypal_reversed');
-                $order_status->save();
-            }
-
-            if($change == 'pending_payment'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('pending_payment');
-                $order_status->save();
-            }
-
-            if($change == 'pending_paypal'){
-                $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                $order_status = $objectManager->get('Magento\Sales\Model\Order')->load($magentoOrder->getId());
-                $order_status->setStatus('pending_paypal');
-                $order_status->save();
-            }
+            $order_status = $this->order->load($magentoOrder->getId());
+            $order_status->setStatus($change);
+            $order_status->save();
         }
     }
 
     /**
      * Assembly orders from history
-     * 
+     *
      * @param array $orderHistory
-     * 
+     *
      * @return array $orders
      */
     public static function assemblyOrder($orderHistory)
@@ -567,6 +500,7 @@ class Exchange
         $orders = [];
 
         foreach ($orderHistory as $change) {
+            $orderId = $change['order']['id'];
             $change['order'] = self::removeEmpty($change['order']);
 
             if (isset($change['order']['items'])) {
@@ -610,10 +544,13 @@ class Exchange
 
             if (isset($change['item'])) {
                 if (isset($orders[$change['order']['id']]['items'])
-                && $orders[$change['order']['id']]['items'][$change['item']['id']]
+                    && $orders[$change['order']['id']]['items'][$change['item']['id']]
                 ) {
-                    $orders[$change['order']['id']]['items'][$change['item']['id']] = array_merge($orders[$change['order']['id']]['items'][$change['item']['id']], $change['item']);
-                } else{
+                    $orders[$change['order']['id']]['items'][$change['item']['id']] = array_merge(
+                        $orders[$change['order']['id']]['items'][$change['item']['id']],
+                        $change['item']
+                    );
+                } else {
                     $orders[$change['order']['id']]['items'][$change['item']['id']] = $change['item'];
                 }
 
@@ -631,33 +568,41 @@ class Exchange
                 if (!empty($change['newValue']) && $change['field'] == 'order_product.quantity') {
                     $orders[$change['order']['id']]['order_edit'] = 1;
                 }
-
-                if (!$orders[$change['order']['id']]['items'][$change['item']['id']]['create'] && $fields['item'][$change['field']]) {
-                    $orders[$change['order']['id']]['items'][$change['item']['id']][$fields['item'][$change['field']]] = $change['newValue'];
-                }
             } else {
-                if ((isset($fields['delivery'][$change['field']]))&&($fields['delivery'][$change['field']] == 'service')) {
-                    $orders[$change['order']['id']]['delivery']['service']['code'] = self::newValue($change['newValue']);
+                if (isset($fields['delivery'][$change['field']])
+                    && $fields['delivery'][$change['field']] == 'service'
+                ) {
+                    $orders[$orderId]['delivery']['service']['code'] = self::newValue($change['newValue']);
                 } elseif (isset($fields['delivery'][$change['field']])) {
-                    $orders[$change['order']['id']]['delivery'][$fields['delivery'][$change['field']]] = self::newValue($change['newValue']);
+                    $field = $fields['delivery'][$change['field']];
+                    $orders[$orderId]['delivery'][$field] = self::newValue($change['newValue']);
+                    unset($field);
                 } elseif (isset($fields['orderAddress'][$change['field']])) {
-                    $orders[$change['order']['id']]['delivery']['address'][$fields['orderAddress'][$change['field']]] = $change['newValue'];
+                    $field = $fields['orderAddress'][$change['field']];
+                    $orders[$orderId]['delivery']['address'][$field] = self::newValue($change['newValue']);
+                    unset($field);
                 } elseif (isset($fields['integrationDelivery'][$change['field']])) {
-                    $orders[$change['order']['id']]['delivery']['service'][$fields['integrationDelivery'][$change['field']]] = self::newValue($change['newValue']);
+                    $field = $fields['integrationDelivery'][$change['field']];
+                    $orders[$orderId]['delivery']['service'][$field] = self::newValue($change['newValue']);
+                    unset($field);
                 } elseif (isset($fields['customerContragent'][$change['field']])) {
-                    $orders[$change['order']['id']][$fields['customerContragent'][$change['field']]] = self::newValue($change['newValue']);
+                    $field = $fields['customerContragent'][$change['field']];
+                    $orders[$orderId][$field] = self::newValue($change['newValue']);
+                    unset($field);
                 } elseif (strripos($change['field'], 'custom_') !== false) {
-                    $orders[$change['order']['id']]['customFields'][str_replace('custom_', '', $change['field'])] = self::newValue($change['newValue']);
+                    $field = str_replace('custom_', '', $change['field']);
+                    $orders[$orderId]['customFields'][$field] = self::newValue($change['newValue']);
+                    unset($field);
                 } elseif (isset($fields['order'][$change['field']])) {
-                    $orders[$change['order']['id']][$fields['order'][$change['field']]] = self::newValue($change['newValue']);
+                    $orders[$orderId][$fields['order'][$change['field']]] = self::newValue($change['newValue']);
                 }
 
                 if (isset($change['created'])) {
-                    $orders[$change['order']['id']]['create'] = 1;
+                    $orders[$orderId]['create'] = 1;
                 }
 
                 if (isset($change['deleted'])) {
-                    $orders[$change['order']['id']]['deleted'] = 1;
+                    $orders[$orderId]['deleted'] = 1;
                 }
             }
         }
@@ -667,9 +612,9 @@ class Exchange
 
     /**
      * Remove empty elements
-     * 
+     *
      * @param array $inputArray
-     * 
+     *
      * @return array $outputArray
      */
     public static function removeEmpty($inputArray)
@@ -678,7 +623,7 @@ class Exchange
 
         if (!empty($inputArray)) {
             foreach ($inputArray as $key => $element) {
-                if(!empty($element) || $element === 0 || $element === '0') {
+                if (!empty($element) || $element === 0 || $element === '0') {
                     if (is_array($element)) {
                         $element = self::removeEmpty($element);
                     }
@@ -700,26 +645,26 @@ class Exchange
      */
     public static function newValue($value)
     {
-        if(isset($value['code'])) {
+        if (isset($value['code'])) {
             return $value['code'];
-        } else{
+        } else {
             return $value;
         }
     }
 
     /**
      * Get shipping methods
-     * 
+     *
      * @param string $mcode
-     * 
+     *
      * @return string
      */
     public function getAllShippingMethodsCode($mcode)
     {
-        $activeCarriers = $this->_shipconfig->getActiveCarriers();
+        $activeCarriers = $this->shipconfig->getActiveCarriers();
         $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
 
-        foreach($activeCarriers as $carrierCode => $carrierModel) {
+        foreach ($activeCarriers as $carrierCode => $carrierModel) {
             $options = [];
 
             if ($carrierMethods = $carrierModel->getAllowedMethods()) {
@@ -738,13 +683,13 @@ class Exchange
 
     /**
      * Get payment type for api v5
-     * 
+     *
      * @param array $payments
      * @param boolean $newOrder
-     * 
+     *
      * @return mixed
      */
-    protected function getPaymentMethod($payments, $newOrder = true)
+    private function getPaymentMethod($payments, $newOrder = true)
     {
         if (count($payments) == 1 || $newOrder) {
             $payment = reset($payments);

@@ -6,18 +6,18 @@ class Logger
 {
     private $logDir;
 
-    public function __construct(\Magento\Framework\ObjectManagerInterface $objectManager)
-    {
-        $directory = $objectManager->get('\Magento\Framework\Filesystem\DirectoryList');
+    public function __construct(
+        \Magento\Framework\Filesystem\DirectoryList $directory
+    ) {
         $this->logDir = $directory->getPath('log');
     }
 
     /**
      * Write data in log file
-     * 
+     *
      * @param array $data
-     * @param str $fileName
-     * 
+     * @param string $fileName
+     *
      * @return void
      */
     public function writeDump($data, $fileName)
@@ -40,10 +40,10 @@ class Logger
 
     /**
      * Write data in log file
-     * 
-     * @param str $data
-     * @param str $fileName
-     * 
+     *
+     * @param string $data
+     * @param string $fileName
+     *
      * @return void
      */
     public function writeRow($data, $fileName = 'retailcrm')
@@ -64,24 +64,24 @@ class Logger
 
     /**
      * Clear file
-     * 
-     * @param str $file
-     * 
+     *
+     * @param string $file
+     *
      * @return void
      */
-    protected function clear($file)
+    private function clear($file)
     {
         file_put_contents($file, '');
     }
 
     /**
      * Check file size
-     * 
-     * @param str $file
-     * 
+     *
+     * @param string $file
+     *
      * @return boolean
      */
-    protected function checkSize($file)
+    private function checkSize($file)
     {
         if (!file_exists($file)) {
             return true;

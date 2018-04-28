@@ -7,47 +7,39 @@ use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
 
 class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
 {
-    protected $_api;
-    protected $_config;
-    protected $_helper;
-    protected $_objectManager;
-    protected $registry;
+    private $api;
+    private $config;
+    private $registry;
 
     /**
      * Constructor
-     * 
-     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     *
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
+     * @param \Magento\Framework\Registry $registry
+     * @param ApiClient $api
      */
     public function __construct(
-        \Magento\Framework\ObjectManagerInterface $objectManager,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
-        \Magento\Framework\Registry $registry
+        \Magento\Framework\Registry $registry,
+        ApiClient $api
     ) {
-        $this->_helper = $objectManager->get('\Retailcrm\Retailcrm\Helper\Data');
-        $this->_objectManager = $objectManager;
-        $this->_config = $config;
+        $this->config = $config;
         $this->registry = $registry;
-
-        $url = $config->getValue('retailcrm/general/api_url');
-        $key = $config->getValue('retailcrm/general/api_key');
-        $apiVersion = $config->getValue('retailcrm/general/api_version');
-
-        if (!empty($url) && !empty($key)) {
-            $this->_api = new ApiClient($url, $key, $apiVersion);
-        }
+        $this->api = $api;
     }
 
     /**
      * Execute update order in CRM
-     * 
+     *
      * @param Observer $observer
-     * 
+     *
      * @return void
      */
     public function execute(Observer $observer)
     {
-        if ($this->registry->registry('RETAILCRM_HISTORY') === true) {
+        if ($this->registry->registry('RETAILCRM_HISTORY') === true
+            || !$this->api->isConfigured()
+        ) {
             return;
         }
 
@@ -56,24 +48,24 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
         if ($order) {
             $preparedOrder = [
                 'externalId' => $order->getId(),
-                'status' => $this->_config->getValue('retailcrm/Status/' . $order->getStatus())
+                'status' => $this->config->getValue('retailcrm/Status/' . $order->getStatus())
             ];
 
             if ($order->getBaseTotalDue() == 0) {
-                if ($this->_api->getVersion() == 'v4') {
+                if ($this->api->getVersion() == 'v4') {
                     $preparedOrder['paymentStatus'] = 'paid';
-                } elseif ($this->_api->getVersion() == 'v5') {
+                } elseif ($this->api->getVersion() == 'v5') {
                     $payment = [
                         'externalId' => $order->getPayment()->getId(),
                         'status' => 'paid'
                     ];
 
-                    $this->_api->ordersPaymentsEdit($payment);
+                    $this->api->ordersPaymentsEdit($payment);
                 }
             }
 
-            $this->_helper->filterRecursive($preparedOrder);
-            $this->_api->ordersEdit($preparedOrder);
+            \Retailcrm\Retailcrm\Helper\Data::filterRecursive($preparedOrder);
+            $this->api->ordersEdit($preparedOrder);
         }
     }
 }

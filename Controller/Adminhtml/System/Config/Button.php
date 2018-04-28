@@ -7,7 +7,8 @@ class Button extends \Magento\Backend\App\Action
     /**
      * @var \Psr\Log\LoggerInterface
      */
-    protected $_logger;
+    private $logger;
+    private $order;
 
     /**
      * @param \Magento\Backend\App\Action\Context $context
@@ -15,16 +16,16 @@ class Button extends \Magento\Backend\App\Action
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
-        \Psr\Log\LoggerInterface $logger
+        \Psr\Log\LoggerInterface $logger,
+        \Retailcrm\Retailcrm\Model\Order\OrderNumber $order
     ) {
-        $this->_logger = $logger;
+        $this->order = $order;
+        $this->logger = $logger;
         parent::__construct($context);
     }
 
-
     public function execute()
     {
-        $order = new \Retailcrm\Retailcrm\Model\Order\OrderNumber();
-        $order->ExportOrderNumber();
+        $this->order->exportOrderNumber();
     }
 }

@@ -6,7 +6,7 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
  
 class Attributes extends \Magento\Config\Block\System\Config\Form\Field
 {
-    protected function _getElementHtml(AbstractElement $element)
+    public function _getElementHtml(AbstractElement $element)
     {
         $values = $element->getValues();
         $html = '<table id="' . $element->getId() . '_table" class="ui_select_table" cellspacing="0">';
@@ -20,7 +20,7 @@ class Attributes extends \Magento\Config\Block\System\Config\Form\Field
                 $html .= '<li value="' . $value . '" title="' . $values[$key]['title'] . '">';
                 $html .= isset($values[$key]['label'])?$values[$key]['label']:'n/a';
                 $html .= '</li>';
-                $values[$key]['selected'] = TRUE;
+                $values[$key]['selected'] = true;
             }
         }
 

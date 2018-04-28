@@ -7,45 +7,38 @@ use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
 
 class OrderNumber extends OrderCreate
 {
-    protected $_orderRepository;
-    protected $_searchCriteriaBuilder;
-    protected $_config;
-    protected $_filterBuilder;
-    protected $_order;
-    protected $_helper;
-    protected $_api;
-    protected $_logger;
-    
-    public function __construct()
-    {
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $orderRepository = $objectManager->get('Magento\Sales\Model\OrderRepository');
-        $searchCriteriaBuilder = $objectManager->get('Magento\Framework\Api\SearchCriteriaBuilder');
-        $config = $objectManager->get('Magento\Framework\App\Config\ScopeConfigInterface');
-        $filterBuilder = $objectManager->get('Magento\Framework\Api\FilterBuilder');
-        $order = $objectManager->get('\Magento\Sales\Api\Data\OrderInterface');
-        $helper = $objectManager->get('\Retailcrm\Retailcrm\Helper\Data');
+    private $orderRepository;
+    private $searchCriteriaBuilder;
+    private $config;
+    private $filterBuilder;
+    private $order;
+    private $api;
+    private $logger;
+    private $productRepository;
 
-        $this->_orderRepository = $orderRepository;
-        $this->_searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->_config = $config;
-        $this->_filterBuilder = $filterBuilder;
-        $this->_order = $order;
-        $this->_helper = $helper;
-        $this->_logger = $objectManager->get('\Retailcrm\Retailcrm\Model\Logger\Logger');
-
-        $url = $config->getValue('retailcrm/general/api_url');
-        $key = $config->getValue('retailcrm/general/api_key');
-        $version = $config->getValue('retailcrm/general/api_version');
-
-        if (!empty($url) && !empty($key)) {
-            $this->_api = new ApiClient($url, $key, $version);
-        }
+    public function __construct(
+        \Magento\Sales\Model\OrderRepository $orderRepository,
+        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
+        \Magento\Framework\Api\FilterBuilder $filterBuilder,
+        \Magento\Sales\Api\Data\OrderInterface $order,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
+        \Magento\Catalog\Model\ProductRepository $productRepository,
+        ApiClient $api
+    ) {
+        $this->orderRepository = $orderRepository;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->config = $config;
+        $this->filterBuilder = $filterBuilder;
+        $this->order = $order;
+        $this->logger = $logger;
+        $this->productRepository = $productRepository;
+        $this->api = $api;
     }
 
-    public function ExportOrderNumber()
+    public function exportOrderNumber()
     {
-        $ordernumber = $this->_config->getValue('retailcrm/Load/number_order');
+        $ordernumber = $this->config->getValue('retailcrm/Load/number_order');
         $ordersId = explode(",", $ordernumber);
         $orders = [];
 
@@ -57,7 +50,7 @@ class OrderNumber extends OrderCreate
         unset($orders);
 
         foreach ($chunked as $chunk) {
-            $this->_api->ordersUpload($chunk);
+            $this->api->ordersUpload($chunk);
             time_nanosleep(0, 250000000);
         }
 
@@ -68,7 +61,7 @@ class OrderNumber extends OrderCreate
 
     public function prepareOrder($id)
     {
-        $magentoOrder = $this->_order->load($id);
+        $magentoOrder = $this->order->load($id);
 
         $items = [];
         $addressObj = $magentoOrder->getBillingAddress();
@@ -77,11 +70,9 @@ class OrderNumber extends OrderCreate
             if ($item->getProductType() == "simple") {
                 $price = $item->getPrice();
 
-                if ($price == 0){
-                    $om = \Magento\Framework\App\ObjectManager::getInstance();
-                    $omproduct = $om->get('Magento\Catalog\Model\ProductRepository')
-                        ->getById($item->getProductId());
-                    $price = $omproduct->getPrice();
+                if ($price == 0) {
+                    $magentoProduct = $this->productRepository->getById($item->getProductId());
+                    $price = $magentoProduct->getPrice();
                 }
 
                 $product = [
@@ -94,8 +85,7 @@ class OrderNumber extends OrderCreate
                     ]
                 ];
 
-                unset($om);
-                unset($omproduct);
+                unset($magentoProduct);
                 unset($price);
 
                 $items[] = $product;
@@ -114,12 +104,14 @@ class OrderNumber extends OrderCreate
             'patronymic' => $magentoOrder->getCustomerMiddlename(),
             'email' => $magentoOrder->getCustomerEmail(),
             'phone' => $addressObj->getTelephone(),
-            'paymentType' => $this->_config->getValue('retailcrm/Payment/'.$magentoOrder->getPayment()->getMethodInstance()->getCode()),
-            'status' => $this->_config->getValue('retailcrm/Status/'.$magentoOrder->getStatus()),
+            'paymentType' => $this->config->getValue(
+                'retailcrm/Payment/' . $magentoOrder->getPayment()->getMethodInstance()->getCode()
+            ),
+            'status' => $this->config->getValue('retailcrm/Status/'.$magentoOrder->getStatus()),
             'discount' => abs($magentoOrder->getDiscountAmount()),
             'items' => $items,
             'delivery' => [
-                'code' => $this->_config->getValue('retailcrm/Shipping/'.$ship),
+                'code' => $this->config->getValue('retailcrm/Shipping/'.$ship),
                 'cost' => $magentoOrder->getShippingAmount(),
                 'address' => [
                     'index' => $addressObj->getData('postcode'),
@@ -130,27 +122,27 @@ class OrderNumber extends OrderCreate
                     'text' => trim(
                         ',',
                         implode(
-                        ',',
-                        [
-                            $addressObj->getData('postcode'),
-                            $addressObj->getData('city'),
-                            $addressObj->getData('street'),
-                        ]
+                            ',',
+                            [
+                                $addressObj->getData('postcode'),
+                                $addressObj->getData('city'),
+                                $addressObj->getData('street'),
+                            ]
                         )
                     )
                 ]
             ]
         ];
 
-        if (trim($preparedOrder['delivery']['code']) == ''){
+        if (trim($preparedOrder['delivery']['code']) == '') {
             unset($preparedOrder['delivery']['code']);
         }
 
-        if (trim($preparedOrder['paymentType']) == ''){
+        if (trim($preparedOrder['paymentType']) == '') {
             unset($preparedOrder['paymentType']);
         }
 
-        if (trim($preparedOrder['status']) == ''){
+        if (trim($preparedOrder['status']) == '') {
             unset($preparedOrder['status']);
         }
 
@@ -158,8 +150,8 @@ class OrderNumber extends OrderCreate
             $preparedOrder['customer']['externalId'] = $magentoOrder->getCustomerId();
         }
 
-        $this->_logger->writeDump($preparedOrder,'OrderNumber');
+        $this->logger->writeDump($preparedOrder, 'OrderNumber');
 
-        return $this->_helper->filterRecursive($preparedOrder);
+        return \Retailcrm\Retailcrm\Helper\Data::filterRecursive($preparedOrder);
     }
 }

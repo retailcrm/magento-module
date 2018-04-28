@@ -2,18 +2,21 @@
 
 namespace Retailcrm\Retailcrm\Cron;
 
-class Icml {
-    protected $_logger;
+class Icml
+{
+    private $logger;
+    private $icml;
 
-    public function __construct() {
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $logger = new \Retailcrm\Retailcrm\Model\Logger\Logger($objectManager);
-        $this->_logger = $logger;
+    public function __construct(
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
+        \Retailcrm\Retailcrm\Model\Icml\Icml $icml
+    ) {
+        $this->logger = $logger;
+        $this->icml = $icml;
     }
-	
+
     public function execute()
     {
-        $Icml = new \Retailcrm\Retailcrm\Model\Icml\Icml();
-        $Icml->generate();
+        $this->icml->generate();
     }
 }

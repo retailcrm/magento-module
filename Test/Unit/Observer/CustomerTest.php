@@ -4,14 +4,12 @@ namespace Retailcrm\Retailcrm\Test\Unit\Observer;
 
 class CustomerTest extends \PHPUnit\Framework\TestCase
 {
-    protected $mockApi;
-    protected $mockResponse;
-    protected $config;
-    protected $registry;
-    protected $mockObserver;
-    protected $mockEvent;
-    protected $objectManager;
-    protected $mockCustomer;
+    private $mockApi;
+    private $mockResponse;
+    private $registry;
+    private $mockObserver;
+    private $mockEvent;
+    private $mockCustomer;
 
     public function setUp()
     {
@@ -28,9 +26,6 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->setMethods(['isSuccessful'])
             ->getMock();
 
-        $this->config = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-            ->getMockForAbstractClass();
-
         $this->registry = $this->getMockBuilder(\Magento\Framework\Registry::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -44,9 +39,6 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->setMethods(['getCustomer'])
             ->getMock();
 
-        $this->objectManager = $this->getMockBuilder(\Magento\Framework\ObjectManagerInterface::class)
-            ->getMockForAbstractClass();
-
         $this->mockCustomer = $this->getMockBuilder(\Magento\Customer\Model\Customer::class)
             ->disableOriginalConstructor()
             ->setMethods([
@@ -59,13 +51,12 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->getMock();
 
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\Customer(
-            $this->objectManager,
-            $this->config,
-            $this->registry
+            $this->registry,
+            $this->mockApi
         );
 
         $reflection = new \ReflectionClass($this->unit);
-        $reflection_property = $reflection->getProperty('_api');
+        $reflection_property = $reflection->getProperty('api');
         $reflection_property->setAccessible(true);
         $reflection_property->setValue($this->unit, $this->mockApi);
     }
@@ -131,10 +122,10 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get test customer data
-     * 
+     *
      * @return array
      */
-    protected function getAfterSaveCustomerTestData()
+    private function getAfterSaveCustomerTestData()
     {
         return [
             'id' => 1,

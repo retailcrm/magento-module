@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
  
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">    
-   <type name="Magento\Framework\Console\CommandList">
-    <arguments>
-        <argument name="commands" xsi:type="array">
-            <item name="retailcrm_command" xsi:type="object">Retailcrm\Retailcrm\Console\Command\Command</item>
-        </argument>
-    </arguments>
-</type>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Retailcrm\Retailcrm\Helper\Proxy">
+        <arguments>
+            <argument name="pathUrl" xsi:type="const">Retailcrm\Retailcrm\Api\ConfigManagerInterface::URL_PATH</argument>
+            <argument name="pathKey" xsi:type="const">Retailcrm\Retailcrm\Api\ConfigManagerInterface::KEY_PATH</argument>
+            <argument name="pathVersion" xsi:type="const">Retailcrm\Retailcrm\Api\ConfigManagerInterface::API_VERSION_PATH</argument>
+        </arguments>
+    </type>
 </config>

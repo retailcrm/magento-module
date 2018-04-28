@@ -6,18 +6,7 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
     /**
      * @var string
      */
-    protected $_template = 'Retailcrm_Retailcrm::system/config/button.phtml';
-
-    /**
-     * @param \Magento\Backend\Block\Template\Context $context
-     * @param array $data
-     */
-    public function __construct(
-        \Magento\Backend\Block\Template\Context $context,
-        array $data = []
-    ) {
-        parent::__construct($context, $data);
-    }
+    public $_template = 'Retailcrm_Retailcrm::system/config/button.phtml';
 
     /**
      * Remove scope label
@@ -39,7 +28,7 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    public function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
         return $this->_toHtml();
     }

@@ -4,20 +4,20 @@ namespace Retailcrm\Retailcrm\Cron;
 
 class OrderHistory
 {
-    protected $_logger;
+    private $logger;
+    private $history;
 
-    public function __construct()
-    {
-        $om = \Magento\Framework\App\ObjectManager::getInstance();
-        $logger = new \Retailcrm\Retailcrm\Model\Logger\Logger($om);
-        $this->_logger = $logger;
+    public function __construct(
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
+        \Retailcrm\Retailcrm\Model\History\Exchange $history
+    ) {
+        $this->logger = $logger;
+        $this->history = $history;
     }
 
     public function execute()
     {
-        $history = new \Retailcrm\Retailcrm\Model\History\Exchange();
-        $history->ordersHistory();
-
-        $this->_logger->writeRow('Cron Works: OrderHistory');
+        $this->history->ordersHistory();
+        $this->logger->writeRow('Cron Works: OrderHistory');
     }
 }

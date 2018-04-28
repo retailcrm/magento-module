@@ -4,17 +4,17 @@ namespace Retailcrm\Retailcrm\Test\Unit\Observer;
 
 class OrderUpdateTest extends \PHPUnit\Framework\TestCase
 {
-    protected $unit;
-    protected $objectManager;
-    protected $config;
-    protected $mockApi;
-    protected $mockObserver;
-    protected $mockEvent;
-    protected $mockOrder;
-    protected $mockPayment;
-    protected $registry;
+    private $unit;
+    private $objectManager;
+    private $config;
+    private $mockApi;
+    private $mockObserver;
+    private $mockEvent;
+    private $mockOrder;
+    private $mockPayment;
+    private $registry;
 
-    protected function setUp()
+    public function setUp()
     {
         $this->mockApi = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Proxy::class)
             ->disableOriginalConstructor()
@@ -37,10 +37,6 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
         $this->objectManager = $this->getMockBuilder(\Magento\Framework\ObjectManagerInterface::class)
             ->getMockForAbstractClass();
 
-        $helper = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Data::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
         $this->mockOrder = $this->getMockBuilder(\Magento\Sales\Order::class)
             ->setMethods([
                 'getId',
@@ -55,12 +51,6 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        // mock Object Manager
-        $this->objectManager->expects($this->any())
-            ->method('get')
-            ->with('\Retailcrm\Retailcrm\Helper\Data')
-            ->willReturn($helper);
-
         $this->config = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
             ->getMockForAbstractClass();
 
@@ -69,15 +59,10 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->getMock();
 
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\OrderUpdate(
-            $this->objectManager,
             $this->config,
-            $this->registry
+            $this->registry,
+            $this->mockApi
         );
-
-        $reflection = new \ReflectionClass($this->unit);
-        $reflection_property = $reflection->getProperty('_api');
-        $reflection_property->setAccessible(true);
-        $reflection_property->setValue($this->unit, $this->mockApi);
     }
 
     /**
@@ -133,10 +118,9 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get test order data
-     * 
      * @return array $testOrderData
      */
-    protected function getAfterUpdateOrderTestData()
+    private function getAfterUpdateOrderTestData()
     {
         $testOrderData = [
             'order.id' => 1,

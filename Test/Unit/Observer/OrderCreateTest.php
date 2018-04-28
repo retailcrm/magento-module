@@ -7,24 +7,23 @@ namespace Retailcrm\Retailcrm\Test\Unit\Observer;
  */
 class OrderCreateTest extends \PHPUnit\Framework\TestCase
 {
-    protected $objectManager;
-    protected $_config;
-    protected $_unit;
-    protected $_mockEvent;
-    protected $_mockObserver;
-    protected $_registry;
-    protected $_mockApi;
-    protected $_mockOrder;
-    protected $_mockItem;
-    protected $_mockStore;
-    protected $_mockBillingAddress;
-    protected $_mockResponse;
-    protected $_mockPayment;
-    protected $_mockPaymentMethod;
+    private $config;
+    private $unit;
+    private $mockEvent;
+    private $mockObserver;
+    private $registry;
+    private $mockApi;
+    private $mockOrder;
+    private $mockItem;
+    private $mockStore;
+    private $mockBillingAddress;
+    private $mockResponse;
+    private $mockPayment;
+    private $mockPaymentMethod;
 
-    protected function setUp()
+    public function setUp()
     {
-        $this->_mockApi = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Proxy::class)
+        $this->mockApi = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Proxy::class)
             ->disableOriginalConstructor()
             ->setMethods([
                 'ordersGet',
@@ -36,39 +35,27 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ])
             ->getMock();
 
-        $this->_mockObserver = $this->getMockBuilder(\Magento\Framework\Event\Observer::class)
+        $this->mockObserver = $this->getMockBuilder(\Magento\Framework\Event\Observer::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->_mockEvent = $this->getMockBuilder(\Magento\Framework\Event::class)
+        $this->mockEvent = $this->getMockBuilder(\Magento\Framework\Event::class)
             ->disableOriginalConstructor()
             ->setMethods(['getOrder'])
             ->getMock();
-
-        $this->objectManager = $this->getMockBuilder(\Magento\Framework\ObjectManagerInterface::class)
-            ->getMockForAbstractClass();
-
-        // mock Object Manager
-        $this->objectManager->expects($this->any())
-            ->method('get')
-            ->with($this->logicalOr(
-                $this->equalTo('\Retailcrm\Retailcrm\Helper\Data'),
-                $this->equalTo('\Retailcrm\Retailcrm\Model\Logger\Logger')
-            ))
-            ->will($this->returnCallback([$this, 'getCallbackDataClasses']));
         
-        $this->_config = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
+        $this->config = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
             ->getMockForAbstractClass();
 
-        $this->_logger = $this->getMockBuilder(\Retailcrm\Retailcrm\Model\Logger\Logger::class)
+        $this->logger = $this->getMockBuilder(\Retailcrm\Retailcrm\Model\Logger\Logger::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->_registry = $this->getMockBuilder(\Magento\Framework\Registry::class)
+        $this->registry = $this->getMockBuilder(\Magento\Framework\Registry::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->_mockOrder = $this->getMockBuilder(\Magento\Sales\Order::class)
+        $this->mockOrder = $this->getMockBuilder(\Magento\Sales\Order::class)
             ->setMethods([
                 'getId',
                 'getRealOrderId',
@@ -91,16 +78,16 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ])
             ->getMock();
 
-        $this->_mockPayment = $this->getMockBuilder(\Magento\Sales\Model\Order\Payment::class)
+        $this->mockPayment = $this->getMockBuilder(\Magento\Sales\Model\Order\Payment::class)
             ->setMethods(['getMethodInstance'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->_mockPaymentMethod = $this->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+        $this->mockPaymentMethod = $this->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
 
-        $this->_mockItem = $this->getMockBuilder(\Magento\Sales\Model\Order\Item::class)
+        $this->mockItem = $this->getMockBuilder(\Magento\Sales\Model\Order\Item::class)
             ->disableOriginalConstructor()
             ->setMethods([
                 'getPrice',
@@ -111,31 +98,32 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ])
             ->getMock();
 
-        $this->_mockStore = $this->getMockBuilder(\Magento\Store\Model\Store::class)
+        $this->mockStore = $this->getMockBuilder(\Magento\Store\Model\Store::class)
             ->disableOriginalConstructor()
             ->setMethods(['getCode'])
             ->getMock();
 
-        $this->_mockBillingAddress = $this->getMockBuilder(\Magento\Customer\Model\Address\AddressModelInterface::class)
+        $this->mockBillingAddress = $this->getMockBuilder(\Magento\Customer\Model\Address\AddressModelInterface::class)
             ->disableOriginalConstructor()
             ->setMethods(['getTelephone', 'getData'])
             ->getMockForAbstractClass();
 
-        $this->_mockResponse = $this->getMockBuilder(\RetailCrm\Response\ApiResponse::class)
+        $this->mockResponse = $this->getMockBuilder(\RetailCrm\Response\ApiResponse::class)
             ->disableOriginalConstructor()
             ->setMethods(['isSuccessful'])
             ->getMock();
 
-        $this->_unit = new \Retailcrm\Retailcrm\Model\Observer\OrderCreate(
-            $this->objectManager,
-            $this->_config,
-            $this->_registry
-        );
+        $product = $this->getMockBuilder(\Magento\Catalog\Model\ProductRepository::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        $reflection = new \ReflectionClass($this->_unit);
-        $reflection_property = $reflection->getProperty('_api');
-        $reflection_property->setAccessible(true);
-        $reflection_property->setValue($this->_unit, $this->_mockApi);
+        $this->unit = new \Retailcrm\Retailcrm\Model\Observer\OrderCreate(
+            $this->config,
+            $this->registry,
+            $this->logger,
+            $product,
+            $this->mockApi
+        );
     }
 
     /**
@@ -154,43 +142,43 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
         $testData = $this->getAfterSaveOrderTestData();
 
         // mock Response
-        $this->_mockResponse->expects($this->any())
+        $this->mockResponse->expects($this->any())
             ->method('isSuccessful')
             ->willReturn($isSuccessful);
 
-        $this->_mockResponse->errorMsg = $errorMsg;
+        $this->mockResponse->errorMsg = $errorMsg;
 
         // mock API
-        $this->_mockApi->expects($this->any())
+        $this->mockApi->expects($this->any())
             ->method('ordersGet')
-            ->willReturn($this->_mockResponse);
+            ->willReturn($this->mockResponse);
 
-        $this->_mockApi->expects($this->any())
+        $this->mockApi->expects($this->any())
             ->method('ordersCreate')
-            ->willReturn($this->_mockResponse);
+            ->willReturn($this->mockResponse);
 
-        $this->_mockApi->expects($this->any())
+        $this->mockApi->expects($this->any())
             ->method('customersGet')
-            ->willReturn($this->_mockResponse);
+            ->willReturn($this->mockResponse);
 
-        $this->_mockApi->expects($this->any())
+        $this->mockApi->expects($this->any())
             ->method('customersCreate')
-            ->willReturn($this->_mockResponse);
+            ->willReturn($this->mockResponse);
 
-        $this->_mockApi->expects($this->any())
+        $this->mockApi->expects($this->any())
             ->method('customersList')
-            ->willReturn($this->_mockResponse);
+            ->willReturn($this->mockResponse);
 
-        $this->_mockApi->expects($this->any())
+        $this->mockApi->expects($this->any())
             ->method('getVersion')
             ->willReturn($apiVersion);
 
         // billing address mock set data
-        $this->_mockBillingAddress->expects($this->any())
+        $this->mockBillingAddress->expects($this->any())
             ->method('getTelephone')
             ->willReturn($testData['order.billingAddress']['telephone']);
 
-        $this->_mockBillingAddress->expects($this->any())
+        $this->mockBillingAddress->expects($this->any())
             ->method('getData')
             ->with($this->logicalOr(
                 $this->equalTo('city'),
@@ -202,121 +190,121 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ->will($this->returnCallback([$this, 'getCallbackDataAddress']));
 
         // store mock set data
-        $this->_mockStore->expects($this->any())
+        $this->mockStore->expects($this->any())
             ->method('getCode')
             ->willReturn(1);
 
         // order item mock set data
-        $this->_mockItem->expects($this->any())
+        $this->mockItem->expects($this->any())
             ->method('getProductType')
             ->willReturn('simple');
 
-        $this->_mockItem->expects($this->any())
+        $this->mockItem->expects($this->any())
             ->method('getPrice')
             ->willReturn(999.99);
 
-        $this->_mockItem->expects($this->any())
+        $this->mockItem->expects($this->any())
             ->method('getProductId')
             ->willReturn(10);
 
-        $this->_mockItem->expects($this->any())
+        $this->mockItem->expects($this->any())
             ->method('getName')
             ->willReturn('Product name');
 
-        $this->_mockItem->expects($this->any())
+        $this->mockItem->expects($this->any())
             ->method('getQtyOrdered')
             ->willReturn(3);
 
         // order mock set data
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getId')
             ->willReturn($testData['order.id']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getBillingAddress')
-            ->willReturn($this->_mockBillingAddress);
+            ->willReturn($this->mockBillingAddress);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getShippingMethod')
             ->willReturn($testData['order.shippingMethod']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getStore')
-            ->willReturn($this->_mockStore);
+            ->willReturn($this->mockStore);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getRealOrderId')
             ->willReturn($testData['order.realOrderId']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCreatedAt')
             ->willReturn(date('Y-m-d H:i:s'));
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCustomerLastname')
             ->willReturn($testData['order.customerLastname']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCustomerFirstname')
             ->willReturn($testData['order.customerFirstname']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCustomerMiddlename')
             ->willReturn($testData['order.customerMiddlename']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCustomerEmail')
             ->willReturn($testData['order.customerEmail']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getAllItems')
             ->willReturn($testData['order.allItems']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getStatus')
             ->willReturn($testData['order.status']);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCustomerIsGuest')
             ->willReturn($customerIsGuest);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getCustomerId')
             ->willReturn(1);
 
-        $this->_mockOrder->expects($this->any())
+        $this->mockOrder->expects($this->any())
             ->method('getPayment')
-            ->willReturn($this->_mockPayment);
+            ->willReturn($this->mockPayment);
 
         // mock Payment Method
-        $this->_mockPaymentMethod->expects($this->any())
+        $this->mockPaymentMethod->expects($this->any())
             ->method('getCode')
             ->willReturn($testData['order.paymentMethod']);
 
         // mock Payment
-        $this->_mockPayment->expects($this->any())
+        $this->mockPayment->expects($this->any())
             ->method('getMethodInstance')
-            ->willReturn($this->_mockPaymentMethod);
+            ->willReturn($this->mockPaymentMethod);
 
         // mock Event
-        $this->_mockEvent->expects($this->once())
+        $this->mockEvent->expects($this->once())
             ->method('getOrder')
-            ->willReturn($this->_mockOrder);
+            ->willReturn($this->mockOrder);
 
         // mock Observer
-        $this->_mockObserver->expects($this->once())
+        $this->mockObserver->expects($this->once())
             ->method('getEvent')
-            ->willReturn($this->_mockEvent);
+            ->willReturn($this->mockEvent);
 
-        $this->_unit->execute($this->_mockObserver);
+        $this->unit->execute($this->mockObserver);
     }
 
     /**
      * Get test order data
-     * 
+     *
      * @return array $testOrderData
      */
-    protected function getAfterSaveOrderTestData()
+    private function getAfterSaveOrderTestData()
     {
         $testOrderData = [
             'order.id' => 1,
@@ -332,7 +320,7 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
                     'country_id' => 'RU'
                 ]
             ],
-            'order.allItems' => [$this->_mockItem],
+            'order.allItems' => [$this->mockItem],
             'order.shippingMethod' => 'flatrate_flatrate',
             'order.paymentMethod' => 'checkmo',
             'order.customerLastname' => 'Test',
