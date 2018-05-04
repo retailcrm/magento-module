@@ -7,7 +7,7 @@ fi
 MAGE_ROOT=$TRAVIS_BUILD_DIR/../magento2
 
 create_db() {
-	mysqladmin create magento_test --user="$DB_USER" --password="$DB_PASS"
+	mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"
 }
 
 magento_clone() {
