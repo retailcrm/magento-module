@@ -26,11 +26,11 @@ magento_install() {
 		--db-host="$DB_HOST" \
 		--db-name="$DB_NAME" \
 		--db-user="$DB_USER" \
-		--db-password="$DB_PASS" \
 		--admin-firstname="$ADMIN_FIRSTNAME" \
 		--admin-lastname="$ADMIN_LASTNAME" \
 		--admin-email="$ADMIN_EMAIL" \
 		--admin-user="$ADMIN_USER" \
+		--admin-password="$ADMIN_PASS" \
 		--language="en_US" \
 		--currency="USD" \
 		--timezone="Europe/Moscow"
