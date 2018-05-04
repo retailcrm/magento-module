@@ -10,6 +10,7 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
     private $mockObserver;
     private $mockEvent;
     private $mockCustomer;
+    private $unit;
 
     public function setUp()
     {
@@ -17,7 +18,8 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->setMethods([
                 'customersEdit',
-                'customersCreate'
+                'customersCreate',
+                'isConfigured'
             ])
             ->getMock();
 
@@ -54,19 +56,16 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             $this->registry,
             $this->mockApi
         );
-
-        $reflection = new \ReflectionClass($this->unit);
-        $reflection_property = $reflection->getProperty('api');
-        $reflection_property->setAccessible(true);
-        $reflection_property->setValue($this->unit, $this->mockApi);
     }
 
     /**
      * @param boolean $isSuccessful
+     * @param boolean $isConfigured
      * @dataProvider dataProviderCustomer
      */
     public function testExecute(
-        $isSuccessful
+        $isSuccessful,
+        $isConfigured
     ) {
         $testData = $this->getAfterSaveCustomerTestData();
 
@@ -86,38 +85,54 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->method('customersCreate')
             ->willReturn($this->mockResponse);
 
+        $this->mockApi->expects($this->any())
+            ->method('isConfigured')
+            ->willReturn($isConfigured);
+
         // mock Customer
-        $this->mockCustomer->expects($this->once())
+        $this->mockCustomer->expects($this->any())
             ->method('getId')
             ->willReturn($testData['id']);
 
-        $this->mockCustomer->expects($this->once())
+        $this->mockCustomer->expects($this->any())
             ->method('getEmail')
             ->willReturn($testData['email']);
 
-        $this->mockCustomer->expects($this->once())
+        $this->mockCustomer->expects($this->any())
             ->method('getFirstname')
             ->willReturn($testData['firstname']);
 
-        $this->mockCustomer->expects($this->once())
+        $this->mockCustomer->expects($this->any())
             ->method('getMiddlename')
             ->willReturn($testData['middlename']);
 
-        $this->mockCustomer->expects($this->once())
+        $this->mockCustomer->expects($this->any())
             ->method('getLastname')
             ->willReturn($testData['lastname']);
 
         // mock Event
-        $this->mockEvent->expects($this->once())
+        $this->mockEvent->expects($this->any())
             ->method('getCustomer')
             ->willReturn($this->mockCustomer);
 
         // mock Observer
-        $this->mockObserver->expects($this->once())
+        $this->mockObserver->expects($this->any())
             ->method('getEvent')
             ->willReturn($this->mockEvent);
 
         $this->unit->execute($this->mockObserver);
+
+        if ($isConfigured) {
+            $this->assertNotEmpty($this->unit->getCustomer());
+            $this->assertArrayHasKey('externalId', $this->unit->getCustomer());
+            $this->assertArrayHasKey('email', $this->unit->getCustomer());
+            $this->assertArrayHasKey('firstName', $this->unit->getCustomer());
+            $this->assertArrayHasKey('lastName', $this->unit->getCustomer());
+            $this->assertArrayHasKey('patronymic', $this->unit->getCustomer());
+            $this->assertArrayHasKey('createdAt', $this->unit->getCustomer());
+        } else {
+            $this->assertEmpty($this->unit->getCustomer());
+        }
     }
 
     /**
@@ -140,10 +155,20 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
     {
         return [
             [
-                'is_successful' => true
+                'is_successful' => true,
+                'is_configured' => true
             ],
             [
-                'is_successful' => false
+                'is_successful' => false,
+                'is_configured' => false
+            ],
+            [
+                'is_successful' => false,
+                'is_configured' => true
+            ],
+            [
+                'is_successful' => true,
+                'is_configured' => false
             ]
         ];
     }

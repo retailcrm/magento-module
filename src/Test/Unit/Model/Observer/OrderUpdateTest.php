@@ -21,7 +21,8 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->setMethods([
                 'ordersEdit',
                 'ordersPaymentsEdit',
-                'getVersion'
+                'getVersion',
+                'isConfigured'
             ])
             ->getMock();
 
@@ -68,11 +69,13 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
     /**
      * @param int $getBaseTotalDue
      * @param string $apiVersion
+     * @param boolean $isConfigured
      * @dataProvider dataProviderOrderUpdate
      */
     public function testExecute(
         $getBaseTotalDue,
-        $apiVersion
+        $apiVersion,
+        $isConfigured
     ) {
         $testData = $this->getAfterUpdateOrderTestData();
 
@@ -82,15 +85,15 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->willReturn(1);
 
         // mock Order
-        $this->mockOrder->expects($this->once())
+        $this->mockOrder->expects($this->any())
             ->method('getId')
             ->willReturn($testData['order.id']);
 
-        $this->mockOrder->expects($this->once())
+        $this->mockOrder->expects($this->any())
             ->method('getStatus')
             ->willReturn($testData['order.status']);
 
-        $this->mockOrder->expects($this->once())
+        $this->mockOrder->expects($this->any())
             ->method('getBaseTotalDue')
             ->willReturn($getBaseTotalDue);
 
@@ -103,17 +106,29 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->method('getVersion')
             ->willReturn($apiVersion);
 
+        $this->mockApi->expects($this->any())
+            ->method('isConfigured')
+            ->willReturn($isConfigured);
+
         // mock Event
-        $this->mockEvent->expects($this->once())
+        $this->mockEvent->expects($this->any())
             ->method('getOrder')
             ->willReturn($this->mockOrder);
 
         // mock Observer
-        $this->mockObserver->expects($this->once())
+        $this->mockObserver->expects($this->any())
             ->method('getEvent')
             ->willReturn($this->mockEvent);
 
         $this->unit->execute($this->mockObserver);
+
+        if ($isConfigured) {
+            $this->assertNotEmpty($this->unit->getOrder());
+            $this->assertArrayHasKey('externalId', $this->unit->getOrder());
+            $this->assertArrayHasKey('status', $this->unit->getOrder());
+        } else {
+            $this->assertEmpty($this->unit->getOrder());
+        }
     }
 
     /**
@@ -136,19 +151,23 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
         return [
             [
                 'get_base_total_due' => 0,
-                'api_version' => 'v4'
+                'api_version' => 'v4',
+                'is_configured' => false
             ],
             [
                 'get_base_total_due' => 1,
-                'api_version' => 'v4'
+                'api_version' => 'v4',
+                'is_configured' => true
             ],
             [
                 'get_base_total_due' => 0,
-                'api_version' => 'v5'
+                'api_version' => 'v5',
+                'is_configured' => true
             ],
             [
                 'get_base_total_due' => 1,
-                'api_version' => 'v5'
+                'api_version' => 'v5',
+                'is_configured' => false
             ]
         ];
     }

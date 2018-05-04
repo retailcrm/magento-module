@@ -10,6 +10,7 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
     private $api;
     private $config;
     private $registry;
+    private $order;
 
     /**
      * Constructor
@@ -26,6 +27,7 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
         $this->config = $config;
         $this->registry = $registry;
         $this->api = $api;
+        $this->order = [];
     }
 
     /**
@@ -46,14 +48,14 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
         $order = $observer->getEvent()->getOrder();
 
         if ($order) {
-            $preparedOrder = [
+            $this->order = [
                 'externalId' => $order->getId(),
                 'status' => $this->config->getValue('retailcrm/Status/' . $order->getStatus())
             ];
 
             if ($order->getBaseTotalDue() == 0) {
                 if ($this->api->getVersion() == 'v4') {
-                    $preparedOrder['paymentStatus'] = 'paid';
+                    $this->order['paymentStatus'] = 'paid';
                 } elseif ($this->api->getVersion() == 'v5') {
                     $payment = [
                         'externalId' => $order->getPayment()->getId(),
@@ -64,8 +66,16 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
                 }
             }
 
-            \Retailcrm\Retailcrm\Helper\Data::filterRecursive($preparedOrder);
-            $this->api->ordersEdit($preparedOrder);
+            \Retailcrm\Retailcrm\Helper\Data::filterRecursive($this->order);
+            $this->api->ordersEdit($this->order);
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOrder()
+    {
+        return $this->order;
     }
 }

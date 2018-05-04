@@ -45,14 +45,14 @@ class Shipping extends \Magento\Config\Block\System\Config\Form\Field
                 return $htmlError;
             }
 
-            foreach (array_keys($deliveryMethods) as $k => $delivery) {
+            foreach ($deliveryMethods as $code => $delivery) {
                 $html .= '<table id="' . $element->getId() . '_table">';
-                $html .= '<tr id="row_retailcrm_shipping_'.$delivery.'">';
-                $html .= '<td class="label">'.$delivery.'</td>';
+                $html .= '<tr id="row_retailcrm_shipping_'. $code . '">';
+                $html .= '<td class="label">' . $delivery->getConfigData('title') . '</td>';
                 $html .= '<td>';
-                $html .= '<select id="1" name="groups[Shipping][fields]['.$delivery.'][value]">';
+                $html .= '<select id="1" name="groups[Shipping][fields][' . $code . '][value]">';
 
-                $selected = $this->config->getValue('retailcrm/Shipping/'.$delivery);
+                $selected = $this->config->getValue('retailcrm/Shipping/' . $code);
 
                 foreach ($deliveryTypes as $k => $value) {
                     if (!empty($selected) && $selected == $value['code']) {

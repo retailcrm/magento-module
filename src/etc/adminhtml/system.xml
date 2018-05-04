@@ -33,8 +33,8 @@
             <group id="Misc" translate="label" type="text" sortOrder="20" showInDefault="2" showInWebsite="0" showInStore="0">
                 <label>Misc</label>
                 <field id="attributes_to_export_into_icml" translate="label" type="multiselect" sortOrder="2" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>attributes to export into icml</label>
-                    <comment>attributes to export into icml</comment>
+                    <label>Attributes to export into icml</label>
+                    <comment>Attributes to export into icml</comment>
            
                      <source_model>Retailcrm\Retailcrm\Model\Setting\Attribute</source_model>
                      <!-- 

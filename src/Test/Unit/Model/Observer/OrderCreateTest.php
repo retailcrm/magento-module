@@ -20,6 +20,7 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
     private $mockResponse;
     private $mockPayment;
     private $mockPaymentMethod;
+    private $logger;
 
     public function setUp()
     {
@@ -31,7 +32,8 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
                 'customersGet',
                 'customersCreate',
                 'customersList',
-                'getVersion'
+                'getVersion',
+                'isConfigured'
             ])
             ->getMock();
 
@@ -131,13 +133,15 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
      * @param string $errorMsg
      * @param int $customerIsGuest
      * @param string $apiVersion
+     * @param boolean $isConfigured
      * @dataProvider dataProviderOrderCreate
      */
     public function testExecute(
         $isSuccessful,
         $errorMsg,
         $customerIsGuest,
-        $apiVersion
+        $apiVersion,
+        $isConfigured
     ) {
         $testData = $this->getAfterSaveOrderTestData();
 
@@ -172,6 +176,10 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
         $this->mockApi->expects($this->any())
             ->method('getVersion')
             ->willReturn($apiVersion);
+
+        $this->mockApi->expects($this->any())
+            ->method('isConfigured')
+            ->willReturn($isConfigured);
 
         // billing address mock set data
         $this->mockBillingAddress->expects($this->any())
@@ -287,16 +295,39 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ->willReturn($this->mockPaymentMethod);
 
         // mock Event
-        $this->mockEvent->expects($this->once())
+        $this->mockEvent->expects($this->any())
             ->method('getOrder')
             ->willReturn($this->mockOrder);
 
         // mock Observer
-        $this->mockObserver->expects($this->once())
+        $this->mockObserver->expects($this->any())
             ->method('getEvent')
             ->willReturn($this->mockEvent);
 
         $this->unit->execute($this->mockObserver);
+
+        if ($isConfigured && !$isSuccessful) {
+            $this->assertNotEmpty($this->unit->getOrder());
+            $this->assertArrayHasKey('externalId', $this->unit->getOrder());
+            $this->assertArrayHasKey('number', $this->unit->getOrder());
+            $this->assertArrayHasKey('createdAt', $this->unit->getOrder());
+            $this->assertArrayHasKey('lastName', $this->unit->getOrder());
+            $this->assertArrayHasKey('firstName', $this->unit->getOrder());
+            $this->assertArrayHasKey('patronymic', $this->unit->getOrder());
+            $this->assertArrayHasKey('email', $this->unit->getOrder());
+            $this->assertArrayHasKey('phone', $this->unit->getOrder());
+//            $this->assertArrayHasKey('status', $this->unit->getOrder());
+            $this->assertArrayHasKey('items', $this->unit->getOrder());
+            $this->assertArrayHasKey('delivery', $this->unit->getOrder());
+
+            if ($apiVersion == 'v5') {
+                $this->assertArrayHasKey('payments', $this->unit->getOrder());
+            } else {
+                $this->assertArrayHasKey('paymentType', $this->unit->getOrder());
+            }
+        } elseif (!$isConfigured || $isSuccessful) {
+            $this->assertEmpty($this->unit->getOrder());
+        }
     }
 
     /**
@@ -365,49 +396,57 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
                 'is_successful' => true,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 1,
-                'api_version' => 'v4'
+                'api_version' => 'v4',
+                'is_configured' => true
             ],
             [
                 'is_successful' => true,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 0,
-                'api_version' => 'v4'
+                'api_version' => 'v4',
+                'is_configured' => false
             ],
             [
                 'is_successful' => false,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 1,
-                'api_version' => 'v4'
+                'api_version' => 'v4',
+                'is_configured' => true
             ],
             [
                 'is_successful' => false,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 0,
-                'api_version' => 'v4'
+                'api_version' => 'v4',
+                'is_configured' => false
             ],
             [
                 'is_successful' => true,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 1,
-                'api_version' => 'v5'
+                'api_version' => 'v5',
+                'is_configured' => true
             ],
             [
                 'is_successful' => true,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 0,
-                'api_version' => 'v5'
+                'api_version' => 'v5',
+                'is_configured' => false
             ],
             [
                 'is_successful' => false,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 1,
-                'api_version' => 'v5'
+                'api_version' => 'v5',
+                'is_configured' => true
             ],
             [
                 'is_successful' => false,
                 'error_msg' => 'Not found',
                 'customer_is_guest' => 0,
-                'api_version' => 'v5'
+                'api_version' => 'v5',
+                'is_configured' => false
             ]
         ];
     }

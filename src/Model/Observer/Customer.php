@@ -8,6 +8,7 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
 {
     private $api;
     private $registry;
+    private $customer;
 
     public function __construct(
         \Magento\Framework\Registry $registry,
@@ -15,6 +16,7 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
     ) {
         $this->api = $api;
         $this->registry = $registry;
+        $this->customer = [];
     }
 
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -27,7 +29,7 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
 
         $data = $observer->getEvent()->getCustomer();
 
-        $customer = [
+        $this->customer = [
             'externalId' => $data->getId(),
             'email' => $data->getEmail(),
             'firstName' => $data->getFirstname(),
@@ -36,14 +38,22 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
             'createdAt' => date('Y-m-d H:i:s', strtotime($data->getCreatedAt()))
         ];
 
-        $response = $this->api->customersEdit($customer);
+        $response = $this->api->customersEdit($this->customer);
 
         if ($response === false) {
             return;
         }
 
         if (!$response->isSuccessful() && $response->errorMsg == $this->api->getErrorText('errorNotFound')) {
-            $this->api->customersCreate($customer);
+            $this->api->customersCreate($this->customer);
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getCustomer()
+    {
+        return $this->customer;
     }
 }

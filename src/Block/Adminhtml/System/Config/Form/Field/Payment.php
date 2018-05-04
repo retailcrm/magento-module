@@ -45,14 +45,14 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Field
                 return $htmlError;
             }
 
-            foreach (array_keys($activePaymentMethods) as $k => $payment) {
+            foreach ($activePaymentMethods as $code => $payment) {
                 $html .= '<table id="' . $element->getId() . '_table">';
-                $html .= '<tr id="row_retailcrm_payment_'.$payment.'">';
-                $html .= '<td class="label">'.$payment.'</td>';
+                $html .= '<tr id="row_retailcrm_payment_' . $code . '">';
+                $html .= '<td class="label">' . $payment->getTitle() . '</td>';
                 $html .= '<td>';
-                $html .= '<select id="1" name="groups[Payment][fields][' . $payment . '][value]">';
+                $html .= '<select id="1" name="groups[Payment][fields][' . $code . '][value]">';
 
-                $selected = $this->config->getValue('retailcrm/Payment/' . $payment);
+                $selected = $this->config->getValue('retailcrm/Payment/' . $code);
 
                 foreach ($paymentTypes as $k => $value) {
                     if (!empty($selected) && $selected == $value['code']) {

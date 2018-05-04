@@ -2,7 +2,6 @@
   "name": "retailcrm/retailcrm",
   "description": "Retailcrm",
   "require": {
-    "php": "~5.5.0|~5.6.0|~7.0.0",
     "retailcrm/api-client-php": "~5.0"
   },
   "type": "magento2-module",
