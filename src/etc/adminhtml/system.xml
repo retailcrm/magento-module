@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="retailcrm" translate="label" sortOrder="10">
+            <label>Retailcrm</label>
+        </tab>
+        <section id="retailcrm" translate="label" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Setting</label>
+            <tab>retailcrm</tab>
+            <resource>Retailcrm_Retailcrm::retailcrm_configuration</resource>
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>General Configuration</label>
+
+                <field id="api_url" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>API URL</label>
+                    <comment>https://YourCrmName.retailcrm.ru</comment>
+                    <backend_model>Retailcrm\Retailcrm\Model\Config\Backend\ApiUrl</backend_model>
+                </field>
+
+                <field id="api_key" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>API Key</label>
+                    <comment>To generate an API Key, log in to RetailCRM then select Admin > Integration > API Keys</comment>
+                </field>
+
+                <field id="api_version" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>API Version</label>
+                    <source_model>Retailcrm\Retailcrm\Model\Setting\ApiVersions</source_model>
+                    <backend_model>Retailcrm\Retailcrm\Model\Config\Backend\ApiVersion</backend_model>
+                </field>
+            </group>
+            
+            <group id="Misc" translate="label" type="text" sortOrder="20" showInDefault="2" showInWebsite="0" showInStore="0">
+                <label>Misc</label>
+                <field id="attributes_to_export_into_icml" translate="label" type="multiselect" sortOrder="2" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Attributes to export into icml</label>
+                    <comment>Attributes to export into icml</comment>
+           
+                     <source_model>Retailcrm\Retailcrm\Model\Setting\Attribute</source_model>
+                     <!-- 
+                     <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Attributes</frontend_model>
+                     -->
+                      
+                </field>
+                
+            </group>
+            
+            <group id="Shipping" translate="label" type="text" sortOrder="30" showInDefault="3" showInWebsite="0" showInStore="0">
+                <label>Shipping</label>
+                <field id="Shipping" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Shipping</label>
+                     <!-- <source_model>Retailcrm\Retailcrm\Model\Setting\Shipping</source_model> 
+                      -->
+                     <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Shipping</frontend_model>
+                </field>
+            </group>
+            
+            <group id="Payment" translate="label comment" type="text" sortOrder="40" showInDefault="4" showInWebsite="0" showInStore="0">
+                <label>Payment method</label>
+               <field id="display_text" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Payment</label>
+                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Payment</frontend_model>
+                    <comment>This text will display on the frontend.</comment>
+                     
+               </field>
+            </group>
+            
+            <group id="Status" translate="label" type="text" sortOrder="50" showInDefault="5" showInWebsite="0" showInStore="0">
+                <label>Order Status</label>
+                
+                <field id="status_text" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Status</label>
+                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Status</frontend_model>  
+                    <comment>This text will display on the frontend.</comment>
+                </field>
+                
+            </group>
+            
+            <group id="Load" translate="label" type="text" sortOrder="60" showInDefault="6" showInWebsite="0" showInStore="0">
+                <label>Order Load</label>
+                <field id="number_order" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Order number</label>
+                    <comment>Enter your order number, separated by commas</comment>
+                </field>
+                
+                <field id="button_order" translate="label comment" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    
+                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Button</frontend_model>
+                    
+                </field>
+                
+            </group>
+            
+        </section>
+    </system>
+</config>
+

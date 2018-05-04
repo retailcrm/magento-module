@@ -1,0 +1,26 @@
+language: php
+
+sudo: false
+
+env:
+  global:
+    - DB_USER=root
+    - DB_HOST=localhost
+    - DB_NAME=magento2_test
+    - ADMIN_FIRSTNAME=admin_firstname
+    - ADMIN_LASTNAME=admin_lastname
+    - ADMIN_EMAIL=example@email.com
+    - ADMIN_USER=admin
+    - ADMIN_PASS=admin123
+
+matrix:
+  include:
+  - php: 7.0
+    env: BRANCH=2.2-develop
+
+before_script:
+  - bash bin/install.sh
+
+script:
+  - cd ../magento2
+  - php vendor/phpunit/phpunit/phpunit -c dev/tests/unit/phpunit.xml.dist app/code/Retailcrm/Retailcrm/Test/Unit/
