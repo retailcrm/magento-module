@@ -37,7 +37,75 @@ class Retailcrm_Retailcrm_Helper_Data extends Mage_Core_Helper_Abstract
      */
     const XML_API_KEY = 'retailcrm/general/api_key';
 
-     /**
+    /**
+     * @var string
+     */
+    const XML_SITES = 'retailcrm/sites/';
+
+    /**
+     * @var string
+     */
+    const XML_SITE = 'retailcrm/site/default';
+
+
+    /**
+     * Get site code
+     *
+     * @param Mage_Core_Model_Store $store
+     *
+     * @return mixed|null
+     */
+    public function getSite($store)
+    {
+        if (!$store instanceof Mage_Core_Model_Store
+            && is_int($store)
+        ) {
+            $store = Mage::app()->getStore($store);
+        }
+
+        $website = $store->getWebsite();
+        $site = $website->getConfig(self::XML_SITES . $store->getCode());
+
+        if ($site) {
+            return $site;
+        } else {
+            $site = Mage::getStoreConfig(self::XML_SITE);
+
+            if ($site) {
+                return $site;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMappingSites() {
+        $sites = array();
+        $webSites = Mage::app()->getWebsites();
+
+        foreach ($webSites as $webSite) {
+            $storesFromSite = $webSite->getStores();
+
+            foreach ($storesFromSite as $store) {
+                $config = $webSite->getConfig(self::XML_SITES . $store->getCode());
+
+                if ($config) {
+                    $sites[$config] = $store->getCode();
+                }
+            }
+
+            unset($storesFromSite);
+        }
+
+        unset($webSites);
+
+        return $sites;
+    }
+
+    /**
       * Get api url
       *
       * @param Mage_Core_Model_Store $store store instance

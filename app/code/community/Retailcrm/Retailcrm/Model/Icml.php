@@ -14,7 +14,7 @@ class Retailcrm_Retailcrm_Model_Icml
         $string = '<?xml version="1.0" encoding="UTF-8"?>
             <yml_catalog date="'.date('Y-m-d H:i:s').'">
                 <shop>
-                    <name>'.Mage::app()->getStore($shop)->getName().'</name>
+                    <name>'.$shop->getName().'</name>
                     <categories/>
                     <offers/>
                 </shop>
@@ -41,9 +41,8 @@ class Retailcrm_Retailcrm_Model_Icml
 
         $this->_dd->saveXML();
         $baseDir = Mage::getBaseDir();
-        $shopCode = Mage::app()->getStore($shop)->getCode();
+        $shopCode = $shop->getCode();
         $this->_dd->save($baseDir . DS . 'retailcrm_' . $shopCode . '.xml');
-            
     }
 
     private function addCategories()
@@ -102,7 +101,6 @@ class Retailcrm_Retailcrm_Model_Icml
         
         $collection->addFieldToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
         $collection->addFieldToFilter('visibility', Mage_Catalog_Model_Product_Visibility::VISIBILITY_BOTH);
-        $collection->addAttributeToFilter('type_id', array('eq' => 'simple'));
         
         foreach ($collection as $product) {
             /** @var Mage_Catalog_Model_Product $product */
@@ -174,6 +172,7 @@ class Retailcrm_Retailcrm_Model_Icml
             $offers[] = $offer;
 
             if($product->getTypeId() == 'configurable') {
+
                 /** @var Mage_Catalog_Model_Product_Type_Configurable $product */
                 $associatedProducts = Mage::getModel('catalog/product_type_configurable')->getUsedProducts(null, $product);
 
