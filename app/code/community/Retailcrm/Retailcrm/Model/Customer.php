@@ -31,6 +31,7 @@ class Retailcrm_Retailcrm_Model_Customer extends Retailcrm_Retailcrm_Model_Excha
             'lastName' => $data->getLastname(),
             'createdAt' => Mage::getSingleton('core/date')->date()
         );
+        $this->_api->setSite(Mage::helper('retailcrm')->getSite($data->getStore()));
         $this->_api->customersEdit($customer);
     }
 
@@ -44,7 +45,7 @@ class Retailcrm_Retailcrm_Model_Customer extends Retailcrm_Retailcrm_Model_Excha
     */
     public function customersExport()
     {
-        $customers = array();
+        $customersSites = array();
         $customerCollection = Mage::getModel('customer/customer')
         ->getCollection()
         ->addAttributeToSelect('email')
@@ -57,19 +58,23 @@ class Retailcrm_Retailcrm_Model_Customer extends Retailcrm_Retailcrm_Model_Excha
                 'firstName' => $customerData->getData('firstname'),
                 'lastName' => $customerData->getData('lastname')
             );
-            $customers[] = $customer;
+
+            $customersSites[$customerData->getStore()->getId()][] = $customer;
         }
-        
+
         unset($customerCollection);
-        $chunked = array_chunk($customers, 50);
-        unset($customers);
-        foreach ($chunked as $chunk) {            
-            $this->_api->customersUpload($chunk);
-            time_nanosleep(0, 250000000);
+
+        foreach ($customersSites as $storeId => $customers) {
+            $chunked = array_chunk($customers, 50);
+            unset($customers);
+            foreach ($chunked as $chunk) {
+                $this->_api->customersUpload($chunk, Mage::helper('retailcrm')->getSite($storeId));
+                time_nanosleep(0, 250000000);
+            }
+
+            unset($chunked);
         }
-        
-        unset($chunked);
-        
+
         return true;
     }
 }

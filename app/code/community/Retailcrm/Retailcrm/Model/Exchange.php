@@ -6,9 +6,11 @@ class Retailcrm_Retailcrm_Model_Exchange
     protected $_apiUrl;
     protected $_config;
     protected $_api;
-    
+    private $_helper;
+
     public function __construct()
     {
+        $this->_helper = Mage::helper('retailcrm');
         $this->_apiUrl = Mage::getStoreConfig('retailcrm/general/api_url');
         $this->_apiKey = Mage::getStoreConfig('retailcrm/general/api_key');
 
@@ -97,17 +99,17 @@ class Retailcrm_Retailcrm_Model_Exchange
             die();
         }
     }
-    
+
     /**
      * @param array $order
      */
     private function doCreate($order)
     {
         Mage::log($order, null, 'retailcrmHistoriCreate.log', true);
-        
+
         try {
             $response = $this->_api->ordersGet($order['id'], $by = 'id');
-          
+
             if ($response->isSuccessful() && 200 === $response->getStatusCode()) {
                 $order = $response->order;
             } else {
@@ -126,22 +128,32 @@ class Retailcrm_Retailcrm_Model_Exchange
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
         }
-        
+
         // get references
         $this->_config = Mage::getStoreConfig('retailcrm');
         $payments = array_flip(array_filter($this->_config['payment']));
         $shippings = array_flip(array_filter($this->_config['shipping']));
-        
+
         // get store
         $_sendConfirmation = '0';
-        $storeId = Mage::app()->getStore()->getId();
+        $sitesConfig = $this->_helper->getMappingSites();
+
+        if (!$sitesConfig) {
+            $storeId = Mage::app()
+                ->getWebsite(true)
+                ->getDefaultGroup()
+                ->getDefaultStoreId();
+        } else {
+            $storeId = Mage::app()->getStore()->load($sitesConfig[$order['site']])->getId();
+        }
+
         $siteid = Mage::getModel('core/store')->load($storeId)->getWebsiteId();
-        
+
         // search or create customer
         $customer = Mage::getSingleton('customer/customer');
         $customer->setWebsiteId($siteid);
         $customer->loadByEmail($order['email']);
-        
+
         if (!is_numeric($customer->getId())) {        
             $customer
                 ->setGroupId(1)
@@ -152,7 +164,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                 ->setLastname($order['lastName'])
                 ->setMiddleName($order['patronymic'])
                 ->setPassword(uniqid());
-                
+
             try {
                 $customer->save();
                 $customer->setConfirmation(null);
@@ -331,7 +343,7 @@ class Retailcrm_Retailcrm_Model_Exchange
             $response = $this->_api->ordersGet($order['id'], $by = 'id');
     
             if ($response->isSuccessful() && 200 === $response->getStatusCode()) {
-                        $order = $response->order;
+                $order = $response->order;
             } else {
                     Mage::log(
                         sprintf(
@@ -348,7 +360,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
         }
-        
+
         // get references
         $this->_config = Mage::getStoreConfig('retailcrm');
         $payments = array_flip(array_filter($this->_config['payment']));
@@ -356,7 +368,17 @@ class Retailcrm_Retailcrm_Model_Exchange
      
         // get store
         $_sendConfirmation = '0';
-        $storeId = Mage::app()->getStore()->getId();
+        $sitesConfig = $this->_helper->getMappingSites();
+
+        if (!$sitesConfig) {
+            $storeId = Mage::app()
+                ->getWebsite(true)
+                ->getDefaultGroup()
+                ->getDefaultStoreId();
+        } else {
+            $storeId = Mage::app()->getStore()->load($sitesConfig[$order['site']])->getId();
+        }
+
         $siteid = Mage::getModel('core/store')->load($storeId)->getWebsiteId();
     
         // search or create customer
@@ -504,7 +526,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $oldOrder = Mage::getModel('sales/order')->loadByIncrementId($originalId);
         $oldOrderArr = $oldOrder->getData();
     
-        if(!empty($oldOrderArr['original_increment_id'])) {
+        if (!empty($oldOrderArr['original_increment_id'])) {
             $originalId = $oldOrderArr['original_increment_id'];
         }
     

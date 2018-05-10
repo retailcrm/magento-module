@@ -57,6 +57,7 @@ SOFTWARE.
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <tooltip><![CDATA[https://<i><b>YourCrmName</b></i>.retailcrm.ru]]></tooltip>
+                            <backend_model>retailcrm_retailcrm_block_adminhtml_system_config_backend_api_url</backend_model>
                         </api_url>
                         <api_key translate="label comment">
                             <label>API Key</label>
@@ -66,6 +67,7 @@ SOFTWARE.
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <tooltip><![CDATA[To generate an API Key, log in to RetailCRM then select Admin > Integration > API Keys]]></tooltip>
+                            <backend_model>retailcrm_retailcrm_block_adminhtml_system_config_backend_api_key</backend_model>
                         </api_key>
                     </fields>
                 </general>
@@ -153,7 +155,26 @@ SOFTWARE.
                         
                     </fields>
                 </load_order>
-            	
+                <site translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>Site</label>
+                    <frontend_type>text</frontend_type>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <sort_order>16</sort_order>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_site</frontend_model>
+                </site>
+            	<sites translate="label comment" module="retailcrm">
+                    <expanded>1</expanded>
+                    <label>Sites</label>
+                    <frontend_type>text</frontend_type>
+                    <show_in_default>0</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <sort_order>17</sort_order>
+                    <frontend_model>retailcrm/adminhtml_system_config_form_fieldset_sites</frontend_model>
+                </sites>
             </groups>
         </retailcrm>
     </sections>

@@ -25,17 +25,20 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
     public function orderPay($orderId)
     {
         $order = Mage::getModel('sales/order')->load($orderId);
-        
-        if((string)$order->getBaseGrandTotal() == (string)$order->getTotalPaid()){
+
+        if ((string)$order->getBaseGrandTotal() == (string)$order->getTotalPaid()) {
             $preparedOrder = array(
                 'externalId' => $order->getRealOrderId(),//getId(),
                 'paymentStatus' => 'paid',
             );
-            $preparedOrder = Mage::helper('retailcrm')->filterRecursive($preparedOrder);
+
+            $helper = Mage::helper('retailcrm');
+            $preparedOrder = $helper->filterRecursive($preparedOrder);
+            $this->_api->setSite($helper->getSite($order->getStore()));
             $this->_api->ordersEdit($preparedOrder);
         }
     }
-    
+
     public function orderStatusHistoryCheck($order)
     {
         $config = Mage::getModel(
@@ -48,19 +51,19 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
             'externalId' => $order->getRealOrderId(),//getId(),
             'status' => $config->getMapping($order->getStatus(), 'status'),
         );
-       
-       $comment = $order->getStatusHistoryCollection()->getData();
-       
-       if(!empty($comment[0]['comment'])) {
-           $preparedOrder['managerComment'] = $comment[0]['comment'];
-       }
-       
-       $preparedOrder = Mage::helper('retailcrm')->filterRecursive($preparedOrder);
-       $this->_api->ordersEdit($preparedOrder);
-       
+
+        $comment = $order->getStatusHistoryCollection()->getData();
+
+        if(!empty($comment[0]['comment'])) {
+            $preparedOrder['managerComment'] = $comment[0]['comment'];
+        }
+
+        $helper = Mage::helper('retailcrm');
+        $preparedOrder = $helper->filterRecursive($preparedOrder);
+        $this->_api->setSite($helper->getSite($order->getStore()));
+        $this->_api->ordersEdit($preparedOrder);
     }
-    
-    
+
     public function orderUpdate($order)
     {
         $config = Mage::getModel(
@@ -73,16 +76,18 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
             'externalId' => $order->getRealOrderId(),//getId(),
             'status' => $config->getMapping($order->getStatus(), 'status'),
         );
-        if((float)$order->getBaseGrandTotal() == (float)$order->getTotalPaid()) {
+        if ((float)$order->getBaseGrandTotal() == (float)$order->getTotalPaid()) {
             $preparedOrder['paymentStatus'] = 'paid';
-            $preparedOrder = Mage::helper('retailcrm')->filterRecursive($preparedOrder);
+            $helper = Mage::helper('retailcrm');
+            $preparedOrder = $helper->filterRecursive($preparedOrder);
+            $this->_api->setSite($helper->getSite($order->getStore()));
             $this->_api->ordersEdit($preparedOrder);
         }
-        
     }
-    
+
     public function orderCreate($order)
     {
+        $helper = Mage::helper('retailcrm');
         $config = Mage::getModel('retailcrm/settings', ['storeId' => $order->getStoreId()]);
         $address = $order->getShippingAddress()->getData();
         $orderItems = $order->getItemsCollection()
@@ -127,7 +132,6 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
         $shipping = $this->getShippingCode($order->getShippingMethod());
 
         $preparedOrder = array(
-            'site' => $order->getStore()->getCode(),
             'externalId' => $order->getRealOrderId(),
             'number' => $order->getRealOrderId(),
             'createdAt' => Mage::getModel('core/date')->date(),
@@ -164,17 +168,16 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
                 ),
             )
         );
-        
-        
-        if(trim($preparedOrder['delivery']['code']) == ''){
+
+        if (trim($preparedOrder['delivery']['code']) == ''){
             unset($preparedOrder['delivery']['code']);
         }
         
-        if(trim($preparedOrder['paymentType']) == ''){
+        if (trim($preparedOrder['paymentType']) == ''){
             unset($preparedOrder['paymentType']);
         }
         
-        if(trim($preparedOrder['status']) == ''){
+        if (trim($preparedOrder['status']) == ''){
             unset($preparedOrder['status']);
         }
         
@@ -182,18 +185,18 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
             $preparedCustomer = array(
                 'externalId' => $order->getCustomerId()
             );
-            
+
             if ($this->_api->customersCreate($preparedCustomer)) {
                 $preparedOrder['customer']['externalId'] = $order->getCustomerId();
             }
         }
-        
-        $preparedOrder = Mage::helper('retailcrm')->filterRecursive($preparedOrder);
-        
+
+        $preparedOrder = $helper->filterRecursive($preparedOrder);
+
         Mage::log($preparedOrder, null, 'retailcrmCreatePreparedOrder.log', true);
-        
+
         try {
-            $response = $this->_api->ordersCreate($preparedOrder);
+            $response = $this->_api->ordersCreate($preparedOrder, $helper->getSite($order->getStore()));
             if ($response->isSuccessful() && 201 === $response->getStatusCode()) {
                 Mage::log($response->id);
             } else {
@@ -218,8 +221,8 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
     {
         $config = Mage::getStoreConfig('retailcrm');
         $ordersId = explode(",", $config['load_order']['numberOrder']);
-        $orders = array();
-        
+        $ordersSites = array();
+
         $ordersList = Mage::getResourceModel('sales/order_collection')
         ->addAttributeToSelect('*')
         ->joinAttribute('billing_firstname', 'order_address/firstname', 'billing_address_id', null, 'left')
@@ -247,20 +250,22 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
         ->setCurPage(1)
         ->addAttributeToFilter('increment_id', $ordersId)
         ->load();
-         
+
         foreach ($ordersList as $order) {
-            $orders[] = $this->prepareOrder($order);
+            $ordersSites[$order->getStore()->getId()][] = $this->prepareOrder($order);
         }
-        
-        $chunked = array_chunk($orders, 50);
-        unset($orders);
-        foreach ($chunked as $chunk) {
-            $this->_api->ordersUpload($chunk);
-            time_nanosleep(0, 250000000);
+
+        foreach ($ordersSites as $storeId => $orders) {
+            $chunked = array_chunk($orders, 50);
+            unset($orders);
+            foreach ($chunked as $chunk) {
+                $this->_api->ordersUpload($chunk, Mage::helper('retailcrm')->getSite($storeId));
+                time_nanosleep(0, 250000000);
+            }
+
+            unset($chunked);
         }
-        
-        unset($chunked);
-        
+
         return true;
     
     }
@@ -275,7 +280,7 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
     */
     public function ordersExport()
     {
-        $orders = array();
+        $ordersSites = array();
         $ordersList = Mage::getResourceModel('sales/order_collection')
         ->addAttributeToSelect('*')
         ->joinAttribute('billing_firstname', 'order_address/firstname', 'billing_address_id', null, 'left')
@@ -302,20 +307,22 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
         ->setPageSize(1000)
         ->setCurPage(1)
         ->load();
-        
+
         foreach ($ordersList as $order) {
-            $orders[] = $this->prepareOrder($order);
+            $ordersSites[$order->getStore()->getId()][] = $this->prepareOrder($order);
         }
-        
-        $chunked = array_chunk($orders, 50);
-        unset($orders);
-        foreach ($chunked as $chunk) {
-            $this->_api->ordersUpload($chunk);
-            time_nanosleep(0, 250000000);
+
+        foreach ($ordersSites as $storeId => $orders) {
+            $chunked = array_chunk($orders, 50);
+            unset($orders);
+            foreach ($chunked as $chunk) {
+                $this->_api->ordersUpload($chunk, Mage::helper('retailcrm')->getSite($storeId));
+                time_nanosleep(0, 250000000);
+            }
+
+            unset($chunked);
         }
-        
-        unset($chunked);
-        
+
         return true;
     }
 
@@ -323,7 +330,7 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
     {
         $config = Mage::getModel('retailcrm/settings', ['storeId' => $order->getStoreId()]);
         $address = $order->getShippingAddress();
-        
+
         $orderItems = $order->getItemsCollection()
         ->addAttributeToSelect('*')
         ->addAttributeToFilter('product_type', array('eq'=>'simple'))

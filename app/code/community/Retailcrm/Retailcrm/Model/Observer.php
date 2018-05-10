@@ -59,8 +59,8 @@ class Retailcrm_Retailcrm_Model_Observer
     public function exportCatalog()
     {
         foreach (Mage::app()->getWebsites() as $website) {
-            foreach ($website->getGroups() as $group) {
-                Mage::getModel('retailcrm/icml')->generate((int)$group->getId());
+            foreach ($website->getStores() as $store) {
+                Mage::getModel('retailcrm/icml')->generate($store);
             }
         }
     }
