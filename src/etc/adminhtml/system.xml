@@ -35,43 +35,26 @@
                 <field id="attributes_to_export_into_icml" translate="label" type="multiselect" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Attributes to export into icml</label>
                     <comment>Attributes to export into icml</comment>
-                     <source_model>Retailcrm\Retailcrm\Model\Setting\Attribute</source_model>
-                     <!-- 
-                     <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Attributes</frontend_model>
-                     -->
+                    <source_model>Retailcrm\Retailcrm\Model\Setting\Attribute</source_model>
                 </field>
             </group>
 
-            <group id="Shipping" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="shipping" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Shipping</label>
-                <field id="Shipping" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Shipping</label>
-                     <!-- <source_model>Retailcrm\Retailcrm\Model\Setting\Shipping</source_model> 
-                      -->
-                     <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Shipping</frontend_model>
-                </field>
+                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Shipping</frontend_model>
             </group>
 
-            <group id="Payment" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="payment" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Payment method</label>
-               <field id="display_text" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Payment</label>
-                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Payment</frontend_model>
-                    <comment>This text will display on the frontend.</comment>
-                     
-               </field>
+                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Payment</frontend_model>
             </group>
 
-            <group id="Status" translate="label" type="text" sortOrder="50" showInDefault="5" showInWebsite="1" showInStore="1">
+            <group id="status" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Order Status</label>
-                <field id="status_text" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Status</label>
-                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Status</frontend_model>  
-                    <comment>This text will display on the frontend.</comment>
-                </field>
+                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Status</frontend_model>
             </group>
 
-            <group id="Load" translate="label" type="text" sortOrder="60" showInDefault="6" showInWebsite="1" showInStore="1">
+            <group id="Load" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Order Load</label>
                 <field id="number_order" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Order number</label>
@@ -81,7 +64,16 @@
                     <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Button</frontend_model>
                 </field>
             </group>
-            
+
+            <group id="site" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Site</label>
+                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Site</frontend_model>
+            </group>
+
+            <group id="sites" translate="label" type="select" sortOrder="70" showInDefault="0" showInWebsite="1" showInStore="0">
+                <label>Sites</label>
+                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Sites</frontend_model>
+            </group>
         </section>
     </system>
 </config>

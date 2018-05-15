@@ -1,17 +1,9 @@
 <?php
 
-namespace Retailcrm\Retailcrm\Test\Unit\Block\Adminhtml\System\Config\Form\Field;
+namespace Retailcrm\Retailcrm\Test\Unit\Block\Adminhtml\System\Config\Form\Fieldset;
 
-class StatusTest extends \PHPUnit\Framework\TestCase
+class StatusTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
 {
-    private $objectManager;
-    private $testElementId = 'test_element_id';
-
-    public function setUp()
-    {
-        $this->objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
-    }
-
     /**
      * @param boolean $isSuccessful
      * @param boolean $isConfigured
@@ -19,15 +11,6 @@ class StatusTest extends \PHPUnit\Framework\TestCase
      */
     public function testRender($isSuccessful, $isConfigured)
     {
-        // element mock
-        $elementMock = $this->getMockBuilder(\Magento\Framework\Data\Form\Element\AbstractElement::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getId'])
-            ->getMock();
-        $elementMock->expects($this->any())
-            ->method('getId')
-            ->willReturn($this->testElementId);
-
         // response
         $response = $this->objectManager->getObject(
             \RetailCrm\Response\ApiResponse::class,
@@ -62,26 +45,35 @@ class StatusTest extends \PHPUnit\Framework\TestCase
             ->method('toOptionArray')
             ->willReturn($this->getTestStatuses());
 
+        $data = [
+            'authSession' => $this->authSessionMock,
+            'jsHelper' => $this->helperMock,
+            'data' => ['group' => $this->groupMock],
+            'client' => $client,
+            'statusCollection' => $statusCollection,
+            'context' => $this->context
+        ];
+
         $status = $this->objectManager->getObject(
-            \Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Status::class,
-            [
-                'client' => $client,
-                'statusCollection' => $statusCollection
-            ]
+            \Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Status::class,
+            $data
         );
 
-        $html = $status->render($elementMock);
+        $status->setForm($this->form);
+        $status->setLayout($this->layoutMock);
 
-        if (!$isConfigured || !$isSuccessful) {
-            $this->assertEquals($html, $this->getHtml(true));
-        }
+        $html = $status->render($this->elementMock);
 
-        if ($isConfigured && $isSuccessful) {
-            $this->assertEquals($html, $this->getHtml(false));
+        $this->assertContains($this->testElementId, $html);
+        $this->assertContains($this->testFieldSetCss, $html);
+
+        if (!$isConfigured) {
+            $expected = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+            $this->assertContains($expected, $html);
         }
     }
 
-    private function getTestStatuses()
+    protected function getTestStatuses()
     {
         $status = [
             'label' => 'Test Status',
@@ -102,37 +94,6 @@ class StatusTest extends \PHPUnit\Framework\TestCase
                 ]
             ]
         ];
-    }
-
-    private function getHtml($error)
-    {
-        $html = '';
-        $statuses = $this->getTestResponse();
-
-        foreach ($this->getTestStatuses() as $code => $status) {
-            $html .= '<table id="' . $this->testElementId . '_table">';
-            $html .= '<tr id="row_retailcrm_status_' . $status['label'] . '">';
-            $html .= '<td class="label">' . $status['label'] . '</td>';
-            $html .= '<td>';
-            $html .= '<select name="groups[Status][fields][' . $status['value'] . '][value]">';
-
-            $html .= '<option value=""> Select status </option>';
-
-            foreach ($statuses['statuses'] as $k => $value) {
-                $html .= '<option value="' . $value['code'] . '"> ' . $value['name'] . '</option>';
-            }
-
-            $html .= '</select>';
-            $html .= '</td>';
-            $html .= '</tr>';
-            $html .= '</table>';
-        }
-
-        if ($error) {
-            return '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
-        }
-
-        return $html;
     }
 
     public function dataProvider()

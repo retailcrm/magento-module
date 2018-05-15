@@ -30,3 +30,12 @@ before_script:
 script:
   - cd ../magento2
   - php vendor/phpunit/phpunit/phpunit -c dev/tests/unit/phpunit.xml.dist app/code/Retailcrm/Retailcrm/Test/Unit/
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: make
+  on:
+    php: 7.2
+    branch: master
+    condition: "$DEPLOY = true"

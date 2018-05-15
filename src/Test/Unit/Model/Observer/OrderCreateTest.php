@@ -33,7 +33,8 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
                 'customersCreate',
                 'customersList',
                 'getVersion',
-                'isConfigured'
+                'isConfigured',
+                'setSite'
             ])
             ->getMock();
 
@@ -119,11 +120,14 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
+        $helper = $this->createMock(\Retailcrm\Retailcrm\Helper\Data::class);
+
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\OrderCreate(
             $this->config,
             $this->registry,
             $this->logger,
             $product,
+            $helper,
             $this->mockApi
         );
     }
@@ -304,7 +308,7 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ->method('getEvent')
             ->willReturn($this->mockEvent);
 
-        $this->unit->execute($this->mockObserver);
+        $orderCreateObserver = $this->unit->execute($this->mockObserver);
 
         if ($isConfigured && !$isSuccessful) {
             $this->assertNotEmpty($this->unit->getOrder());
@@ -325,6 +329,8 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             } else {
                 $this->assertArrayHasKey('paymentType', $this->unit->getOrder());
             }
+
+            $this->assertInstanceOf(\Retailcrm\Retailcrm\Model\Observer\OrderCreate::class, $orderCreateObserver);
         } elseif (!$isConfigured || $isSuccessful) {
             $this->assertEmpty($this->unit->getOrder());
         }

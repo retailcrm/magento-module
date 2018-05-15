@@ -54,8 +54,9 @@ class Proxy
             if (!$response->isSuccessful()) {
                 $this->logger->writeRow(
                     sprintf(
-                        "[HTTP status %s] %s",
+                        "[HTTP status %s] %s - %s",
                         $response->getStatusCode(),
+                        $method,
                         $response->getErrorMsg()
                     )
                 );
@@ -133,6 +134,32 @@ class Proxy
         }
 
         return $this->apiClient->getVersion();
+    }
+
+    /**
+     * Set site code
+     *
+     * @param $site
+     */
+    public function setSite($site)
+    {
+        if ($this->isConfigured()) {
+            $this->apiClient->request->setSite($site);
+        }
+    }
+
+    /**
+     * Get site code
+     *
+     * @return null | mixed
+     */
+    public function getSite()
+    {
+        if ($this->isConfigured()) {
+            return $this->apiClient->request->getSite();
+        }
+
+        return null;
     }
 
     /**

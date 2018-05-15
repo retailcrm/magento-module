@@ -1,17 +1,9 @@
 <?php
 
-namespace Retailcrm\Retailcrm\Test\Unit\Block\Adminhtml\System\Config\Form\Field;
+namespace Retailcrm\Retailcrm\Test\Unit\Block\Adminhtml\System\Config\Form\Fieldset;
 
-class ShippingTest extends \PHPUnit\Framework\TestCase
+class ShippingTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
 {
-    private $objectManager;
-    private $testElementId = 'test_element_id';
-
-    public function setUp()
-    {
-        $this->objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
-    }
-
     /**
      * @param $isSuccessful
      * @param $isConfigured
@@ -19,15 +11,6 @@ class ShippingTest extends \PHPUnit\Framework\TestCase
      */
     public function testRender($isSuccessful, $isConfigured)
     {
-        // element mock
-        $elementMock = $this->getMockBuilder(\Magento\Framework\Data\Form\Element\AbstractElement::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getId'])
-            ->getMock();
-        $elementMock->expects($this->any())
-            ->method('getId')
-            ->willReturn($this->testElementId);
-
         // response
         $response = $this->objectManager->getObject(
             \RetailCrm\Response\ApiResponse::class,
@@ -62,26 +45,35 @@ class ShippingTest extends \PHPUnit\Framework\TestCase
             ->method('getActiveCarriers')
             ->willReturn($this->getTestActiveCarriers());
 
+        $data = [
+            'authSession' => $this->authSessionMock,
+            'jsHelper' => $this->helperMock,
+            'data' => ['group' => $this->groupMock],
+            'client' => $client,
+            'shippingConfig' => $shippingConfig,
+            'context' => $this->context
+        ];
+
         $shipping = $this->objectManager->getObject(
-            \Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Field\Shipping::class,
-            [
-                'client' => $client,
-                'shippingConfig' => $shippingConfig
-            ]
+            \Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Shipping::class,
+            $data
         );
 
-        $html = $shipping->render($elementMock);
+        $shipping->setForm($this->form);
+        $shipping->setLayout($this->layoutMock);
 
-        if (!$isConfigured || !$isSuccessful) {
-            $this->assertEquals($html, $this->getHtml(true));
-        }
+        $html = $shipping->render($this->elementMock);
 
-        if ($isConfigured && $isSuccessful) {
-            $this->assertEquals($html, $this->getHtml(false));
+        $this->assertContains($this->testElementId, $html);
+        $this->assertContains($this->testFieldSetCss, $html);
+
+        if (!$isConfigured) {
+            $expected = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+            $this->assertContains($expected, $html);
         }
     }
 
-    private function getTestActiveCarriers()
+    protected function getTestActiveCarriers()
     {
         $shipping = $this->getMockBuilder(\Magento\Shipping\Model\Carrier\AbstractCarrierInterface::class)
             ->disableOriginalConstructor()
@@ -106,35 +98,6 @@ class ShippingTest extends \PHPUnit\Framework\TestCase
                 ]
             ]
         ];
-    }
-
-    private function getHtml($error)
-    {
-        $html = '';
-        $deliveryTypes = $this->getTestResponse();
-
-        foreach ($this->getTestActiveCarriers() as $code => $deliveryType) {
-            $html .= '<table id="' . $this->testElementId . '_table">';
-            $html .= '<tr id="row_retailcrm_shipping_' . $code . '">';
-            $html .= '<td class="label">' . $deliveryType->getConfigData('title') . '</td>';
-            $html .= '<td>';
-            $html .= '<select id="1" name="groups[Shipping][fields][' . $code . '][value]">';
-
-            foreach ($deliveryTypes['deliveryTypes'] as $k => $value) {
-                $html .= '<option  value="' . $value['code'] . '"> ' . $value['name'] . '</option>';
-            }
-
-            $html .= '</select>';
-            $html .= '</td>';
-            $html .= '</tr>';
-            $html .= '</table>';
-        }
-
-        if ($error) {
-            return '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
-        }
-
-        return $html;
     }
 
     public function dataProvider()

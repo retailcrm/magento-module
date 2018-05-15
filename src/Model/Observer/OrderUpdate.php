@@ -4,6 +4,7 @@ namespace Retailcrm\Retailcrm\Model\Observer;
 
 use Magento\Framework\Event\Observer;
 use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
+use RetailCrm\Retailcrm\Helper\Data as Helper;
 
 class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
 {
@@ -11,21 +12,25 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
     private $config;
     private $registry;
     private $order;
+    private $helper;
 
     /**
      * Constructor
      *
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param \Magento\Framework\Registry $registry
+     * @param Helper $helper
      * @param ApiClient $api
      */
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Framework\Registry $registry,
+        Helper $helper,
         ApiClient $api
     ) {
         $this->config = $config;
         $this->registry = $registry;
+        $this->helper = $helper;
         $this->api = $api;
         $this->order = [];
     }
@@ -35,14 +40,14 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
      *
      * @param Observer $observer
      *
-     * @return void
+     * @return mixed
      */
     public function execute(Observer $observer)
     {
         if ($this->registry->registry('RETAILCRM_HISTORY') === true
             || !$this->api->isConfigured()
         ) {
-            return;
+            return false;
         }
 
         $order = $observer->getEvent()->getOrder();
@@ -50,7 +55,7 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
         if ($order) {
             $this->order = [
                 'externalId' => $order->getId(),
-                'status' => $this->config->getValue('retailcrm/Status/' . $order->getStatus())
+                'status' => $this->config->getValue('retailcrm/retailcrm_status/' . $order->getStatus())
             ];
 
             if ($order->getBaseTotalDue() == 0) {
@@ -66,9 +71,12 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
                 }
             }
 
-            \Retailcrm\Retailcrm\Helper\Data::filterRecursive($this->order);
+            Helper::filterRecursive($this->order);
+            $this->api->setSite($this->helper->getSite($order->getStore()));
             $this->api->ordersEdit($this->order);
         }
+
+        return $this;
     }
 
     /**

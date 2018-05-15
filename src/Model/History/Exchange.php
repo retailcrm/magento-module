@@ -167,13 +167,19 @@ class Exchange
     {
         $this->logger->writeDump($order, 'doCreate');
 
-        $payments = $this->config->getValue('retailcrm/Payment');
-        $shippings = $this->config->getValue('retailcrm/Shipping');
+        $payments = $this->config->getValue('retailcrm/retailcrm_payment');
+        $shippings = $this->config->getValue('retailcrm/retailcrm_shipping');
+        $sites = $this->helper->getMappingSites();
+
+        if ($sites) {
+            $store = $this->storeManager->getStore($sites[$order['site']]);
+            $websiteId = $store->getWebsiteId();
+        } else {
+            $store = $this->storeManager->getStore();
+            $websiteId = $this->storeManager->getStore()->getWebsiteId();
+        }
 
         $region = $this->regionFactory->create();
-        $store = $this->storeManager->getStore();
-        $websiteId = $this->storeManager->getStore()->getWebsiteId();
-
         $customer = $this->customerFactory->create();
         $customer->setWebsiteId($websiteId);
 
@@ -324,18 +330,25 @@ class Exchange
             $order = $response['order'];
         }
 
-        $payments = $this->config->getValue('retailcrm/Payment');
-        $shippings = $this->config->getValue('retailcrm/Shipping');
+        $payments = $this->config->getValue('retailcrm/retailcrm_payment');
+        $shippings = $this->config->getValue('retailcrm/retailcrm_shipping');
 
         $region = $this->regionFactory->create();
-        $store = $this->storeManager->getStore();
-        $websiteId = $this->storeManager->getStore()->getWebsiteId();
+        $sites = $this->helper->getMappingSites();
+
+        if ($sites) {
+            $store = $this->storeManager->getStore($sites[$order['site']]);
+            $websiteId = $store->getWebsiteId();
+        } else {
+            $store = $this->storeManager->getStore();
+            $websiteId = $this->storeManager->getStore()->getWebsiteId();
+        }
 
         $customer = $this->customerFactory->create();
         $customer->setWebsiteId($websiteId);
 
         if (isset($order['customer']['externalId'])) {
-            $customer->load($order['customer']['externalId']); // load customet by external id
+            $customer->load($order['customer']['externalId']); // load customer by external id
         }
 
         //Create object of quote
@@ -345,7 +358,7 @@ class Exchange
         $quote->setStore($store);
         $quote->setCurrency();
 
-        // if you have allready buyer id then you can load customer directly
+        // if you have all ready buyer id then you can load customer directly
         if ($customer->getId()) {
             $customer = $this->customerRepository->getById($customer->getId());
             $quote->assignCustomer($customer); //Assign quote to customer
@@ -462,7 +475,7 @@ class Exchange
     {
         $this->logger->writeDump($order, 'doUpdate');
 
-        $Status = $this->config->getValue('retailcrm/Status');
+        $Status = $this->config->getValue('retailcrm/retailcrm_status');
         $Status = array_flip(array_filter($Status));
 
         $magentoOrder = $this->order->load($order['externalId']);
@@ -662,11 +675,8 @@ class Exchange
     public function getAllShippingMethodsCode($mcode)
     {
         $activeCarriers = $this->shipconfig->getActiveCarriers();
-        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
 
         foreach ($activeCarriers as $carrierCode => $carrierModel) {
-            $options = [];
-
             if ($carrierMethods = $carrierModel->getAllowedMethods()) {
                 foreach ($carrierMethods as $methodCode => $method) {
                     $code = $carrierCode . '_'. $methodCode;

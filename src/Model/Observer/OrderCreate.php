@@ -4,12 +4,15 @@ namespace Retailcrm\Retailcrm\Model\Observer;
 
 use Magento\Framework\Event\Observer;
 use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
+use RetailCrm\Retailcrm\Helper\Data as Helper;
 
 class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 {
-    private $api;
-    private $config;
-    private $logger;
+    protected $api;
+    protected $config;
+    protected $logger;
+    protected $helper;
+
     private $registry;
     private $product;
     private $order;
@@ -18,20 +21,25 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
      * Constructor
      *
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
-     * @param \Retailcrm\Retailcrm\Model\Logger\Logger $logger
      * @param \Magento\Framework\Registry $registry
+     * @param \Retailcrm\Retailcrm\Model\Logger\Logger $logger
+     * @param \Magento\Catalog\Model\ProductRepository $product
+     * @param Helper $helper
+     * @param ApiClient $api
      */
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Framework\Registry $registry,
         \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         \Magento\Catalog\Model\ProductRepository $product,
+        Helper $helper,
         ApiClient $api
     ) {
         $this->logger = $logger;
         $this->config = $config;
         $this->registry = $registry;
         $this->product = $product;
+        $this->helper = $helper;
         $this->api = $api;
         $this->order = [];
     }
@@ -41,20 +49,22 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
      *
      * @param Observer $observer
      *
-     * @return null
+     * @return mixed
      */
     public function execute(Observer $observer)
     {
         if ($this->registry->registry('RETAILCRM_HISTORY') === true
             || !$this->api->isConfigured()
         ) {
-            return;
+            return false;
         }
 
         $order = $observer->getEvent()->getOrder();
 
+        $this->api->setSite($this->helper->getSite($order->getStore()));
+
         if ($this->existsInCrm($order->getId()) === true) {
-            return;
+            return false;
         }
 
         $addressObj = $order->getBillingAddress();
@@ -62,7 +72,6 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
         $shippingCode = $this->getShippingCode($order->getShippingMethod());
 
         $this->order = [
-            'site' => $order->getStore()->getCode(),
             'externalId' => $order->getId(),
             'number' => $order->getRealOrderId(),
             'createdAt' => $order->getCreatedAt(),
@@ -77,10 +86,10 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
                 : $addressObj->getMiddlename(),
             'email' => $order->getCustomerEmail(),
             'phone' => $addressObj->getTelephone(),
-            'status' => $this->config->getValue('retailcrm/Status/' . $order->getStatus()),
+            'status' => $this->config->getValue('retailcrm/retailcrm_status/' . $order->getStatus()),
             'items' => $this->getOrderItems($order),
             'delivery' => [
-                'code' => $this->config->getValue('retailcrm/Shipping/' . $shippingCode),
+                'code' => $this->config->getValue('retailcrm/retailcrm_shipping/' . $shippingCode),
                 'cost' => $order->getShippingAmount(),
                 'address' => [
                     'index' => $addressObj->getData('postcode'),
@@ -108,7 +117,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 
         if ($this->api->getVersion() == 'v4') {
             $this->order['paymentType'] = $this->config->getValue(
-                'retailcrm/Payment/' . $order->getPayment()->getMethodInstance()->getCode()
+                'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
             );
             $this->order['discount'] = abs($order->getDiscountAmount());
         } elseif ($this->api->getVersion() == 'v5') {
@@ -116,7 +125,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 
             $payment = [
                 'type' => $this->config->getValue(
-                    'retailcrm/Payment/' . $order->getPayment()->getMethodInstance()->getCode()
+                    'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
                 ),
                 'externalId' => $order->getId(),
                 'order' => [
@@ -148,11 +157,13 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             $addressObj
         );
 
-        \Retailcrm\Retailcrm\Helper\Data::filterRecursive($this->order);
+        Helper::filterRecursive($this->order);
 
         $this->logger->writeDump($this->order, 'CreateOrder');
 
         $this->api->ordersCreate($this->order);
+
+        return $this;
     }
 
     /**
@@ -253,15 +264,18 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
      * Check exists order or customer in CRM
      *
      * @param int $id
+     * @param string $method
+     * @param string $by
+     * @param string $site
      *
      * @return boolean
      */
-    private function existsInCrm($id, $method = 'ordersGet', $by = 'externalId')
+    private function existsInCrm($id, $method = 'ordersGet', $by = 'externalId', $site = null)
     {
-        $response = $this->api->{$method}($id, $by);
+        $response = $this->api->{$method}($id, $by, $site);
 
         if ($response === false) {
-            return;
+            return false;
         }
 
         if (!$response->isSuccessful() && $response->errorMsg == $this->api->getErrorText('errorNotFound')) {

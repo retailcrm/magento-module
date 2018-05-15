@@ -11,6 +11,7 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
     private $mockEvent;
     private $mockCustomer;
     private $unit;
+    private $helper;
 
     public function setUp()
     {
@@ -19,7 +20,8 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->setMethods([
                 'customersEdit',
                 'customersCreate',
-                'isConfigured'
+                'isConfigured',
+                'setSite'
             ])
             ->getMock();
 
@@ -48,12 +50,16 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
                 'getEmail',
                 'getFirstname',
                 'getMiddlename',
-                'getLastname'
+                'getLastname',
+                'getStore'
             ])
             ->getMock();
 
+        $this->helper = $this->createMock(\Retailcrm\Retailcrm\Helper\Data::class);
+
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\Customer(
             $this->registry,
+            $this->helper,
             $this->mockApi
         );
     }
@@ -110,6 +116,12 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->method('getLastname')
             ->willReturn($testData['lastname']);
 
+        $store = $this->createMock(\Magento\Store\Model\Store::class);
+
+        $this->mockCustomer->expects($this->any())
+            ->method('getStore')
+            ->willReturn($store);
+
         // mock Event
         $this->mockEvent->expects($this->any())
             ->method('getCustomer')
@@ -120,7 +132,7 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             ->method('getEvent')
             ->willReturn($this->mockEvent);
 
-        $this->unit->execute($this->mockObserver);
+        $customerObserver = $this->unit->execute($this->mockObserver);
 
         if ($isConfigured) {
             $this->assertNotEmpty($this->unit->getCustomer());
@@ -130,6 +142,7 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             $this->assertArrayHasKey('lastName', $this->unit->getCustomer());
             $this->assertArrayHasKey('patronymic', $this->unit->getCustomer());
             $this->assertArrayHasKey('createdAt', $this->unit->getCustomer());
+            $this->assertInstanceOf(\RetailCrm\Retailcrm\Model\Observer\Customer::class, $customerObserver);
         } else {
             $this->assertEmpty($this->unit->getCustomer());
         }

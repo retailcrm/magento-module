@@ -2,38 +2,25 @@
 
 namespace Retailcrm\Retailcrm\Model\Order;
 
-use Retailcrm\Retailcrm\Model\Observer\OrderCreate;
+use RetailCrm\Retailcrm\Helper\Data as Helper;
 use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
+use Retailcrm\Retailcrm\Model\Observer\OrderCreate;
 
 class OrderNumber extends OrderCreate
 {
-    private $orderRepository;
-    private $searchCriteriaBuilder;
-    private $config;
-    private $filterBuilder;
-    private $order;
-    private $api;
-    private $logger;
-    private $productRepository;
+    private $salesOrder;
 
     public function __construct(
-        \Magento\Sales\Model\OrderRepository $orderRepository,
-        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
-        \Magento\Framework\Api\FilterBuilder $filterBuilder,
-        \Magento\Sales\Api\Data\OrderInterface $order,
+        \Magento\Framework\Registry $registry,
         \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
-        \Magento\Catalog\Model\ProductRepository $productRepository,
-        ApiClient $api
+        \Magento\Catalog\Model\ProductRepository $product,
+        Helper $helper,
+        ApiClient $api,
+        \Magento\Sales\Api\Data\OrderInterface $salesOrder
     ) {
-        $this->orderRepository = $orderRepository;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->config = $config;
-        $this->filterBuilder = $filterBuilder;
-        $this->order = $order;
-        $this->logger = $logger;
-        $this->productRepository = $productRepository;
-        $this->api = $api;
+        $this->salesOrder = $salesOrder;
+        parent::__construct($config, $registry, $logger, $product, $helper, $api);
     }
 
     public function exportOrderNumber()
@@ -43,26 +30,28 @@ class OrderNumber extends OrderCreate
         $orders = [];
 
         foreach ($ordersId as $id) {
-            $orders[] = $this->prepareOrder($id);
+            $magentoOrder = $this->salesOrder->load($id);
+            $orders[$magentoOrder->getStore()->getId()][] = $this->prepareOrder($magentoOrder);
         }
 
-        $chunked = array_chunk($orders, 50);
-        unset($orders);
+        foreach ($orders as $storeId => $ordersStore) {
+            $chunked = array_chunk($ordersStore, 50);
+            unset($ordersStore);
 
-        foreach ($chunked as $chunk) {
-            $this->api->ordersUpload($chunk);
-            time_nanosleep(0, 250000000);
+            foreach ($chunked as $chunk) {
+                $this->api->setSite($this->helper->getSite($storeId));
+                $this->api->ordersUpload($chunk);
+                time_nanosleep(0, 250000000);
+            }
+
+            unset($chunked);
         }
-
-        unset($chunked);
 
         return true;
     }
 
-    public function prepareOrder($id)
+    public function prepareOrder($magentoOrder)
     {
-        $magentoOrder = $this->order->load($id);
-
         $items = [];
         $addressObj = $magentoOrder->getBillingAddress();
 
@@ -95,7 +84,6 @@ class OrderNumber extends OrderCreate
         $ship = $this->getShippingCode($magentoOrder->getShippingMethod());
 
         $preparedOrder = [
-            'site' => $magentoOrder->getStore()->getCode(),
             'externalId' => $magentoOrder->getRealOrderId(),
             'number' => $magentoOrder->getRealOrderId(),
             'createdAt' => date('Y-m-d H:i:s'),
@@ -152,6 +140,6 @@ class OrderNumber extends OrderCreate
 
         $this->logger->writeDump($preparedOrder, 'OrderNumber');
 
-        return \Retailcrm\Retailcrm\Helper\Data::filterRecursive($preparedOrder);
+        return Helper::filterRecursive($preparedOrder);
     }
 }

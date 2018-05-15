@@ -22,7 +22,8 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
                 'ordersEdit',
                 'ordersPaymentsEdit',
                 'getVersion',
-                'isConfigured'
+                'isConfigured',
+                'setSite'
             ])
             ->getMock();
 
@@ -38,12 +39,14 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
         $this->objectManager = $this->getMockBuilder(\Magento\Framework\ObjectManagerInterface::class)
             ->getMockForAbstractClass();
 
-        $this->mockOrder = $this->getMockBuilder(\Magento\Sales\Order::class)
+        $this->mockOrder = $this->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'getId',
                 'getPayment',
                 'getBaseTotalDue',
-                'getStatus'
+                'getStatus',
+                'getStore'
             ])
             ->getMock();
 
@@ -59,9 +62,12 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
+        $helper = $this->createMock(\Retailcrm\Retailcrm\Helper\Data::class);
+
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\OrderUpdate(
             $this->config,
             $this->registry,
+            $helper,
             $this->mockApi
         );
     }
@@ -101,6 +107,12 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->method('getPayment')
             ->willReturn($this->mockPayment);
 
+        $store = $this->createMock(\Magento\Store\Model\Store::class);
+
+        $this->mockOrder->expects($this->any())
+            ->method('getStore')
+            ->willReturn($store);
+
         // mock Api
         $this->mockApi->expects($this->any())
             ->method('getVersion')
@@ -120,12 +132,16 @@ class OrderUpdateTest extends \PHPUnit\Framework\TestCase
             ->method('getEvent')
             ->willReturn($this->mockEvent);
 
-        $this->unit->execute($this->mockObserver);
+        $updateOrderObserver = $this->unit->execute($this->mockObserver);
 
         if ($isConfigured) {
             $this->assertNotEmpty($this->unit->getOrder());
             $this->assertArrayHasKey('externalId', $this->unit->getOrder());
             $this->assertArrayHasKey('status', $this->unit->getOrder());
+            $this->assertInstanceOf(
+                \Retailcrm\Retailcrm\Model\Observer\OrderUpdate::class,
+                $updateOrderObserver
+            );
         } else {
             $this->assertEmpty($this->unit->getOrder());
         }

@@ -3,18 +3,22 @@
 namespace Retailcrm\Retailcrm\Model\Observer;
 
 use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
+use Retailcrm\Retailcrm\Helper\Data as Helper;
 
 class Customer implements \Magento\Framework\Event\ObserverInterface
 {
     private $api;
     private $registry;
     private $customer;
+    private $helper;
 
     public function __construct(
         \Magento\Framework\Registry $registry,
+        Helper $helper,
         ApiClient $api
     ) {
         $this->api = $api;
+        $this->helper = $helper;
         $this->registry = $registry;
         $this->customer = [];
     }
@@ -24,7 +28,7 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
         if ($this->registry->registry('RETAILCRM_HISTORY') === true
             || !$this->api->isConfigured()
         ) {
-            return;
+            return false;
         }
 
         $data = $observer->getEvent()->getCustomer();
@@ -41,12 +45,15 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
         $response = $this->api->customersEdit($this->customer);
 
         if ($response === false) {
-            return;
+            return false;
         }
 
         if (!$response->isSuccessful() && $response->errorMsg == $this->api->getErrorText('errorNotFound')) {
+            $this->api->setSite($this->helper->getSite($data->getStore()));
             $this->api->customersCreate($this->customer);
         }
+
+        return $this;
     }
 
     /**
