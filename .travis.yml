@@ -28,8 +28,7 @@ before_script:
   - bash bin/install.sh
 
 script:
-  - cd ../magento2
-  - php vendor/phpunit/phpunit/phpunit -c dev/tests/unit/phpunit.xml.dist app/code/Retailcrm/Retailcrm/Test/Unit/
+  - bash bin/script.sh
 
 deploy:
   skip_cleanup: true
