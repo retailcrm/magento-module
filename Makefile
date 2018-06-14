@@ -8,7 +8,7 @@ build_archive:
 	cd src; zip -r $(ARCHIVE_NAME) ./*
 
 send_to_ftp:
-	curl -T $(ARCHIVE_NAME) -u $(FTP_USER):$(FTP_PASSWORD) ftp://$(FTP_HOST)/public_html/
+	curl -T $(ARCHIVE_NAME) -u $(FTP_USER):$(FTP_PASSWORD) ftp://$(FTP_HOST)
 
 delete_archive:
 	rm -f $(ARCHIVE_NAME)
