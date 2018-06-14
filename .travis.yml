@@ -1,0 +1,40 @@
+language: php
+
+sudo: false
+
+env:
+  global:
+    - DB_USER=root
+    - DB_HOST=localhost
+    - DB_NAME=magento2_test
+    - ADMIN_FIRSTNAME=admin_firstname
+    - ADMIN_LASTNAME=admin_lastname
+    - ADMIN_EMAIL=example@email.com
+    - ADMIN_USER=admin
+    - ADMIN_PASS=admin123
+
+matrix:
+  include:
+  - php: 7.0
+    env: BRANCH=2.2-develop
+  - php: 7.1
+    env: BRANCH=2.2-develop
+  - php: 7.1
+    env: BRANCH=2.3-develop
+  - php: 7.2
+    env: BRANCH=2.3-develop
+
+before_script:
+  - bash bin/install.sh
+
+script:
+  - bash bin/script.sh
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: make
+  on:
+    php: 7.2
+    branch: master
+    condition: "$DEPLOY = true"
