@@ -16,7 +16,7 @@ Magento module
 
 1) Находясь в корневой директории проекта выполните команду:
 
-* Настроить соответствие справочников RetailCRM и Magento (статусы, оплаты, типы доставки и т.д.)
+* Настроить соответствие справочников retailCRM и Magento (статусы, оплаты, типы доставки и т.д.)
 * Создать [ICML] (http://www.retailcrm.ru/docs/Developers/ICML) (Intaro Markup Language) для загрузки каталога товаров в RetailCRM
 
 ## ICML
