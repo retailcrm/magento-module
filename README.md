@@ -1,5 +1,5 @@
-Magento module
-==============
+Magento module (THIS VERSION IS DEPRECATED!)
+============================================
 
 Magento 1.9.x module for interaction with [retailCRM](https://www.retailcrm.pro) through [REST API](https://www.retailcrm.pro/docs/Developers/Index).
 
