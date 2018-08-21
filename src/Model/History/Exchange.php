@@ -19,14 +19,11 @@ class Exchange
     private $cacheTypeList;
     private $order;
     private $orderManagement;
-    private $eventManager;
-    private $objectManager;
     private $orderInterface;
     private $storeManager;
     private $regionFactory;
 
     public function __construct(
-        \Magento\Framework\App\ObjectManager $objectManager,
         \Retailcrm\Retailcrm\Helper\Data $helper,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Config\Model\ResourceModel\Config $resourceConfig,
@@ -40,7 +37,6 @@ class Exchange
         \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
         \Magento\Sales\Api\Data\OrderInterface $orderInterface,
         \Magento\Sales\Api\OrderManagementInterface $orderManagement,
-        \Magento\Framework\Event\Manager $eventManager,
         \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         \Magento\Sales\Model\Order $order,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
@@ -61,8 +57,6 @@ class Exchange
         $this->cacheTypeList = $cacheTypeList;
         $this->orderInterface = $orderInterface;
         $this->orderManagement = $orderManagement;
-        $this->eventManager = $eventManager;
-        $this->objectManager = $objectManager;
         $this->order = $order;
         $this->storeManager = $storeManager;
         $this->regionFactory = $regionFactory;

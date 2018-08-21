@@ -20,6 +20,7 @@ class Site extends \Magento\Config\Block\System\Config\Form\Fieldset
      */
     protected $_fieldRenderer;
 
+    private $objectFactory;
     private $client;
 
     public function __construct(
@@ -27,9 +28,11 @@ class Site extends \Magento\Config\Block\System\Config\Form\Fieldset
         \Magento\Backend\Model\Auth\Session $authSession,
         \Magento\Framework\View\Helper\Js $jsHelper,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Magento\Framework\DataObjectFactory $objectFactory,
         array $data = []
     ) {
         $this->client = $client;
+        $this->objectFactory = $objectFactory;
 
         parent::__construct($context, $authSession, $jsHelper, $data);
     }
@@ -58,7 +61,7 @@ class Site extends \Magento\Config\Block\System\Config\Form\Fieldset
     protected function _getDummyElement()
     {
         if (empty($this->_dummyElement)) {
-            $this->_dummyElement = new \Magento\Framework\DataObject(['showInDefault' => 1, 'showInWebsite' => 0]);
+            $this->_dummyElement = $this->objectFactory->create(['showInDefault' => 1, 'showInWebsite' => 0]);
         }
 
         return $this->_dummyElement;
@@ -73,7 +76,9 @@ class Site extends \Magento\Config\Block\System\Config\Form\Fieldset
     public function render(AbstractElement $element)
     {
         $html = '';
-        $htmlError = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+        $htmlError = '
+            <div style="margin-left: 15px;"><b><i>' . __('Enter API of your URL and API key') . '</i></b></div>
+        ';
         $html .= $this->_getHeaderHtml($element);
 
         if ($this->client->isConfigured()) {
@@ -145,7 +150,7 @@ class Site extends \Magento\Config\Block\System\Config\Form\Fieldset
             'select',
             [
                 'name' => 'groups[' . $fieldset->getId() . '][fields][default][value]',
-                'label' => 'Default site',
+                'label' => __('Default site'),
                 'value' => isset($data) ? $data : '',
                 'values' => $this->getValues(),
                 'inherit' => isset($data['inherit']) ? $data['inherit'] : '',

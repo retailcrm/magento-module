@@ -73,14 +73,16 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
         if ($response->isSuccessful()) {
             $availableVersions = $response['versions'];
         } else {
-            throw new \Magento\Framework\Exception\ValidatorException(__('Invalid CRM url or api key'));
+            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect URL of retailCRM or API key'));
         }
 
         if (isset($availableVersions)) {
             if (in_array($apiVersions[$apiVersion], $availableVersions)) {
                 $this->setValue($this->getValue());
             } else {
-                throw new \Magento\Framework\Exception\ValidatorException(__('Selected api version forbidden'));
+                throw new \Magento\Framework\Exception\ValidatorException(
+                    __('The selected API version is unavailable')
+                );
             }
         }
     }

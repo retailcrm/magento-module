@@ -1,19 +1,19 @@
-
 <script>
 require([
     'jquery',
     'prototype',
 ], function(jQuery){
     function syncronize() {
-        params = {
-        };
+        var numbers = $('retailcrm_load_number_order').getValue();
 
         new Ajax.Request('<?php echo $block->getAjaxSyncUrl() ?>', {
-            loaderArea:     false,
+            loaderArea:     true,
             asynchronous:   true,
-            parameters:     params,
+            parameters:     {numbers:numbers},
             onSuccess: function(transport) {
-                var response = JSON.parse(transport.responseText);
+                if (transport.responseJSON.success === false) {
+                    alert(transport.responseJSON.error);
+                }
             }
         });
     }

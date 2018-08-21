@@ -6,72 +6,62 @@
         </tab>
         <section id="retailcrm" translate="label" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
             <class>separator-top</class>
-            <label>Setting</label>
+            <label>Settings</label>
             <tab>retailcrm</tab>
             <resource>Retailcrm_Retailcrm::retailcrm_configuration</resource>
             <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>General Configuration</label>
-
+                <label>Main settings</label>
                 <field id="api_url" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API URL</label>
                     <comment>https://YourCrmName.retailcrm.ru</comment>
                     <backend_model>Retailcrm\Retailcrm\Model\Config\Backend\ApiUrl</backend_model>
                 </field>
-
                 <field id="api_key" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>API Key</label>
-                    <comment>To generate an API Key, log in to RetailCRM then select Admin > Integration > API Keys</comment>
+                    <label>API key</label>
+                    <comment>You can create an API key in the administration section of retailCRM</comment>
                 </field>
-
                 <field id="api_version" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>API Version</label>
+                    <label>API version</label>
                     <source_model>Retailcrm\Retailcrm\Model\Setting\ApiVersions</source_model>
                     <backend_model>Retailcrm\Retailcrm\Model\Config\Backend\ApiVersion</backend_model>
                 </field>
             </group>
-
-            <group id="Misc" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Misc</label>
+            <group id="catalog" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Catalogue settings</label>
                 <field id="attributes_to_export_into_icml" translate="label" type="multiselect" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Attributes to export into icml</label>
-                    <comment>Attributes to export into icml</comment>
+                    <label>Attributes for uploading to ICML</label>
+                    <comment>Select attributes which will be uploaded to ICML</comment>
                     <source_model>Retailcrm\Retailcrm\Model\Setting\Attribute</source_model>
                 </field>
             </group>
-
             <group id="shipping" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Shipping</label>
+                <label>Delivery types</label>
                 <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Shipping</frontend_model>
             </group>
-
             <group id="payment" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Payment method</label>
+                <label>Payment types</label>
                 <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Payment</frontend_model>
             </group>
-
             <group id="status" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Order Status</label>
+                <label>Order statuses</label>
                 <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Status</frontend_model>
             </group>
-
-            <group id="Load" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Order Load</label>
+            <group id="load" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Uploading orders</label>
                 <field id="number_order" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Order number</label>
-                    <comment>Enter your order number, separated by commas</comment>
+                    <comment>Enter order numbers separated by a comma for uploading</comment>
                 </field>
                 <field id="button_order" translate="label comment" type="button" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Button</frontend_model>
                 </field>
             </group>
-
             <group id="site" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Site</label>
+                <label>Setting the store by default</label>
                 <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Site</frontend_model>
             </group>
-
             <group id="sites" translate="label" type="select" sortOrder="70" showInDefault="0" showInWebsite="1" showInStore="0">
-                <label>Sites</label>
+                <label>Setting the stores correspondence</label>
                 <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Sites</frontend_model>
             </group>
         </section>

@@ -20,6 +20,7 @@ class Status extends \Magento\Config\Block\System\Config\Form\Fieldset
      */
     protected $_fieldRenderer;
 
+    private $objectFactory;
     private $statusCollection;
     private $client;
 
@@ -29,10 +30,12 @@ class Status extends \Magento\Config\Block\System\Config\Form\Fieldset
         \Magento\Framework\View\Helper\Js $jsHelper,
         \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Magento\Framework\DataObjectFactory $objectFactory,
         array $data = []
     ) {
         $this->statusCollection = $statusCollection;
         $this->client = $client;
+        $this->objectFactory = $objectFactory;
 
         parent::__construct($context, $authSession, $jsHelper, $data);
     }
@@ -61,7 +64,7 @@ class Status extends \Magento\Config\Block\System\Config\Form\Fieldset
     protected function _getDummyElement()
     {
         if (empty($this->_dummyElement)) {
-            $this->_dummyElement = new \Magento\Framework\DataObject(['showInDefault' => 1, 'showInWebsite' => 1]);
+            $this->_dummyElement = $this->objectFactory->create(['showInDefault' => 1, 'showInWebsite' => 1]);
         }
 
         return $this->_dummyElement;
@@ -70,11 +73,14 @@ class Status extends \Magento\Config\Block\System\Config\Form\Fieldset
     public function render(AbstractElement $element)
     {
         $html = '';
-        $htmlError = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+        $htmlError = '
+            <div style="margin-left: 15px;"><b><i>'. __('Enter API of your URL and API key') . '</i></b></div>
+        ';
+
         $html .= $this->_getHeaderHtml($element);
 
         if ($this->client->isConfigured()) {
-            $statuses = $this->statusCollection->toOptionArray();;
+            $statuses = $this->statusCollection->toOptionArray();
 
             foreach ($statuses as $code => $status) {
                 $html .= $this->_getFieldHtml($element, $status);

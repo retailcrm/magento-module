@@ -8,4 +8,12 @@
             <argument name="pathVersion" xsi:type="const">Retailcrm\Retailcrm\Api\ConfigManagerInterface::API_VERSION_PATH</argument>
         </arguments>
     </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="orders_export_command" xsi:type="object">Retailcrm\Retailcrm\Console\Command\OrdersExport</item>
+                <item name="customers_export_command" xsi:type="object">Retailcrm\Retailcrm\Console\Command\CustomersExport</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

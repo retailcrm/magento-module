@@ -20,6 +20,7 @@ class Shipping extends \Magento\Config\Block\System\Config\Form\Fieldset
      */
     protected $_fieldRenderer;
 
+    private $objectFactory;
     private $shippingConfig;
     private $client;
 
@@ -29,10 +30,12 @@ class Shipping extends \Magento\Config\Block\System\Config\Form\Fieldset
         \Magento\Framework\View\Helper\Js $jsHelper,
         \Magento\Shipping\Model\Config $shippingConfig,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Magento\Framework\DataObjectFactory $objectFactory,
         array $data = []
     ) {
         $this->shippingConfig = $shippingConfig;
         $this->client = $client;
+        $this->objectFactory = $objectFactory;
 
         parent::__construct($context, $authSession, $jsHelper, $data);
     }
@@ -61,7 +64,7 @@ class Shipping extends \Magento\Config\Block\System\Config\Form\Fieldset
     protected function _getDummyElement()
     {
         if (empty($this->_dummyElement)) {
-            $this->_dummyElement = new \Magento\Framework\DataObject(['showInDefault' => 1, 'showInWebsite' => 1]);
+            $this->_dummyElement = $this->objectFactory->create(['showInDefault' => 1, 'showInWebsite' => 1]);
         }
 
         return $this->_dummyElement;
@@ -76,7 +79,10 @@ class Shipping extends \Magento\Config\Block\System\Config\Form\Fieldset
     public function render(AbstractElement $element)
     {
         $html = '';
-        $htmlError = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+        $htmlError = '
+            <div style="margin-left: 15px;"><b><i>' . __('Enter API of your URL and API key') . '</i></b></div>
+        ';
+
         $html .= $this->_getHeaderHtml($element);
 
         if ($this->client->isConfigured()) {

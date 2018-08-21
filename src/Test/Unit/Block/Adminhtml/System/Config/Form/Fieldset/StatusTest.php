@@ -51,7 +51,8 @@ class StatusTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'data' => ['group' => $this->groupMock],
             'client' => $client,
             'statusCollection' => $statusCollection,
-            'context' => $this->context
+            'context' => $this->context,
+            'objectFactory' => $this->objectFactory
         ];
 
         $status = $this->objectManager->getObject(
@@ -68,12 +69,14 @@ class StatusTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
         $this->assertContains($this->testFieldSetCss, $html);
 
         if (!$isConfigured) {
-            $expected = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+            $expected = '
+                <div style="margin-left: 15px;"><b><i>' . __('Enter API of your URL and API key') . '</i></b></div>
+            ';
             $this->assertContains($expected, $html);
         }
     }
 
-    protected function getTestStatuses()
+    private function getTestStatuses()
     {
         $status = [
             'label' => 'Test Status',

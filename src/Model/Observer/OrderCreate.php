@@ -4,41 +4,37 @@ namespace Retailcrm\Retailcrm\Model\Observer;
 
 use Magento\Framework\Event\Observer;
 use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
-use RetailCrm\Retailcrm\Helper\Data as Helper;
+use Retailcrm\Retailcrm\Helper\Data as Helper;
 
 class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 {
     protected $api;
-    protected $config;
     protected $logger;
     protected $helper;
 
     private $registry;
-    private $product;
     private $order;
+    private $serviceOrder;
 
     /**
      * Constructor
      *
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param \Magento\Framework\Registry $registry
      * @param \Retailcrm\Retailcrm\Model\Logger\Logger $logger
-     * @param \Magento\Catalog\Model\ProductRepository $product
+     * @param \Retailcrm\Retailcrm\Model\Service\Order $serviceOrder
      * @param Helper $helper
      * @param ApiClient $api
      */
     public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Framework\Registry $registry,
         \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
-        \Magento\Catalog\Model\ProductRepository $product,
+        \Retailcrm\Retailcrm\Model\Service\Order $serviceOrder,
         Helper $helper,
         ApiClient $api
     ) {
         $this->logger = $logger;
-        $this->config = $config;
         $this->registry = $registry;
-        $this->product = $product;
+        $this->serviceOrder = $serviceOrder;
         $this->helper = $helper;
         $this->api = $api;
         $this->order = [];
@@ -60,101 +56,18 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
         }
 
         $order = $observer->getEvent()->getOrder();
-
         $this->api->setSite($this->helper->getSite($order->getStore()));
 
         if ($this->existsInCrm($order->getId()) === true) {
             return false;
         }
 
-        $addressObj = $order->getBillingAddress();
-
-        $shippingCode = $this->getShippingCode($order->getShippingMethod());
-
-        $this->order = [
-            'externalId' => $order->getId(),
-            'number' => $order->getRealOrderId(),
-            'createdAt' => $order->getCreatedAt(),
-            'lastName' => $order->getCustomerLastname()
-                ? $order->getCustomerLastname()
-                : $addressObj->getLastname(),
-            'firstName' => $order->getCustomerFirstname()
-                ? $order->getCustomerFirstname()
-                : $addressObj->getFirstname(),
-            'patronymic' => $order->getCustomerMiddlename()
-                ? $order->getCustomerMiddlename()
-                : $addressObj->getMiddlename(),
-            'email' => $order->getCustomerEmail(),
-            'phone' => $addressObj->getTelephone(),
-            'status' => $this->config->getValue('retailcrm/retailcrm_status/' . $order->getStatus()),
-            'items' => $this->getOrderItems($order),
-            'delivery' => [
-                'code' => $this->config->getValue('retailcrm/retailcrm_shipping/' . $shippingCode),
-                'cost' => $order->getShippingAmount(),
-                'address' => [
-                    'index' => $addressObj->getData('postcode'),
-                    'city' => $addressObj->getData('city'),
-                    'street' => $addressObj->getData('street'),
-                    'region' => $addressObj->getData('region'),
-                    'text' => trim(
-                        ',',
-                        implode(
-                            ',',
-                            [
-                                $addressObj->getData('postcode'),
-                                $addressObj->getData('city'),
-                                $addressObj->getData('street'),
-                            ]
-                        )
-                    )
-                ]
-            ]
-        ];
-
-        if ($addressObj->getData('country_id')) {
-            $this->order['countryIso'] = $addressObj->getData('country_id');
-        }
-
-        if ($this->api->getVersion() == 'v4') {
-            $this->order['paymentType'] = $this->config->getValue(
-                'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
-            );
-            $this->order['discount'] = abs($order->getDiscountAmount());
-        } elseif ($this->api->getVersion() == 'v5') {
-            $this->order['discountManualAmount'] = abs($order->getDiscountAmount());
-
-            $payment = [
-                'type' => $this->config->getValue(
-                    'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
-                ),
-                'externalId' => $order->getId(),
-                'order' => [
-                    'externalId' => $order->getId(),
-                ]
-            ];
-
-            if ($order->getBaseTotalDue() == 0) {
-                $payment['status'] = 'paid';
-            }
-
-            $this->order['payments'][] = $payment;
-        }
-
-        if (trim($this->order['delivery']['code']) == '') {
-            unset($this->order['delivery']['code']);
-        }
-
-        if (isset($this->order['paymentType']) && trim($this->order['paymentType']) == '') {
-            unset($this->order['paymentType']);
-        }
-
-        if (trim($this->order['status']) == '') {
-            unset($this->order['status']);
-        }
+        $billingAddress = $order->getBillingAddress();
+        $this->order = $this->serviceOrder->process($order);
 
         $this->setCustomer(
             $order,
-            $addressObj
+            $billingAddress
         );
 
         Helper::filterRecursive($this->order);
@@ -168,9 +81,9 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
 
     /**
      * @param $order
-     * @param $addressObj
+     * @param $billingAddress
      */
-    private function setCustomer($order, $addressObj)
+    private function setCustomer($order, $billingAddress)
     {
         if ($order->getCustomerIsGuest() == 1) {
             $customer = $this->getCustomerByEmail($order->getCustomerEmail());
@@ -191,9 +104,9 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
                     'email' => $order->getCustomerEmail()
                 ];
 
-                if ($addressObj->getTelephone()) {
+                if ($billingAddress->getTelephone()) {
                     $preparedCustomer['phones'][] = [
-                        'number' => $addressObj->getTelephone()
+                        'number' => $billingAddress->getTelephone()
                     ];
                 }
 
@@ -202,62 +115,6 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
                 }
             }
         }
-    }
-
-    /**
-     * Get order products
-     *
-     * @param object $order
-     *
-     * @return array $items
-     */
-    private function getOrderItems($order)
-    {
-        $items = [];
-
-        foreach ($order->getAllItems() as $item) {
-            if ($item->getProductType() == "simple") {
-                $price = $item->getPrice();
-
-                if ($price == 0) {
-                    $magentoProduct = $this->product->getById($item->getProductId());
-                    $price = $magentoProduct->getPrice();
-                }
-
-                $product = [
-                    'productId' => $item->getProductId(),
-                    'productName' => $item->getName(),
-                    'quantity' => $item->getQtyOrdered(),
-                    'initialPrice' => $price,
-                    'offer' => [
-                        'externalId' => $item->getProductId()
-                    ]
-                ];
-
-                unset($magentoProduct);
-                unset($price);
-
-                $items[] = $product;
-            }
-        }
-
-        return $items;
-    }
-
-    /**
-     * Get shipping code
-     *
-     * @param string $string
-     *
-     * @return string
-     */
-    public function getShippingCode($string)
-    {
-        $split = array_values(explode('_', $string));
-        $length = count($split);
-        $prepare = array_slice($split, 0, $length/2);
-
-        return implode('_', $prepare);
     }
 
     /**

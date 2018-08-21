@@ -4,7 +4,7 @@ namespace Retailcrm\Retailcrm\Model\Observer;
 
 use Magento\Framework\Event\Observer;
 use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
-use RetailCrm\Retailcrm\Helper\Data as Helper;
+use Retailcrm\Retailcrm\Helper\Data as Helper;
 
 class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
 {
