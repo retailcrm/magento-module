@@ -72,9 +72,10 @@ class SitesTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
         $this->assertContains($this->testFieldSetCss, $html);
 
         if (!$isConfigured) {
-            $expected = '
-                <div style="margin-left: 15px;"><b><i>' . __('Enter API of your URL and API key') . '</i></b></div>
-            ';
+            $expected = sprintf(
+                '<div style="margin-left: 15px;"><b><i>%s</i></b></div>',
+                __('Enter API of your URL and API key')
+            );
             $this->assertContains($expected, $html);
         }
     }

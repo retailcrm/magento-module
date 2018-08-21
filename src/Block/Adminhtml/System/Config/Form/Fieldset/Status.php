@@ -73,9 +73,10 @@ class Status extends \Magento\Config\Block\System\Config\Form\Fieldset
     public function render(AbstractElement $element)
     {
         $html = '';
-        $htmlError = '
-            <div style="margin-left: 15px;"><b><i>'. __('Enter API of your URL and API key') . '</i></b></div>
-        ';
+        $htmlError = sprintf(
+            '<div style="margin-left: 15px;"><b><i>%s</i></b></div>',
+            __('Enter API of your URL and API key')
+        );
 
         $html .= $this->_getHeaderHtml($element);
 
