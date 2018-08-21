@@ -20,6 +20,7 @@ class Sites extends \Magento\Config\Block\System\Config\Form\Fieldset
      */
     protected $_fieldRenderer;
 
+    private $objectFactory;
     private $storeManager;
     private $client;
 
@@ -29,11 +30,12 @@ class Sites extends \Magento\Config\Block\System\Config\Form\Fieldset
         \Magento\Framework\View\Helper\Js $jsHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Magento\Framework\DataObjectFactory $objectFactory,
         array $data = []
     ) {
         $this->storeManager = $storeManager;
         $this->client = $client;
-
+        $this->objectFactory = $objectFactory;
         parent::__construct($context, $authSession, $jsHelper, $data);
     }
 
@@ -61,7 +63,7 @@ class Sites extends \Magento\Config\Block\System\Config\Form\Fieldset
     protected function _getDummyElement()
     {
         if (empty($this->_dummyElement)) {
-            $this->_dummyElement = new \Magento\Framework\DataObject(['showInDefault' => 1, 'showInWebsite' => 0]);
+            $this->_dummyElement = $this->objectFactory->create(['showInDefault' => 1, 'showInWebsite' => 0]);
         }
 
         return $this->_dummyElement;
@@ -76,7 +78,10 @@ class Sites extends \Magento\Config\Block\System\Config\Form\Fieldset
     public function render(AbstractElement $element)
     {
         $html = '';
-        $htmlError = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+        $htmlError = sprintf(
+            '<div style="margin-left: 15px;"><b><i>%s</i></b></div>',
+            __('Enter API of your URL and API key')
+        );
         $html .= $this->_getHeaderHtml($element);
 
         if ($this->client->isConfigured()) {

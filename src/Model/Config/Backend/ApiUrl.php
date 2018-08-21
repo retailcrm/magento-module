@@ -78,11 +78,11 @@ class ApiUrl extends \Magento\Framework\App\Config\Value
         $response = $api->availableVersions();
 
         if ($response === false) {
-            throw new \Magento\Framework\Exception\ValidatorException(__('Verify that the data entered is correct'));
+            throw new \Magento\Framework\Exception\ValidatorException(__('Make sure that the entered data is correct'));
         } elseif (!$response->isSuccessful() && $response['errorMsg'] == $api->getErrorText('errorApiKey')) {
-            throw new \Magento\Framework\Exception\ValidatorException(__('Invalid CRM api key'));
+            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect API key'));
         } elseif (isset($response['errorMsg']) && $response['errorMsg'] == $api->getErrorText('errorAccount')) {
-            throw new \Magento\Framework\Exception\ValidatorException(__('Invalid CRM api url'));
+            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect URL of retailCRM'));
         }
 
         return true;

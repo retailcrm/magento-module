@@ -23,6 +23,13 @@ class Data extends AbstractHelper
         parent::__construct($context);
     }
 
+    public function getGeneralSettings($setting = null)
+    {
+        return $setting === null
+            ? $this->getConfigValue(self::XML_PATH_RETAILCRM . 'general')
+            : $this->getConfigValue(self::XML_PATH_RETAILCRM . 'general/' . $setting);
+    }
+
     public function getConfigValue($field, $storeId = null)
     {
         return $this->scopeConfig->getValue(
@@ -30,11 +37,6 @@ class Data extends AbstractHelper
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
-    }
-
-    public function getGeneralConfig($code, $storeId = null)
-    {
-        return $this->getConfigValue(self::XML_PATH_RETAILCRM . $code, $storeId);
     }
 
     /**

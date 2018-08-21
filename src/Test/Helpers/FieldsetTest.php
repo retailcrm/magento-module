@@ -17,6 +17,7 @@ class FieldsetTest extends \PHPUnit\Framework\TestCase
     protected $form;
     protected $testElementId = 'test_element_id';
     protected $testFieldSetCss = 'test_fieldset_css';
+    protected $objectFactory;
 
     public function setUp()
     {
@@ -26,7 +27,7 @@ class FieldsetTest extends \PHPUnit\Framework\TestCase
         $escaperMock = $this->createMock(\Magento\Framework\Escaper::class);
         $formElementMock = $this->createMock(\Magento\Framework\Data\Form\Element\Select::class);
         $factoryMock->expects($this->any())->method('create')->willReturn($formElementMock);
-
+        $this->objectFactory = $this->objectManager->getObject(\Magento\Framework\DataObjectFactory::class);
         $formElementMock->expects($this->any())->method('setRenderer')->willReturn($formElementMock);
         $elementCollection = $this->objectManager->getObject(\Magento\Framework\Data\Form\Element\Collection::class);
 
@@ -88,13 +89,17 @@ class FieldsetTest extends \PHPUnit\Framework\TestCase
         $this->urlModelMock = $this->createMock(\Magento\Backend\Model\Url::class);
         $this->layoutMock = $this->createMock(\Magento\Framework\View\Layout::class);
         $this->groupMock = $this->createMock(\Magento\Config\Model\Config\Structure\Element\Group::class);
-        $this->groupMock->expects($this->any())->method('getFieldsetCss')->will($this->returnValue($this->testFieldSetCss));
+        $this->groupMock->expects($this->any())->method('getFieldsetCss')
+            ->will($this->returnValue($this->testFieldSetCss));
         $this->context = $this->createMock(\Magento\Backend\Block\Context::class);
         $this->context->expects($this->any())->method('getRequest')->willReturn($this->requestMock);
         $this->context->expects($this->any())->method('getUrlBuilder')->willReturn($this->urlModelMock);
         $this->layoutMock->expects($this->any())->method('getBlockSingleton')->willReturn($rendererMock);
         $this->helperMock = $this->createMock(\Magento\Framework\View\Helper\Js::class);
-        $this->form = $this->createPartialMock(\Magento\Config\Block\System\Config\Form::class, ['getElements', 'getRequest']);
+        $this->form = $this->createPartialMock(
+            \Magento\Config\Block\System\Config\Form::class,
+            ['getElements', 'getRequest']
+        );
         $this->form->expects($this->any())->method('getElements')->willReturn($elementCollection);
         $this->form->expects($this->any())->method('getRequest')->willReturn($this->requestMock);
     }

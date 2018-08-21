@@ -10,49 +10,57 @@ class Icml
     private $shop;
     private $manager;
     private $category;
-    private $product;
     private $storeManager;
     private $StockState;
     private $configurable;
     private $config;
     private $dirList;
     private $ddFactory;
+    private $resourceModelProduct;
+    private $searchCriteriaBuilder;
+    private $productRepository;
 
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $manager,
         \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
-        \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $product,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\CatalogInventory\Api\StockStateInterface $StockState,
         \Magento\ConfigurableProduct\Model\Product\Type\Configurable $configurable,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Framework\DomDocument\DomDocumentFactory $ddFactory,
-        \Magento\Framework\Filesystem\DirectoryList $dirList
+        \Magento\Framework\Filesystem\DirectoryList $dirList,
+        \Magento\Catalog\Model\ResourceModel\Product $resourceModelProduct,
+        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        \Magento\Catalog\Model\ProductRepository $productRepository
     ) {
         $this->configurable = $configurable;
         $this->StockState = $StockState;
         $this->storeManager = $storeManager;
-        $this->product = $product;
         $this->category = $categoryCollectionFactory;
         $this->manager = $manager;
         $this->config = $config;
         $this->ddFactory = $ddFactory;
         $this->dirList = $dirList;
+        $this->resourceModelProduct = $resourceModelProduct;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->productRepository = $productRepository;
     }
 
     /**
      * Generate icml catelog
      *
+     * @param \Magento\Store\Model\Website $website
+     *
      * @return void
      */
-    public function generate()
+    public function generate($website)
     {
-        $this->shop = $this->manager->getStore()->getId();
+        $this->shop = $website;
 
         $string = '<?xml version="1.0" encoding="UTF-8"?>
             <yml_catalog date="'.date('Y-m-d H:i:s').'">
                 <shop>
-                    <name>'.$this->manager->getStore()->getName().'</name>
+                    <name>' . $website->getName() . '</name>
                     <categories/>
                     <offers/>
                 </shop>
@@ -79,8 +87,7 @@ class Icml
         $this->addOffers();
 
         $this->dd->saveXML();
-        $shopCode = $this->manager->getStore()->getCode();
-        $this->dd->save($this->dirList->getRoot() . '/retailcrm_' . $shopCode . '.xml');
+        $this->dd->save($this->dirList->getRoot() . '/retailcrm_' . $website->getCode() . '.xml');
     }
 
     /**
@@ -226,22 +233,22 @@ class Icml
     {
         $offers = [];
 
-        $collection = $this->product->create();
-        $collection->addFieldToFilter('visibility', 4);//catalog, search visible
-        $collection->addAttributeToSelect('*');
-        $picUrl = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
-        $customAdditionalAttributes = $this->config->getValue('retailcrm/Misc/attributes_to_export_into_icml');
+        $criteria = $this->searchCriteriaBuilder
+            ->addFilter('website_id', $this->shop->getId(), 'eq')
+            ->create();
+        $collection = $this->productRepository->getList($criteria);
+        $customAdditionalAttributes = $this->config->getValue('retailcrm/catalog/attributes_to_export_into_icml');
 
-        foreach ($collection as $product) {
+        foreach ($collection->getItems() as $product) {
             if ($product->getTypeId() == 'simple') {
-                $offers[] = $this->buildOffer($product);
+                $offers[] = $this->buildOffer($product, $customAdditionalAttributes);
             }
 
             if ($product->getTypeId() == 'configurable') {
                 $associated_products = $this->getAssociatedProducts($product);
 
                 foreach ($associated_products as $associatedProduct) {
-                    $offers[] = $this->buildOffer($product, $associatedProduct);
+                    $offers[] = $this->buildOffer($product, $customAdditionalAttributes, $associatedProduct);
                 }
             }
         }
@@ -253,14 +260,17 @@ class Icml
      * Build offer array
      *
      * @param object $product
+     * @param $customAdditionalAttributes
      * @param object $associatedProduct
+     *
      * @return array $offer
      */
-    private function buildOffer($product, $associatedProduct = null)
+    private function buildOffer($product, $customAdditionalAttributes, $associatedProduct = null)
     {
         $offer = [];
 
-        $picUrl = $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
+        $store = $this->shop->getDefaultStore() ? $this->shop->getDefaultStore() : $this->storeManager->getStore();
+        $picUrl = $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
 
         $offer['id'] = $associatedProduct === null ? $product->getId() : $associatedProduct->getId();
         $offer['productId'] = $product->getId();
@@ -276,7 +286,7 @@ class Icml
         $offer['initialPrice'] = $associatedProduct === null
             ? $product->getFinalPrice()
             : $associatedProduct->getFinalPrice();
-        $offer['url'] = $product->getProductUrl();
+        $offer['url'] = $product->getUrlInStore();
 
         if ($associatedProduct === null) {
             $offer['picture'] = $picUrl . 'catalog/product' . $product->getImage();
@@ -294,7 +304,7 @@ class Icml
             ? $product->getAttributeText('manufacturer')
             : $associatedProduct->getAttributeText('manufacturer');
 
-        $offer['params'] = $this->getOfferParams($product, $associatedProduct);
+        $offer['params'] = $this->getOfferParams($product, $customAdditionalAttributes, $associatedProduct);
 
         return $offer;
     }
@@ -303,59 +313,35 @@ class Icml
      * Get parameters offers
      *
      * @param object $product
+     * @param $customAdditionalAttributes
      * @param object $associatedProduct
+     *
      * @return array $params
      */
-    private function getOfferParams($product, $associatedProduct = null)
+    private function getOfferParams($product, $customAdditionalAttributes, $associatedProduct = null)
     {
         $params = [];
 
-        if ($associatedProduct !== null) {
-            if ($associatedProduct->getResource()->getAttribute('color')) {
-                $colorAttribute = $associatedProduct->getResource()->getAttribute('color');
-                $color = $colorAttribute->getSource()->getOptionText($associatedProduct->getColor());
-            }
-
-            if (isset($color)) {
-                $params[] = [
-                    'name' => 'Color',
-                    'code' => 'color',
-                    'value' => $color
-                ];
-            }
-
-            if ($associatedProduct->getResource()->getAttribute('size')) {
-                $sizeAttribute = $associatedProduct->getResource()->getAttribute('size');
-                $size = $sizeAttribute->getSource()->getOptionText($associatedProduct->getSize());
-            }
-
-            if (isset($size)) {
-                $params[] = [
-                    'name' => 'Size',
-                    'code' => 'size',
-                    'value' => $size
-                ];
-            }
+        if (!$customAdditionalAttributes) {
+            return $params;
         }
 
-        $article = $associatedProduct === null ? $product->getSku() : $associatedProduct->getSku();
+        $attributes = explode(',', $customAdditionalAttributes);
 
-        if (!empty($article)) {
-            $params[] = [
-                'name' => 'Article',
-                'code' => 'article',
-                'value' => $article
-            ];
-        }
+        foreach ($attributes as $attributeCode) {
+            $attribute = $this->resourceModelProduct->getAttribute($attributeCode);
+            $attributeValue = $associatedProduct
+                ? $associatedProduct->getData($attributeCode)
+                : $product->getData($attributeCode);
+            $attributeText = $attribute->getSource()->getOptionText($attributeValue);
 
-        $weight = $associatedProduct === null ? $product->getWeight() : $associatedProduct->getWeight();
-
-        if (!empty($weight)) {
-            $params[] = [
-                'name' => 'Weight',
-                'code' => 'weight',
-                'value' => $weight
-            ];
+            if ($attribute && $attributeValue) {
+                $params[] = [
+                    'name' => $attribute->getDefaultFrontendLabel(),
+                    'code' => $attributeCode,
+                    'value' => $attributeText ? $attributeText : $attributeValue
+                ];
+            }
         }
 
         return $params;

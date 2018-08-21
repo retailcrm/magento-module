@@ -11,15 +11,18 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
     private $registry;
     private $customer;
     private $helper;
+    private $serviceCustomer;
 
     public function __construct(
         \Magento\Framework\Registry $registry,
         Helper $helper,
-        ApiClient $api
+        ApiClient $api,
+        \Retailcrm\Retailcrm\Model\Service\Customer $serviceCustomer
     ) {
         $this->api = $api;
         $this->helper = $helper;
         $this->registry = $registry;
+        $this->serviceCustomer = $serviceCustomer;
         $this->customer = [];
     }
 
@@ -31,17 +34,8 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
             return false;
         }
 
-        $data = $observer->getEvent()->getCustomer();
-
-        $this->customer = [
-            'externalId' => $data->getId(),
-            'email' => $data->getEmail(),
-            'firstName' => $data->getFirstname(),
-            'patronymic' => $data->getMiddlename(),
-            'lastName' => $data->getLastname(),
-            'createdAt' => date('Y-m-d H:i:s', strtotime($data->getCreatedAt()))
-        ];
-
+        $customer = $observer->getEvent()->getCustomer();
+        $this->customer = $this->serviceCustomer->process($customer);
         $response = $this->api->customersEdit($this->customer);
 
         if ($response === false) {
@@ -49,7 +43,7 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
         }
 
         if (!$response->isSuccessful() && $response->errorMsg == $this->api->getErrorText('errorNotFound')) {
-            $this->api->setSite($this->helper->getSite($data->getStore()));
+            $this->api->setSite($this->helper->getSite($customer->getStore()));
             $this->api->customersCreate($this->customer);
         }
 

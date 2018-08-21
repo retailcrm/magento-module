@@ -17,7 +17,13 @@ class Attribute implements \Magento\Framework\Option\ArrayInterface
 
     public function toOptionArray()
     {
-        $types = ['text', 'multiselect', 'decimal'];
+        $types = [
+            'text',
+            'decimal',
+            'boolean',
+            'select',
+            'price'
+        ];
         $attributes = $this->entityType->loadByCode('catalog_product')->getAttributeCollection();
         $attributes->addFieldToFilter('frontend_input', $types);
 
@@ -26,7 +32,7 @@ class Attribute implements \Magento\Framework\Option\ArrayInterface
         foreach ($attributes as $attr) {
             if ($attr->getFrontendLabel()) {
                 $result[] = [
-                    'value' => $attr->getAttributeId(),
+                    'value' => $attr->getAttributeCode(),
                     'label' => $attr->getFrontendLabel(),
                     'title' => $attr->getAttributeCode()
                 ];

@@ -55,7 +55,7 @@ class Button extends \Magento\Config\Block\System\Config\Form\Field
         )->setData(
             [
                 'id' => 'order_button',
-                'label' => __('Run'),
+                'label' => __('Send'),
             ]
         );
 

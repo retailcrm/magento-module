@@ -51,7 +51,8 @@ class PaymentTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'data' => ['group' => $this->groupMock],
             'client' => $client,
             'paymentConfig' => $paymentConfig,
-            'context' => $this->context
+            'context' => $this->context,
+            'objectFactory' => $this->objectFactory
         ];
 
         $payment = $this->objectManager->getObject(
@@ -68,7 +69,10 @@ class PaymentTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
         $this->assertContains($this->testFieldSetCss, $html);
 
         if (!$isConfigured) {
-            $expected = '<div style="margin-left: 15px;"><b><i>Please check your API Url & API Key</i></b></div>';
+            $expected = sprintf(
+                '<div style="margin-left: 15px;"><b><i>%s</i></b></div>',
+                __('Enter API of your URL and API key')
+            );
             $this->assertContains($expected, $html);
         }
     }
@@ -76,11 +80,13 @@ class PaymentTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
     protected function getTestActiveMethods()
     {
         $payment = $this->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->setMethods(['getData'])
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
 
         $payment->expects($this->any())
-            ->method('getTitle')
+            ->method('getData')
+            ->with('title')
             ->willReturn('Test Payment');
 
         return ['test_payment' => $payment];

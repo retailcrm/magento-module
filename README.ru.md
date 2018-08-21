@@ -33,11 +33,6 @@ Magento module
 composer require retailcrm/api-client-php ~5.0
 ```
 
-2) Распакуйте архив с модулем в директорию "app/code/Retailcrm/Retailcrm". 
-
-3) В файле "app/etc/config.php" в массив `modules` добавьте элемент `'Retailcrm_Retailcrm' => 1`
-
-
 В конфигурационный файл `composer.json` вашего проекта будет добавлена библиотека [retailcrm/api-client-php](https://github.com/retailcrm/api-client-php), которая будет установлена в директорию `vendor/`.
 
 

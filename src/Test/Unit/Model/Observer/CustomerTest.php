@@ -1,6 +1,6 @@
 <?php
 
-namespace Retailcrm\Retailcrm\Test\Unit\Observer;
+namespace Retailcrm\Retailcrm\Test\Unit\Model\Observer;
 
 class CustomerTest extends \PHPUnit\Framework\TestCase
 {
@@ -12,6 +12,7 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
     private $mockCustomer;
     private $unit;
     private $helper;
+    private $mockServiceCustomer;
 
     public function setUp()
     {
@@ -46,21 +47,22 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
         $this->mockCustomer = $this->getMockBuilder(\Magento\Customer\Model\Customer::class)
             ->disableOriginalConstructor()
             ->setMethods([
-                'getId',
-                'getEmail',
-                'getFirstname',
-                'getMiddlename',
-                'getLastname',
                 'getStore'
             ])
             ->getMock();
+
+        $this->mockServiceCustomer = $this->getMockBuilder(\Retailcrm\Retailcrm\Model\Service\Customer::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->mockServiceCustomer->expects($this->any())->method('process')->willReturn($this->getCustomerTestData());
 
         $this->helper = $this->createMock(\Retailcrm\Retailcrm\Helper\Data::class);
 
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\Customer(
             $this->registry,
             $this->helper,
-            $this->mockApi
+            $this->mockApi,
+            $this->mockServiceCustomer
         );
     }
 
@@ -73,8 +75,6 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
         $isSuccessful,
         $isConfigured
     ) {
-        $testData = $this->getAfterSaveCustomerTestData();
-
         // mock Response
         $this->mockResponse->expects($this->any())
             ->method('isSuccessful')
@@ -94,27 +94,6 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
         $this->mockApi->expects($this->any())
             ->method('isConfigured')
             ->willReturn($isConfigured);
-
-        // mock Customer
-        $this->mockCustomer->expects($this->any())
-            ->method('getId')
-            ->willReturn($testData['id']);
-
-        $this->mockCustomer->expects($this->any())
-            ->method('getEmail')
-            ->willReturn($testData['email']);
-
-        $this->mockCustomer->expects($this->any())
-            ->method('getFirstname')
-            ->willReturn($testData['firstname']);
-
-        $this->mockCustomer->expects($this->any())
-            ->method('getMiddlename')
-            ->willReturn($testData['middlename']);
-
-        $this->mockCustomer->expects($this->any())
-            ->method('getLastname')
-            ->willReturn($testData['lastname']);
 
         $store = $this->createMock(\Magento\Store\Model\Store::class);
 
@@ -142,25 +121,24 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
             $this->assertArrayHasKey('lastName', $this->unit->getCustomer());
             $this->assertArrayHasKey('patronymic', $this->unit->getCustomer());
             $this->assertArrayHasKey('createdAt', $this->unit->getCustomer());
-            $this->assertInstanceOf(\RetailCrm\Retailcrm\Model\Observer\Customer::class, $customerObserver);
+            $this->assertInstanceOf(\Retailcrm\Retailcrm\Model\Observer\Customer::class, $customerObserver);
         } else {
             $this->assertEmpty($this->unit->getCustomer());
         }
     }
 
     /**
-     * Get test customer data
-     *
      * @return array
      */
-    private function getAfterSaveCustomerTestData()
+    private function getCustomerTestData()
     {
         return [
-            'id' => 1,
+            'externalId' => 1,
             'email' => 'test@mail.com',
-            'firstname' => 'TestFirstname',
-            'lastname' => 'Testlastname',
-            'middlename' => 'Testmiddlename'
+            'firstName' => 'TestFirstname',
+            'lastName' => 'Testlastname',
+            'patronymic' => 'Testmiddlename',
+            'createdAt' => \date('Y-m-d H:i:s')
         ];
     }
 
