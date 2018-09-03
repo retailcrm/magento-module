@@ -154,6 +154,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $customer->setWebsiteId($siteid);
         $customer->loadByEmail($order['email']);
 
+
         if (!is_numeric($customer->getId())) {
             $customer
                 ->setGroupId(1)
