@@ -21,7 +21,7 @@ class Retailcrm_Retailcrm_Model_Exchange
             );
         }
     }
-    
+
 /**
  * Get orders history & modify orders into shop
  *
@@ -31,12 +31,12 @@ class Retailcrm_Retailcrm_Model_Exchange
         $runTime = $this->getExchangeTime($this->_config['general']['history']);
         $historyFilter = array();
         $historiOrder = array();
-        
+
         $historyStart = Mage::getStoreConfig('retailcrm/general/fhistory');
         if($historyStart && $historyStart > 0) {
             $historyFilter['sinceId'] = $historyStart;
         }
-        
+
         while(true) {
             try {
                 $response = $this->_api->ordersHistory($historyFilter);
@@ -46,38 +46,38 @@ class Retailcrm_Retailcrm_Model_Exchange
                         Mage::log(
                             sprintf("Orders history error: [HTTP status %s] %s", $response->getStatusCode(), $response->getErrorMsg())
                         );
-    
+
                         if (isset($response['errors'])) {
                             Mage::log(implode(' :: ', $response['errors']));
                         }
-    
+
                         return false;
                 }
             } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
                 Mage::log($e->getMessage());
-    
+
                 return false;
             }
-    
+
             $orderH = isset($response['history']) ? $response['history'] : array();
-            if(count($orderH) == 0) {
+            if (count($orderH) == 0) {
                 return true;
             }
-    
+
             $historiOrder = array_merge($historiOrder, $orderH);
             $end = array_pop($response->history);
             $historyFilter['sinceId'] = $end['id'];
-    
+
             if($response['pagination']['totalPageCount'] == 1) {
                 Mage::getModel('core/config')->saveConfig('retailcrm/general/fhistory', $historyFilter['sinceId']);
                 $orders = self::assemblyOrder($historiOrder);
                 $this->processOrders($orders, $nowTime);
-    
+
                 return true;
             }
         }//endwhile
     }
-    
+
     /**
      * @param array $orders
      */
@@ -89,13 +89,13 @@ class Retailcrm_Retailcrm_Model_Exchange
             );
 
             foreach ($orders as $order) {
-                if(!empty($order['externalId'])) {    
+                if(!empty($order['externalId'])) {
                     $this->doUpdate($order);
                 } else {
                     $this->doCreate($order);
                 }
             }
-            
+
             die();
         }
     }
@@ -154,11 +154,11 @@ class Retailcrm_Retailcrm_Model_Exchange
         $customer->setWebsiteId($siteid);
         $customer->loadByEmail($order['email']);
 
-        if (!is_numeric($customer->getId())) {        
+        if (!is_numeric($customer->getId())) {
             $customer
                 ->setGroupId(1)
                 ->setWebsiteId($siteid)
-                ->setStore($storeId)
+                ->setStoreId($storeId)
                 ->setEmail($order['email'])
                 ->setFirstname($order['firstName'])
                 ->setLastname($order['lastName'])
@@ -224,7 +224,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         foreach ($order['items'] as $item) {
             $products[$item['offer']['externalId']] = array('qty' => $item['quantity']);
         }
-        
+
         $orderData = array(
             'session'       => array(
                 'customer_id'   => $customer->getId(),
@@ -275,45 +275,45 @@ class Retailcrm_Retailcrm_Model_Exchange
         $quote = Mage::getModel('sales/quote')->setStoreId($storeId);
         $quote->assignCustomer($customer);
         $quote->setSendCconfirmation($_sendConfirmation);
-        
+
         foreach($products as $idx => $val) {
             $product = Mage::getModel('catalog/product')->load($idx);
             $quote->addProduct($product, new Varien_Object($val));
         }
-        
+
         $shipping_method = self::getAllShippingMethodsCode($orderData['order']['shipping_method']);
         $billingAddress = $quote->getBillingAddress()->addData($orderData['order']['billing_address']);
         $shippingAddress = $quote->getShippingAddress()->addData($orderData['order']['shipping_address']);
-                
+
         $shippingAddress->setCollectShippingRates(true)
             ->collectShippingRates()
             ->setShippingMethod($shipping_method)
             ->setPaymentMethod($orderData['payment']['method']);
-    
+
         $quote->getPayment()->importData($orderData['payment']);
         $quote->collectTotals();
         $quote->reserveOrderId();
         $quote->save();
-        
+
         $service = Mage::getModel('sales/service_quote', $quote);
-        
+
         try{
             $service->submitAll();
         }
         catch (Exception $e) {
             Mage::log($e->getMessage());
         }
-        
+
         try {
             $response = $this->_api->ordersFixExternalIds(
                 array(
                     array(
-                        'id' => $order['id'], 
+                        'id' => $order['id'],
                         'externalId' =>$service->getOrder()->getRealOrderId()
                     )
                 )
             );
-                
+
             if (!$response->isSuccessful() || 200 !== $response->getStatusCode()) {
                 Mage::log(
                     sprintf(
@@ -329,7 +329,7 @@ class Retailcrm_Retailcrm_Model_Exchange
             }
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
-        }  
+        }
     }
 
     /**
@@ -338,10 +338,10 @@ class Retailcrm_Retailcrm_Model_Exchange
     private function doCreateUp($order)
     {
         Mage::log($order, null, 'retailcrmHistoriCreateUp.log', true);
-    
+
         try {
             $response = $this->_api->ordersGet($order['id'], $by = 'id');
-    
+
             if ($response->isSuccessful() && 200 === $response->getStatusCode()) {
                 $order = $response->order;
             } else {
@@ -352,7 +352,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                             $response->getErrorMsg()
                         )
                     );
-    
+
                     if (isset($response['errors'])) {
                         Mage::log(implode(' :: ', $response['errors']));
                     }
@@ -365,7 +365,7 @@ class Retailcrm_Retailcrm_Model_Exchange
         $this->_config = Mage::getStoreConfig('retailcrm');
         $payments = array_flip(array_filter($this->_config['payment']));
         $shippings = array_flip(array_filter($this->_config['shipping']));
-     
+
         // get store
         $_sendConfirmation = '0';
         $sitesConfig = $this->_helper->getMappingSites();
@@ -380,23 +380,23 @@ class Retailcrm_Retailcrm_Model_Exchange
         }
 
         $siteid = Mage::getModel('core/store')->load($storeId)->getWebsiteId();
-    
+
         // search or create customer
         $customer = Mage::getSingleton('customer/customer');
         $customer->setWebsiteId($siteid);
         $customer->loadByEmail($order['email']);
-     
-        if (!is_numeric($customer->getId())) {  
+
+        if (!is_numeric($customer->getId())) {
             $customer
             ->setGropuId(1)
             ->setWebsiteId($siteid)
-            ->setStore($storeId)
+            ->setStoreId($storeId)
             ->setEmail($order['email'])
             ->setFirstname($order['firstName'])
             ->setLastname($order['lastName'])
             ->setMiddleName($order['patronymic'])
             ->setPassword(uniqid());
-    
+
             try {
                 $customer->save();
                 $customer->setConfirmation(null);
@@ -404,7 +404,7 @@ class Retailcrm_Retailcrm_Model_Exchange
             } catch (Exception $e) {
                 Mage::log($e->getMessage());
             }
-    
+
             $address = Mage::getModel("customer/address");
             $address->setCustomerId($customer->getId())
             ->setFirstname($customer->getFirstname())
@@ -419,14 +419,14 @@ class Retailcrm_Retailcrm_Model_Exchange
             ->setIsDefaultBilling('1')
             ->setIsDefaultShipping('1')
             ->setSaveInAddressBook('1');
-    
+
             try{
                 $address->save();
             }
             catch (Exception $e) {
                 Mage::log($e->getMessage());
             }
-    
+
             try {
                 $response = $this->_api->customersFixExternalIds(
                     array(
@@ -442,7 +442,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                                $response->getErrorMsg()
                            )
                        );
-    
+
                        if (isset($response['errors'])) {
                            Mage::log(implode(' :: ', $response['errors']));
                        }
@@ -451,12 +451,12 @@ class Retailcrm_Retailcrm_Model_Exchange
                 Mage::log($e->getMessage());
             }
         }
-    
+
         $products = array();
         foreach ($order['items'] as $item) {
             $products[$item['offer']['externalId']] = array('qty' => $item['quantity']);
         }
-    
+
         $orderData = array(
                 'session'       => array(
                         'customer_id'   => $customer->getId(),
@@ -500,11 +500,11 @@ class Retailcrm_Retailcrm_Model_Exchange
                         'send_confirmation' => $_sendConfirmation
                 )
         );
-         
+
         $quote = Mage::getModel('sales/quote')->setStoreId($storeId);
         $quote->assignCustomer($customer);
         $quote->setSendCconfirmation($_sendConfirmation);
-    
+
         foreach($products as $idx => $val) {
             $product = Mage::getModel('catalog/product')->load($idx);
             $quote->addProduct($product, new Varien_Object($val));
@@ -513,23 +513,23 @@ class Retailcrm_Retailcrm_Model_Exchange
         $shipping_method = self::getAllShippingMethodsCode($orderData['order']['shipping_method']);
         $billingAddress = $quote->getBillingAddress()->addData($orderData['order']['billing_address']);
         $shippingAddress = $quote->getShippingAddress()->addData($orderData['order']['shipping_address']);
-    
+
         $shippingAddress->setCollectShippingRates(true)
             ->collectShippingRates()
             ->setShippingMethod($shipping_method)
             ->setPaymentMethod($orderData['payment']['method']);
-    
+
         $quote->getPayment()->importData($orderData['payment']);
         $quote->collectTotals();
-    
+
         $originalId = $order['externalId'];
         $oldOrder = Mage::getModel('sales/order')->loadByIncrementId($originalId);
         $oldOrderArr = $oldOrder->getData();
-    
+
         if (!empty($oldOrderArr['original_increment_id'])) {
             $originalId = $oldOrderArr['original_increment_id'];
         }
-    
+
         $orderDataUp = array(
                 'original_increment_id'     => $originalId,
                 'relation_parent_id'        => $oldOrder->getId(),
@@ -537,23 +537,23 @@ class Retailcrm_Retailcrm_Model_Exchange
                 'edit_increment'            => $oldOrder->getEditIncrement()+1,
                 'increment_id'              => $originalId.'-'.($oldOrder->getEditIncrement()+1)
         );
-    
+
         $quote->setReservedOrderId($orderDataUp['increment_id']);
         $quote->save();
-    
+
         $service = Mage::getModel('sales/service_quote', $quote);
         $service->setOrderData($orderDataUp);
-    
+
         try{
             $service->submitAll();
         }
         catch (Exception $e) {
             Mage::log($e->getMessage());
         }
-    
+
         $magentoOrder = Mage::getModel('sales/order')->loadByIncrementId($orderDataUp['relation_parent_real_id']);
         $magentoOrder->setState(Mage_Sales_Model_Order::STATE_CANCELED, true)->save();
-    
+
         try {
             $response = $this->_api->ordersFixExternalIds(
                 array(
@@ -563,7 +563,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                     )
                 )
             );
-    
+
             if (!$response->isSuccessful() || 200 !== $response->getStatusCode()) {
                 Mage::log(
                     sprintf(
@@ -572,7 +572,7 @@ class Retailcrm_Retailcrm_Model_Exchange
                         $response->getErrorMsg()
                     )
                 );
-    
+
                 if (isset($response['errors'])) {
                     Mage::log(implode(' :: ', $response['errors']));
                 }
@@ -580,58 +580,58 @@ class Retailcrm_Retailcrm_Model_Exchange
         } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
             Mage::log($e->getMessage());
         }
-     
+
     }
-    
+
     /**
      * @param array $order
      */
     private function doUpdate($order)
-    {  
+    {
         $magentoOrder = Mage::getModel('sales/order')->loadByIncrementId($order['externalId']);
         $magentoOrderArr = $magentoOrder->getData();
         $config = Mage::getStoreConfig('retailcrm');
-        
+
         Mage::log($order, null, 'retailcrmHistoriUpdate.log', true);
-        
+
         if((!empty($order['order_edit']))&&($order['order_edit'] == 1)) {
            $this->doCreateUp($order);
         }
-        
+
         if (!empty($order['status'])) {
                  try {
                     $response = $this->_api->statusesList();
-           
+
                     if ($response->isSuccessful() && 200 === $response->getStatusCode()) {
-                        $code = $order['status'];   
+                        $code = $order['status'];
                         $group = $response->statuses[$code]['group'];
-                    
+
                         if ($magentoOrder->hasInvoices()) {
                             $invIncrementIDs = array();
                             foreach ($magentoOrder->getInvoiceCollection() as $inv) {
                                 $invIncrementIDs[] = $inv->getIncrementId();
                             }
                         }
-                    
+
                         if (in_array($group, array('approval', 'assembling', 'delivery'))) {
                             if(empty($invIncrementIDs)) {
                                 $magentoOrder->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
                                 $magentoOrder->save();
-    
+
                                 $invoice = $magentoOrder->prepareInvoice()
                                     ->setTransactionId($magentoOrder->getRealOrderId())
                                     ->addComment("Add status on CRM")
                                     ->register()
                                     ->pay();
-    
+
                                 $transaction_save = Mage::getModel('core/resource_transaction')
                                     ->addObject($invoice)
                                     ->addObject($invoice->getOrder());
-    
+
                                 $transaction_save->save();
                             }
                         }
-                    
+
                         if (in_array($group, array('complete'))) {
                             if(empty($invIncrementIDs)){
                                 $invoice = $magentoOrder->prepareInvoice()
@@ -639,15 +639,15 @@ class Retailcrm_Retailcrm_Model_Exchange
                                     ->addComment("Add status on CRM")
                                     ->register()
                                     ->pay();
-    
+
                                 $transaction_save = Mage::getModel('core/resource_transaction')
                                     ->addObject($invoice)
                                     ->addObject($invoice->getOrder());
-                                
+
                                 $transaction_save->save();
                                 $magentoOrder->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true)->save();
                             }
-                    
+
                             if($magentoOrder->canShip()) {
                                 $itemQty =  $magentoOrder->getItemsCollection()->count();
                                 $shipment = Mage::getModel('sales/service_order', $magentoOrder)->prepareShipment($itemQty);
@@ -656,36 +656,36 @@ class Retailcrm_Retailcrm_Model_Exchange
                             }
                         }
 
-                        if($code == $config['status']['canceled']) { 
+                        if($code == $config['status']['canceled']) {
                             $magentoOrder->setState(Mage_Sales_Model_Order::STATE_CANCELED, true)->save();
                         }
-                    
+
                         if($code == $config['status']['holded']) {
                             if($magentoOrder->canHold()){
                                 $magentoOrder->hold()->save();
                             }
                         }
-                    
+
                         if($code == $config['status']['unhold']) {
                             if($magentoOrder->canUnhold()) {
                                 $magentoOrder->unhold()->save();
                             }
                         }
-                        
+
                         if($code == $config['status']['closed']) {
                             if($magentoOrder->canCreditmemo()) {
                                 $orderItem = $magentoOrder->getItemsCollection();
                                 foreach ($orderItem as $item) {
                                     $data['qtys'][$item->getid()] = $item->getQtyOrdered();
-                                }    
-                                
+                                }
+
                                 $service = Mage::getModel('sales/service_order', $magentoOrder);
                                 $creditMemo = $service->prepareCreditmemo($data)->register()->save();
                                 $magentoOrder->addStatusToHistory(Mage_Sales_Model_Order::STATE_CLOSED, 'Add status on CRM', false);
                                 $magentoOrder->save();
                             }
                         }
-                    
+
                         Mage::log("Update: " . $order['externalId'], null, 'history.log');
                     } else {
                         Mage::log(
@@ -702,14 +702,14 @@ class Retailcrm_Retailcrm_Model_Exchange
                     }
                  } catch (Retailcrm_Retailcrm_Model_Exception_CurlException $e) {
                      Mage::log($e->getMessage());
-                 }       
+                 }
         }
-        
+
         if(!empty($order['manager_comment'])) {
             $magentoOrder->addStatusHistoryComment($order['manager_comment']);
             $magentoOrder->save();
         }
-       
+
     }
 
     /**
@@ -842,8 +842,8 @@ class Retailcrm_Retailcrm_Model_Exchange
 
         return (string) $country;
     }
-    
-    
+
+
     public static function assemblyOrder($orderHistory)
     {
         $orders = array();
@@ -855,32 +855,32 @@ class Retailcrm_Retailcrm_Model_Exchange
                     if(isset($change['created'])) {
                         $item['create'] = 1;
                     }
-    
+
                     $items[$item['id']] = $item;
                 }
-                
+
                 $change['order']['items'] = $items;
             }
-    
+
             Mage::log($change, null, 'retailcrmHistoryAssemblyOrder.log', true);
-   
+
             if($change['order']['contragent']['contragentType']) {
                 $change['order']['contragentType'] = self::newValue($change['order']['contragent']['contragentType']);
                 unset($change['order']['contragent']);
             }
-    
+
             if($orders[$change['order']['id']]) {
                 $orders[$change['order']['id']] = array_merge($orders[$change['order']['id']], $change['order']);
             }
-    
+
             else {
                 $orders[$change['order']['id']] = $change['order'];
             }
-    
+
             if($change['field'] == 'manager_comment'){
                 $orders[$change['order']['id']][$change['field']] = $change['newValue'];
             }
-    
+
             if(($change['field'] != 'status')&&
                 ($change['field'] != 'country')&&
                 ($change['field'] != 'manager_comment')&&
@@ -890,31 +890,31 @@ class Retailcrm_Retailcrm_Model_Exchange
             ) {
                 $orders[$change['order']['id']]['order_edit'] = 1;
             }
-   
-            if($change['item']) {         
+
+            if($change['item']) {
                 if($orders[$change['order']['id']]['items'][$change['item']['id']]) {
                     $orders[$change['order']['id']]['items'][$change['item']['id']] = array_merge($orders[$change['order']['id']]['items'][$change['item']['id']], $change['item']);
                 }
-    
+
                 else{
                     $orders[$change['order']['id']]['items'][$change['item']['id']] = $change['item'];
                 }
-    
+
                 if(empty($change['oldValue']) && $change['field'] == 'order_product') {
                     $orders[$change['order']['id']]['items'][$change['item']['id']]['create'] = 1;
                     $orders[$change['order']['id']]['order_edit'] = 1;
                     unset($orders[$change['order']['id']]['items'][$change['item']['id']]['delete']);
                 }
-    
+
                 if(empty($change['newValue']) && $change['field'] == 'order_product') {
                     $orders[$change['order']['id']]['items'][$change['item']['id']]['delete'] = 1;
-                    $orders[$change['order']['id']]['order_edit'] = 1; 
+                    $orders[$change['order']['id']]['order_edit'] = 1;
                 }
-    
+
                 if(!empty($change['newValue']) && $change['field'] == 'order_product.quantity') {
                     $orders[$change['order']['id']]['order_edit'] = 1;
                 }
-   
+
                 if(!$orders[$change['order']['id']]['items'][$change['item']['id']]['create'] && $fields['item'][$change['field']]) {
                     $orders[$change['order']['id']]['items'][$change['item']['id']][$fields['item'][$change['field']]] = $change['newValue'];
                 }
@@ -941,11 +941,11 @@ class Retailcrm_Retailcrm_Model_Exchange
                 elseif($fields['order'][$change['field']]) {
                     $orders[$change['order']['id']][$fields['order'][$change['field']]] = self::newValue($change['newValue']);
                 }
-    
+
                 if(isset($change['created'])) {
                     $orders[$change['order']['id']]['create'] = 1;
                 }
-    
+
                 if(isset($change['deleted'])) {
                     $orders[$change['order']['id']]['deleted'] = 1;
                 }
@@ -954,7 +954,7 @@ class Retailcrm_Retailcrm_Model_Exchange
 
         return $orders;
     }
-    
+
     public static function removeEmpty($inputArray)
     {
         $outputArray = array();
@@ -964,15 +964,15 @@ class Retailcrm_Retailcrm_Model_Exchange
                     if (is_array($element)) {
                         $element = self::removeEmpty($element);
                     }
-                    
+
                     $outputArray[$key] = $element;
                 }
             }
         }
-    
+
         return $outputArray;
     }
-    
+
     public static function newValue($value)
     {
         if(isset($value['code'])) {
@@ -981,7 +981,7 @@ class Retailcrm_Retailcrm_Model_Exchange
             return $value;
         }
     }
-    
+
     public static function getAllShippingMethodsCode($code)
     {
         $methods = Mage::getSingleton('shipping/config')->getActiveCarriers();
@@ -992,12 +992,12 @@ class Retailcrm_Retailcrm_Model_Exchange
                     $_code = $_ccode . '_' . $_mcode;
                     $options[$_ccode] = $_code;
                 }
-            }            
+            }
         }
-    
+
         return $options[$code];
     }
-    
-    
+
+
 }
 
