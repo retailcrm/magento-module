@@ -103,25 +103,23 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
                 }
 
                 $product = array(
-                    'productId' => $item->getProductId(),
                     'productName' => !isset($parent) ? $item->getName() : $parent->getName(),
                     'quantity' => !isset($parent) ? intval($item->getQtyOrdered()) : intval($parent->getQtyOrdered()),
                     'initialPrice' => !isset($parent) ? $item->getPrice() : $parent->getPrice(),
-                    'offer'=>array(
-                                'externalId'=>$item->getProductId()
+                    'offer' => array(
+                        'externalId' => $item->getProductId()
                     )
                 );
 
                 unset($parent);
                 $items[] = $product;
-            } elseif($item->getProductType() == "grouped") {
+            } elseif ($item->getProductType() == "grouped") {
                 $product = array(
-                    'productId' => $item->getProductId(),
                     'productName' => $item->getName(),
                     'quantity' => $item->getQtyOrdered(),
                     'initialPrice' => $item->getPrice(),
-                    'offer'=>array(
-                                'externalId'=>$item->getProductId()
+                    'offer' => array(
+                        'externalId '=> $item->getProductId()
                     )
                 );
 
@@ -172,15 +170,15 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
         if (trim($preparedOrder['delivery']['code']) == ''){
             unset($preparedOrder['delivery']['code']);
         }
-        
+
         if (trim($preparedOrder['paymentType']) == ''){
             unset($preparedOrder['paymentType']);
         }
-        
+
         if (trim($preparedOrder['status']) == ''){
             unset($preparedOrder['status']);
         }
-        
+
         if ($order->getCustomerIsGuest() == 0) {
             $preparedCustomer = array(
                 'externalId' => $order->getCustomerId()
@@ -267,9 +265,9 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
         }
 
         return true;
-    
+
     }
-    
+
     /**
     * Orders export
     *
@@ -341,18 +339,20 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
                 if ($item->getParentItemId()) {
                     $parent = Mage::getModel('sales/order_item')->load($item->getParentItemId());
                 }
-                
+
                 $product = array(
-                    'productId' => $item->getProductId(),
                     'productName' => !isset($parent) ? $item->getName() : $parent->getName(),
                     'quantity' => !isset($parent) ? intval($item->getQtyOrdered()) : intval($parent->getQtyOrdered()),
-                    'initialPrice' => !isset($parent) ? $item->getPrice() : $parent->getPrice()
+                    'initialPrice' => !isset($parent) ? $item->getPrice() : $parent->getPrice(),
+                    'offer' => array(
+                        'externalId' => $item->getProductId()
+                    )
                 );
                 unset($parent);
                 $items[] = $product;
             }
         }
-        
+
         $shipping = $this->getShippingCode($order->getShippingMethod());
         $preparedOrder = array(
             'externalId' => $order->getRealOrderId(),
@@ -391,23 +391,23 @@ class Retailcrm_Retailcrm_Model_Order extends Retailcrm_Retailcrm_Model_Exchange
                 ),
             )
         );
-        
+
         if(trim($preparedOrder['delivery']['code']) == ''){
             unset($preparedOrder['delivery']['code']);
         }
-        
+
         if(trim($preparedOrder['paymentType']) == ''){
             unset($preparedOrder['paymentType']);
         }
-        
+
         if(trim($preparedOrder['status']) == ''){
             unset($preparedOrder['status']);
         }
-        
+
         if ($order->getCustomerIsGuest() != 0) {
             $preparedOrder['customer']['externalId'] = $order->getCustomerId();
         }
-        
+
         return Mage::helper('retailcrm')->filterRecursive($preparedOrder);
     }
 
