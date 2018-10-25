@@ -6,12 +6,17 @@ class IntegrationModuleTest extends \PHPUnit\Framework\TestCase
 {
     private $mockResourceConfig;
     private $mockApiClient;
+    private $mockData;
     private $unit;
 
     const ACCOUNT_URL = 'test';
 
     public function setUp()
     {
+        $this->mockData = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Data::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
         $this->mockResourceConfig = $this->getMockBuilder(\Magento\Config\Model\ResourceModel\Config::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -24,7 +29,10 @@ class IntegrationModuleTest extends \PHPUnit\Framework\TestCase
             ])
             ->getMock();
 
-        $this->unit = new \Retailcrm\Retailcrm\Model\Service\IntegrationModule($this->mockResourceConfig);
+        $this->unit = new \Retailcrm\Retailcrm\Model\Service\IntegrationModule(
+            $this->mockResourceConfig,
+            $this->mockData
+        );
     }
 
     /**
@@ -66,8 +74,8 @@ class IntegrationModuleTest extends \PHPUnit\Framework\TestCase
             $configuration['logo']
         );
         $this->assertArrayHasKey('code', $configuration);
-        $this->assertEquals(
-            \Retailcrm\Retailcrm\Model\Service\IntegrationModule::CODE,
+        $this->assertContains(
+            \Retailcrm\Retailcrm\Model\Service\IntegrationModule::INTEGRATION_CODE,
             $configuration['code']
         );
         $this->assertArrayHasKey('active', $configuration);
@@ -80,8 +88,8 @@ class IntegrationModuleTest extends \PHPUnit\Framework\TestCase
             $this->assertArrayHasKey('accountUrl', $configuration);
             $this->assertEquals(self::ACCOUNT_URL, $configuration['accountUrl']);
             $this->assertArrayHasKey('integrationCode', $configuration);
-            $this->assertEquals(
-                \Retailcrm\Retailcrm\Model\Service\IntegrationModule::CODE,
+            $this->assertContains(
+                \Retailcrm\Retailcrm\Model\Service\IntegrationModule::INTEGRATION_CODE,
                 $configuration['integrationCode']
             );
             $this->assertArrayHasKey('clientId', $configuration);
