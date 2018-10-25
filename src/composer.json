@@ -5,7 +5,7 @@
     "retailcrm/api-client-php": "~5.0"
   },
   "type": "magento2-module",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "license": [
     "OSL-3.0",
     "AFL-3.0"
@@ -13,7 +13,7 @@
   "authors": [
     {
       "name": "RetailDriver LLC",
-      "email": "gorokh@retailcrm.ru",
+      "email": "integration@retailcrm.ru",
       "homepage": "https://www.retailcrm.ru",
       "role": "Developer"
     }

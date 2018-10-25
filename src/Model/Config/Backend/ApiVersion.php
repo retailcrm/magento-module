@@ -7,6 +7,8 @@ use Retailcrm\Retailcrm\Helper\Proxy as ApiClient;
 class ApiVersion extends \Magento\Framework\App\Config\Value
 {
     private $api;
+    private $request;
+    private $integrationModule;
 
     /**
      * ApiVersion constructor.
@@ -16,6 +18,8 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
      * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
+     * @param \Magento\Framework\App\Request\Http $request
+     * @param \Retailcrm\Retailcrm\Model\Service\IntegrationModule $integrationModule
      * @param ApiClient $api
      * @param array $data
      */
@@ -24,12 +28,17 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
         \Magento\Framework\Registry $registry,
         \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
-        ApiClient $api,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        \Magento\Framework\App\Request\Http $request,
+        \Retailcrm\Retailcrm\Model\Service\IntegrationModule $integrationModule,
+        ApiClient $api,
         array $data = []
     ) {
         $this->api = $api;
+        $this->request = $request;
+        $this->integrationModule = $integrationModule;
+
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
 
@@ -79,12 +88,24 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
         if (isset($availableVersions)) {
             if (in_array($apiVersions[$apiVersion], $availableVersions)) {
                 $this->setValue($this->getValue());
+
+                $this->sendModuleConfiguration($api);
             } else {
                 throw new \Magento\Framework\Exception\ValidatorException(
                     __('The selected API version is unavailable')
                 );
             }
         }
+    }
+
+    /**
+     * @param $api
+     */
+    private function sendModuleConfiguration($api)
+    {
+        $this->integrationModule->setApiVersion($api->getVersion());
+        $this->integrationModule->setAccountUrl($this->request->getUriString());
+        $this->integrationModule->sendConfiguration($api);
     }
 
     /**
