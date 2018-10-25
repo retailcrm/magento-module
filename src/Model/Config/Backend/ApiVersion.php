@@ -8,7 +8,6 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
 {
     private $api;
     private $request;
-    private $helper;
     private $integrationModule;
 
     /**
@@ -20,7 +19,6 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param \Magento\Framework\App\Request\Http $request
-     * @param \Retailcrm\Retailcrm\Helper\Data $helper
      * @param \Retailcrm\Retailcrm\Model\Service\IntegrationModule $integrationModule
      * @param ApiClient $api
      * @param array $data
@@ -33,14 +31,12 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         \Magento\Framework\App\Request\Http $request,
-        \Retailcrm\Retailcrm\Helper\Data $helper,
         \Retailcrm\Retailcrm\Model\Service\IntegrationModule $integrationModule,
         ApiClient $api,
         array $data = []
     ) {
         $this->api = $api;
         $this->request = $request;
-        $this->helper = $helper;
         $this->integrationModule = $integrationModule;
 
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
@@ -107,13 +103,9 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
      */
     private function sendModuleConfiguration($api)
     {
-        $clientId = $this->helper->getGeneralSettings('client_id_in_crm');
-
-        if (!$clientId) {
-            $this->integrationModule->setApiVersion($api->getVersion());
-            $this->integrationModule->setAccountUrl($this->request->getUriString());
-            $this->integrationModule->sendConfiguration($api);
-        }
+        $this->integrationModule->setApiVersion($api->getVersion());
+        $this->integrationModule->setAccountUrl($this->request->getUriString());
+        $this->integrationModule->sendConfiguration($api);
     }
 
     /**

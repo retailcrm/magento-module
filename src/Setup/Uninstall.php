@@ -20,6 +20,7 @@ class Uninstall implements \Magento\Framework\Setup\UninstallInterface
 
     public function uninstall(SchemaSetupInterface $setup, ModuleContextInterface $context)
     {
-        $this->integrationModule->sendConfiguration($this->apiClient, $this->apiClient->getVersion(), false);
+        $this->integrationModule->setApiVersion($this->apiClient->getVersion());
+        $this->integrationModule->sendConfiguration($this->apiClient, false);
     }
 }

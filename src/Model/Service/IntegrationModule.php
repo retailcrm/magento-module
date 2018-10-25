@@ -7,18 +7,28 @@ use Retailcrm\Retailcrm\Helper\Data as Helper;
 class IntegrationModule
 {
     const LOGO = 'https://s3.eu-central-1.amazonaws.com/retailcrm-billing/images/5b846b1fef57e-magento.svg';
-    const CODE = 'magento';
+    const INTEGRATION_CODE = 'magento';
     const NAME = 'Magento 2';
 
     private $accountUrl = null;
-    private $resourceConfig;
     private $apiVersion = 'v5';
     private $configuration = [];
+    private $resourceConfig;
+    private $clientId;
+    private $helper;
 
+    /**
+     * IntegrationModule constructor.
+     *
+     * @param \Magento\Config\Model\ResourceModel\Config $resourceConfig
+     * @param \Retailcrm\Retailcrm\Helper\Data $helper
+     */
     public function __construct(
-        \Magento\Config\Model\ResourceModel\Config $resourceConfig
+        \Magento\Config\Model\ResourceModel\Config $resourceConfig,
+        Helper $helper
     ) {
         $this->resourceConfig = $resourceConfig;
+        $this->helper = $helper;
     }
 
     /**
@@ -52,21 +62,25 @@ class IntegrationModule
      */
     private function setConfiguration($active)
     {
+        $this->clientId = $this->helper->getGeneralSettings('client_id_in_crm');
+
+        if (!$this->clientId) {
+            $this->clientId = uniqid();
+        }
+
         if ($this->apiVersion == 'v4') {
             $this->configuration = [
                 'name' => self::NAME,
-                'code' => self::CODE,
+                'code' => self::INTEGRATION_CODE . '-' . $this->clientId,
                 'logo' => self::LOGO,
                 'configurationUrl' => $this->accountUrl,
                 'active' => $active
             ];
         } else {
-            $clientId = hash('md5', date('Y-m-d H:i:s'));
-
             $this->configuration = [
-                'clientId' => $clientId,
-                'code' => self::CODE,
-                'integrationCode' => self::CODE,
+                'clientId' => $this->clientId,
+                'code' => self::INTEGRATION_CODE . '-' . $this->clientId,
+                'integrationCode' => self::INTEGRATION_CODE,
                 'active' => $active,
                 'name' => self::NAME,
                 'logo' => self::LOGO,
@@ -95,8 +109,11 @@ class IntegrationModule
             return false;
         }
 
-        if ($response->isSuccessful() && isset($clientId)) {
-            $this->resourceConfig->saveConfig(Helper::XML_PATH_RETAILCRM . 'general/client_id_in_crm', $clientId);
+        if ($response->isSuccessful() && $active == true) {
+            $this->resourceConfig->saveConfig(
+                Helper::XML_PATH_RETAILCRM . 'general/client_id_in_crm',
+                $this->clientId
+            );
 
             return true;
         }
