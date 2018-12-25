@@ -36,6 +36,7 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
 
         $customer = $observer->getEvent()->getCustomer();
         $this->customer = $this->serviceCustomer->process($customer);
+        $this->api->setSite($this->helper->getSite($customer->getStore()));
         $response = $this->api->customersEdit($this->customer);
 
         if ($response === false) {
@@ -43,7 +44,6 @@ class Customer implements \Magento\Framework\Event\ObserverInterface
         }
 
         if (!$response->isSuccessful() && $response->errorMsg == $this->api->getErrorText('errorNotFound')) {
-            $this->api->setSite($this->helper->getSite($customer->getStore()));
             $this->api->customersCreate($this->customer);
         }
 

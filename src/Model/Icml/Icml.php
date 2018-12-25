@@ -105,7 +105,13 @@ class Icml
                 $e = $this->eCategories->appendChild(
                     $this->dd->createElement('category')
                 );
-                $e->appendChild($this->dd->createTextNode($category->getName()));
+
+                $e->appendChild($this->dd->createElement('name', \htmlspecialchars($category->getName())));
+
+                if ($category->getImageUrl()) {
+                    $e->appendChild($this->dd->createElement('picture', \htmlspecialchars($category->getImageUrl())));
+                }
+
                 $e->setAttribute('id', $category->getId());
 
                 if ($category->getParentId() > 1) {
