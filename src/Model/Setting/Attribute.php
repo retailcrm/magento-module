@@ -24,6 +24,7 @@ class Attribute implements \Magento\Framework\Option\ArrayInterface
             'select',
             'price'
         ];
+
         $attributes = $this->entityType->loadByCode('catalog_product')->getAttributeCollection();
         $attributes->addFieldToFilter('frontend_input', $types);
 
