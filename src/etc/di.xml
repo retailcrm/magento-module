@@ -13,6 +13,7 @@
             <argument name="commands" xsi:type="array">
                 <item name="orders_export_command" xsi:type="object">Retailcrm\Retailcrm\Console\Command\OrdersExport</item>
                 <item name="customers_export_command" xsi:type="object">Retailcrm\Retailcrm\Console\Command\CustomersExport</item>
+                <item name="icml_generate_command" xsi:type="object">Retailcrm\Retailcrm\Console\Command\IcmlGenerate</item>
             </argument>
         </arguments>
     </type>

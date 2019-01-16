@@ -20,6 +20,8 @@ class Icml
     private $searchCriteriaBuilder;
     private $productRepository;
 
+    const DIMENSION_FIELDS = ['height', 'length', 'width'];
+
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $manager,
         \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory $categoryCollectionFactory,
@@ -217,6 +219,20 @@ class Icml
             );
         }
 
+        if (!empty($offer['dimensions'])) {
+            $e->appendChild($this->dd->createElement('dimensions'))
+            ->appendChild(
+                $this->dd->createTextNode($offer['dimensions'])
+            );
+        }
+
+        if (!empty($offer['weight'])) {
+            $e->appendChild($this->dd->createElement('weight'))
+            ->appendChild(
+                $this->dd->createTextNode($offer['weight'])
+            );
+        }
+
         if (!empty($offer['params'])) {
             foreach ($offer['params'] as $param) {
                 $paramNode = $this->dd->createElement('param');
@@ -309,8 +325,16 @@ class Icml
         $offer['vendor'] = $associatedProduct === null
             ? $product->getAttributeText('manufacturer')
             : $associatedProduct->getAttributeText('manufacturer');
+        $offer['weight'] = $associatedProduct === null
+            ? $product->getWeight()
+            : $associatedProduct->getWeight();
 
-        $offer['params'] = $this->getOfferParams($product, $customAdditionalAttributes, $associatedProduct);
+        $params = $this->getOfferParams($product, $customAdditionalAttributes, $associatedProduct);
+
+        $offer['params'] = $params['params'];
+        $offer['dimensions'] = $params['dimensions'];
+
+        unset($params);
 
         return $offer;
     }
@@ -333,8 +357,16 @@ class Icml
         }
 
         $attributes = explode(',', $customAdditionalAttributes);
+        $dimensionsAttrs = [];
+        $dimensions = '';
 
         foreach ($attributes as $attributeCode) {
+            if ($this->checkDimension($attributeCode) !== false) {
+                $dimensionsAttrs += $this->checkDimension($attributeCode);
+
+                continue;
+            }
+
             $attribute = $this->resourceModelProduct->getAttribute($attributeCode);
             $attributeValue = $associatedProduct
                 ? $associatedProduct->getData($attributeCode)
@@ -350,7 +382,28 @@ class Icml
             }
         }
 
-        return $params;
+        if ($dimensionsAttrs && count($dimensionsAttrs) == 3) {
+            $length = $associatedProduct
+                ? $associatedProduct->getData($dimensionsAttrs['length'])
+                : $product->getData($dimensionsAttrs['length']);
+            $width = $associatedProduct
+                ? $associatedProduct->getData($dimensionsAttrs['width'])
+                : $product->getData($dimensionsAttrs['width']);
+            $height = $associatedProduct
+                ? $associatedProduct->getData($dimensionsAttrs['height'])
+                : $product->getData($dimensionsAttrs['height']);
+
+            if ($length && $width && $height) {
+                $dimensions = sprintf(
+                    '%s/%s/%s',
+                    $length,
+                    $width,
+                    $height
+                );
+            }
+        }
+
+        return ['params' => $params, 'dimensions' => $dimensions];
     }
 
     /**
@@ -382,5 +435,21 @@ class Icml
         );
 
         return $quantity;
+    }
+
+    /**
+     * @param string $attrCode
+     *
+     * @return mixed
+     */
+    private function checkDimension($attrCode)
+    {
+        foreach (self::DIMENSION_FIELDS as $dimensionField) {
+            if (mb_strpos($attrCode, $dimensionField) !== false) {
+                return [$dimensionField => $attrCode];
+            }
+        }
+
+        return false;
     }
 }

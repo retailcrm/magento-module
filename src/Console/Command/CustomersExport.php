@@ -59,7 +59,7 @@ class CustomersExport extends Command
      *
      * @throws \Exception
      *
-     * @return boolean
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -89,7 +89,7 @@ class CustomersExport extends Command
         if (empty($customers)) {
             $output->writeln('<comment>Customers not found</comment>');
 
-            return false;
+            return 0;
         }
 
         /** @var  \Magento\Customer\Model\Customer $customer */
@@ -112,6 +112,6 @@ class CustomersExport extends Command
 
         $output->writeln('<info>Uploading customers finished</info>');
 
-        return true;
+        return 0;
     }
 }
