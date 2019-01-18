@@ -15,6 +15,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
     private $registry;
     private $order;
     private $serviceOrder;
+    private $serviceCustomer;
 
     /**
      * Constructor
@@ -22,6 +23,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
      * @param \Magento\Framework\Registry $registry
      * @param \Retailcrm\Retailcrm\Model\Logger\Logger $logger
      * @param \Retailcrm\Retailcrm\Model\Service\Order $serviceOrder
+     * @param \Retailcrm\Retailcrm\Model\Service\Customer $serviceCustomer
      * @param Helper $helper
      * @param ApiClient $api
      */
@@ -29,12 +31,14 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
         \Magento\Framework\Registry $registry,
         \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         \Retailcrm\Retailcrm\Model\Service\Order $serviceOrder,
+        \Retailcrm\Retailcrm\Model\Service\Customer $serviceCustomer,
         Helper $helper,
         ApiClient $api
     ) {
         $this->logger = $logger;
         $this->registry = $registry;
         $this->serviceOrder = $serviceOrder;
+        $this->serviceCustomer = $serviceCustomer;
         $this->helper = $helper;
         $this->api = $api;
         $this->order = [];
@@ -55,6 +59,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             return false;
         }
 
+        /** @var \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getOrder();
         $this->api->setSite($this->helper->getSite($order->getStore()));
 
@@ -62,13 +67,8 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             return false;
         }
 
-        $billingAddress = $order->getBillingAddress();
         $this->order = $this->serviceOrder->process($order);
-
-        $this->setCustomer(
-            $order,
-            $billingAddress
-        );
+        $this->setCustomer($order);
 
         Helper::filterRecursive($this->order);
 
@@ -80,16 +80,22 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
     }
 
     /**
-     * @param $order
-     * @param $billingAddress
+     * @param \Magento\Sales\Model\Order $order
+     * @param \Magento\Sales\Model\Order\Address $billingAddress
      */
-    private function setCustomer($order, $billingAddress)
+    private function setCustomer($order)
     {
         if ($order->getCustomerIsGuest() == 1) {
             $customer = $this->getCustomerByEmail($order->getCustomerEmail());
 
             if ($customer !== false) {
                 $this->order['customer']['id'] = $customer['id'];
+            } else {
+                $newCustomer = $this->serviceCustomer->prepareCustomerFromOrder($order);
+                $response = $this->api->customersCreate($newCustomer);
+                if ($response && isset($response['id'])) {
+                    $this->order['customer']['id'] = $response['id'];
+                }
             }
         }
 
@@ -97,18 +103,7 @@ class OrderCreate implements \Magento\Framework\Event\ObserverInterface
             if ($this->existsInCrm($order->getCustomerId(), 'customersGet')) {
                 $this->order['customer']['externalId'] = $order->getCustomerId();
             } else {
-                $preparedCustomer = [
-                    'externalId' => $order->getCustomerId(),
-                    'firstName' => $order->getCustomerFirstname(),
-                    'lastName' => $order->getCustomerLastname(),
-                    'email' => $order->getCustomerEmail()
-                ];
-
-                if ($billingAddress->getTelephone()) {
-                    $preparedCustomer['phones'][] = [
-                        'number' => $billingAddress->getTelephone()
-                    ];
-                }
+                $preparedCustomer = $this->serviceCustomer->process($order->getCustomer());
 
                 if ($this->api->customersCreate($preparedCustomer)) {
                     $this->order['customer']['externalId'] = $order->getCustomerId();

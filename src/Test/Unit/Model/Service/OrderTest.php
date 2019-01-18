@@ -90,7 +90,14 @@ class OrderTest extends \PHPUnit\Framework\TestCase
 
         $mockShippingAddress = $this->getMockBuilder(\Magento\Sales\Model\Order\Address::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getData'])
+            ->setMethods([
+                'getData',
+                'getTelephone',
+                'getFirstname',
+                'getLastname',
+                'getMiddlename',
+                'getEmail'
+            ])
             ->getMock();
         $mockShippingAddress->expects($this->any())
             ->method('getData')
@@ -103,11 +110,11 @@ class OrderTest extends \PHPUnit\Framework\TestCase
             ))
             ->will($this->returnCallback([$this, 'getCallbackDataAddress']));
 
-        $mockBillingAddress = $this->getMockBuilder(\Magento\Sales\Model\Order\Address::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getTelephone'])
-            ->getMock();
-        $mockBillingAddress->expects($this->any())->method('getTelephone')->willReturn('89000000000');
+        $mockShippingAddress->expects($this->any())->method('getTelephone')->willReturn('89000000000');
+        $mockShippingAddress->expects($this->any())->method('getFirstname')->willReturn('Test');
+        $mockShippingAddress->expects($this->any())->method('getLastname')->willReturn('Test');
+        $mockShippingAddress->expects($this->any())->method('getMiddlename')->willReturn('Test');
+        $mockShippingAddress->expects($this->any())->method('getEmail')->willReturn('test@mail.com');
 
         $mockPaymentMethod = $this->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
             ->disableOriginalConstructor()
@@ -121,16 +128,11 @@ class OrderTest extends \PHPUnit\Framework\TestCase
         $mockPayment->expects($this->any())->method('getMethodInstance')->willReturn($mockPaymentMethod);
 
         $this->mockOrder->expects($this->any())->method('getAllItems')->willReturn([$mockItem]);
-        $this->mockOrder->expects($this->any())->method('getBillingAddress')->willReturn($mockBillingAddress);
         $this->mockOrder->expects($this->any())->method('getShippingAddress')->willReturn($mockShippingAddress);
         $this->mockOrder->expects($this->any())->method('getShippingMethod')->willReturn('flatrate_flatrate');
         $this->mockOrder->expects($this->any())->method('getId')->willReturn(1);
         $this->mockOrder->expects($this->any())->method('getRealOrderId')->willReturn('000000001');
         $this->mockOrder->expects($this->any())->method('getCreatedAt')->willReturn(date('Y-m-d H:i:s'));
-        $this->mockOrder->expects($this->any())->method('getCustomerLastname')->willReturn('Test');
-        $this->mockOrder->expects($this->any())->method('getCustomerFirstname')->willReturn(date('Test'));
-        $this->mockOrder->expects($this->any())->method('getCustomerMiddlename')->willReturn(date('Test'));
-        $this->mockOrder->expects($this->any())->method('getCustomerEmail')->willReturn('test@mail.com');
         $this->mockOrder->expects($this->any())->method('getStatus')->willReturn('processing');
         $this->mockOrder->expects($this->any())->method('getShippingAmount')->willReturn(100);
         $this->mockOrder->expects($this->any())->method('getDiscountAmount')->willReturn(0);
