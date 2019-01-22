@@ -4,10 +4,8 @@
         <job name="create_icml" instance="Retailcrm\Retailcrm\Cron\Icml" method="execute">
             <schedule>* */4 * * *</schedule>
         </job>
-        
         <job name="order_hystory" instance="Retailcrm\Retailcrm\Cron\OrderHistory" method="execute">
             <schedule>*/5 * * * *</schedule>
         </job>
-        
     </group>
 </config>
