@@ -1,8 +1,5 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <referenceContainer name="content">
-        <block class="Retailcrm\Retailcrm\Block\Display" name="retailcrm_display" template="Retailcrm_Retailcrm::sayhello.phtml" />
-    </referenceContainer>
     <body>
         <referenceBlock name="head.additional">
             <block class="Retailcrm\Retailcrm\Block\Frontend\DaemonCollector" name="block_name" template="Retailcrm_Retailcrm::daemon_collector.phtml" />

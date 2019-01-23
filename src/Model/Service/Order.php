@@ -34,7 +34,6 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
     {
         $items = $order->getAllItems();
         $products = $this->addProducts($items);
-        $billingAddress = $order->getBillingAddress();
         $shippingAddress = $order->getShippingAddress();
         $shipping = $this->getShippingCode($order->getShippingMethod());
 
@@ -42,11 +41,11 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
             'externalId' => $order->getId(),
             'number' => $order->getRealOrderId(),
             'createdAt' => $order->getCreatedAt(),
-            'lastName' => $order->getCustomerLastname(),
-            'firstName' => $order->getCustomerFirstname(),
-            'patronymic' => $order->getCustomerMiddlename(),
-            'email' => $order->getCustomerEmail(),
-            'phone' => $billingAddress->getTelephone(),
+            'lastName' => $shippingAddress->getLastname(),
+            'firstName' => $shippingAddress->getFirstname(),
+            'patronymic' => $shippingAddress->getMiddlename(),
+            'email' => $shippingAddress->getEmail(),
+            'phone' => $shippingAddress->getTelephone(),
             'status' => $this->config->getValue('retailcrm/retailcrm_status/' . $order->getStatus()),
             'items' => $products,
             'delivery' => [
@@ -73,8 +72,8 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
             ]
         ];
 
-        if ($billingAddress->getData('country_id')) {
-            $preparedOrder['countryIso'] = $billingAddress->getData('country_id');
+        if ($shippingAddress->getData('country_id')) {
+            $preparedOrder['countryIso'] = $shippingAddress->getData('country_id');
         }
 
         if ($this->helper->getGeneralSettings('api_version') == 'v4') {

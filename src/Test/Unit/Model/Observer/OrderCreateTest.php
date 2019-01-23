@@ -20,6 +20,8 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
     private $mockLogger;
     private $mockServiceOrder;
     private $mockHelper;
+    private $mockServiceCustomer;
+    private $mockCustomer;
 
     public function setUp()
     {
@@ -56,6 +58,12 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
 
         $this->mockOrder = $this->getMockBuilder(\Magento\Sales\Model\Order::class)
             ->disableOriginalConstructor()
+            ->setMethods([
+                'getCustomer',
+                'getId',
+                'getBillingAddress',
+                'getStore'
+            ])
             ->getMock();
 
         $this->mockStore = $this->getMockBuilder(\Magento\Store\Model\Store::class)
@@ -81,10 +89,62 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
+        $this->mockServiceCustomer = $this->getMockBuilder(\Retailcrm\Retailcrm\Model\Service\Customer::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->mockServiceCustomer->expects($this->any())->method('process')->willReturn($this->getCustomerTestData());
+        $this->mockServiceCustomer
+            ->expects($this->any())
+            ->method('prepareCustomerFromOrder')
+            ->willReturn(
+                $this->getCustomerTestData()
+            );
+
+        $this->mockCustomer = $this->getMockBuilder(\Magento\Customer\Model\Customer::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getId',
+                'getEmail',
+                'getFirstname',
+                'getMiddlename',
+                'getLastname',
+                'getStore',
+                'getGender',
+                'getDob',
+                'getDefaultBillingAddress',
+                'getAddressesCollection'
+            ])
+            ->getMock();
+
+        $testData = $this->getAfterSaveCustomerTestData();
+
+        // mock Customer
+        $this->mockCustomer->expects($this->any())
+            ->method('getId')
+            ->willReturn($testData['id']);
+
+        $this->mockCustomer->expects($this->any())
+            ->method('getEmail')
+            ->willReturn($testData['email']);
+
+        $this->mockCustomer->expects($this->any())
+            ->method('getFirstname')
+            ->willReturn($testData['firstname']);
+
+        $this->mockCustomer->expects($this->any())
+            ->method('getMiddlename')
+            ->willReturn($testData['middlename']);
+
+        $this->mockCustomer->expects($this->any())
+            ->method('getLastname')
+            ->willReturn($testData['lastname']);
+
         $this->unit = new \Retailcrm\Retailcrm\Model\Observer\OrderCreate(
             $this->mockRegistry,
             $this->mockLogger,
             $this->mockServiceOrder,
+            $this->mockServiceCustomer,
             $this->mockHelper,
             $this->mockApi
         );
@@ -176,6 +236,10 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
         $this->mockOrder->expects($this->any())
             ->method('getStore')
             ->willReturn($this->mockStore);
+
+        $this->mockOrder->expects($this->any())
+            ->method('getCustomer')
+            ->willReturn($this->mockCustomer);
 
         // mock Event
         $this->mockEvent->expects($this->any())
@@ -377,6 +441,39 @@ class OrderCreateTest extends \PHPUnit\Framework\TestCase
                 'api_version' => 'v5',
                 'is_configured' => false
             ]
+        ];
+    }
+
+    /**
+     * Get test customer data
+     *
+     * @return array
+     */
+    private function getAfterSaveCustomerTestData()
+    {
+        return [
+            'id' => 1,
+            'email' => 'test@mail.com',
+            'firstname' => 'TestFirstname',
+            'lastname' => 'Testlastname',
+            'middlename' => 'Testmiddlename',
+            'birthday' => '1990-01-01',
+            'gender' => 1
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function getCustomerTestData()
+    {
+        return [
+            'externalId' => 1,
+            'email' => 'test@mail.com',
+            'firstName' => 'TestFirstname',
+            'lastName' => 'Testlastname',
+            'patronymic' => 'Testmiddlename',
+            'createdAt' => \date('Y-m-d H:i:s')
         ];
     }
 }

@@ -25,7 +25,6 @@ class Customer implements CustomerManagerInterface
      * @param \Magento\Customer\Model\Customer $customer
      *
      * @return array $preparedCustomer
-     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function process(\Magento\Customer\Model\Customer $customer)
     {
@@ -55,6 +54,49 @@ class Customer implements CustomerManagerInterface
             }
 
             $preparedCustomer['birthday'] = $customer->getDob();
+        }
+
+        return $preparedCustomer;
+    }
+
+    /**
+     * @param \Magento\Sales\Model\Order $order
+     *
+     * @return array
+     */
+    public function prepareCustomerFromOrder(\Magento\Sales\Model\Order $order)
+    {
+        $billing = $order->getBillingAddress();
+
+        $preparedCustomer = [
+            'externalId' => uniqid(),
+            'email' => $billing->getEmail(),
+            'firstName' => $billing->getFirstname(),
+            'patronymic' => $billing->getMiddlename(),
+            'lastName' => $billing->getLastname(),
+            'createdAt' => $order->getCreatedAt(),
+            'address' => [
+                'countryIso' => $billing->getCountryId(),
+                'index' => $billing->getPostcode(),
+                'region' => $billing->getRegion(),
+                'city' => $billing->getCity(),
+                'street' => $billing->getStreet(),
+                'text' => sprintf(
+                    '%s %s %s %s',
+                    $billing->getPostcode(),
+                    $billing->getRegion(),
+                    $billing->getCity(),
+                    $billing->getStreet()
+                )
+            ]
+        ];
+
+        if ($billing->getTelephone()) {
+            $preparedCustomer['phones'] = [
+                [
+                    'number' => $billing->getTelephone()
+                ]
+            ];
         }
 
         return $preparedCustomer;

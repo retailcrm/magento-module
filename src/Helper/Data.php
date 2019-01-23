@@ -2,6 +2,7 @@
 
 namespace Retailcrm\Retailcrm\Helper;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\Helper\Context;
@@ -14,6 +15,7 @@ class Data extends AbstractHelper
     const XML_PATH_RETAILCRM = 'retailcrm/';
     const XML_PATH_DEFAULT_SITE = 'retailcrm_site/default';
     const XML_PATH_SITES = 'retailcrm_sites/';
+    const XML_PATH_DAEMON_COLLECTOR = 'daemon_collector/';
 
     public function __construct(
         Context $context,
@@ -45,6 +47,7 @@ class Data extends AbstractHelper
      * @param $store
      *
      * @return mixed|null
+     * @throws \Exception
      */
     public function getSite($store)
     {
@@ -70,6 +73,9 @@ class Data extends AbstractHelper
         return $websitesConfig;
     }
 
+    /**
+     * @return array
+     */
     public function getMappingSites()
     {
         $sites = [];
@@ -88,6 +94,72 @@ class Data extends AbstractHelper
         }
 
         return $sites;
+    }
+
+    /**
+     * @param $website
+     *
+     * @return array|bool
+     */
+    public function getDaemonCollector($website)
+    {
+        $forWebsite = $this->scopeConfig->getValue(
+            self::XML_PATH_RETAILCRM . self::XML_PATH_DAEMON_COLLECTOR . 'active',
+            ScopeInterface::SCOPE_WEBSITES,
+            $website
+        );
+
+        if ($forWebsite) {
+            return [
+                'website' => $website,
+                'active' => $forWebsite
+            ];
+        }
+
+        $forDefault = $this->scopeConfig->getValue(
+            self::XML_PATH_RETAILCRM . self::XML_PATH_DAEMON_COLLECTOR . 'active',
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+        );
+
+        if ($forDefault) {
+            return [
+                'website' => 0,
+                'active' => $forDefault
+            ];
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $website
+     *
+     * @return bool|mixed
+     */
+    public function getSiteKey($website)
+    {
+        $daemonCollector = $this->getDaemonCollector($website);
+
+        if ($daemonCollector === false) {
+            return false;
+        }
+
+        if ($daemonCollector['active']) {
+            if ($daemonCollector['website'] > 0) {
+                return $this->scopeConfig->getValue(
+                    self::XML_PATH_RETAILCRM . self::XML_PATH_DAEMON_COLLECTOR . 'key',
+                    ScopeInterface::SCOPE_WEBSITES,
+                    $website
+                );
+            } else {
+                return $this->scopeConfig->getValue(
+                    self::XML_PATH_RETAILCRM . self::XML_PATH_DAEMON_COLLECTOR . 'key',
+                    ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+                );
+            }
+        }
+
+        return false;
     }
 
     /**
