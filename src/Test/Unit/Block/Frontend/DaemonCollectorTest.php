@@ -1,5 +1,7 @@
 <?php
 
+namespace Retailcrm\Retailcrm\Test\Unit\Block\Frontend;
+
 class DaemonCollectorTest extends \PHPUnit\Framework\TestCase
 {
     private $unit;
