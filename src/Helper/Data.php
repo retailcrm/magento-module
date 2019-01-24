@@ -131,6 +131,20 @@ class Data extends AbstractHelper
         return false;
     }
 
+    public function getInventoriesUpload()
+    {
+        $inventories = $this->scopeConfig->getValue(
+            self::XML_PATH_RETAILCRM . self::XML_PATH_INVENTORIES . 'active',
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+        );
+
+        if ($inventories) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * @param $website
      *

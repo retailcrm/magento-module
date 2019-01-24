@@ -68,10 +68,17 @@
                 <label>Daemon Collector</label>
                 <field id="active" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Activate</label>
-                    <source_model>Retailcrm\Retailcrm\Model\Setting\DaemonCollector</source_model>
+                    <source_model>Retailcrm\Retailcrm\Model\Setting\Select</source_model>
                 </field>
                 <field id="key" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Site key</label>
+                </field>
+            </group>
+            <group id="inventories_upload" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Synchronization of the stock balance</label>
+                <field id="active" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Activate</label>
+                    <source_model>Retailcrm\Retailcrm\Model\Setting\Select</source_model>
                 </field>
             </group>
         </section>

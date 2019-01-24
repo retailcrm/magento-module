@@ -2,7 +2,7 @@
 
 namespace Retailcrm\Retailcrm\Model\Setting;
 
-class DaemonCollector implements \Magento\Framework\Option\ArrayInterface
+class Select implements \Magento\Framework\Option\ArrayInterface
 {
     public function toOptionArray()
     {
