@@ -19,8 +19,7 @@ class Icml
     private $resourceModelProduct;
     private $searchCriteriaBuilder;
     private $productRepository;
-
-    const DIMENSION_FIELDS = ['height', 'length', 'width'];
+    private $dimensionFields = ['height', 'length', 'width'];
 
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $manager,
@@ -444,7 +443,7 @@ class Icml
      */
     private function checkDimension($attrCode)
     {
-        foreach (self::DIMENSION_FIELDS as $dimensionField) {
+        foreach ($this->dimensionFields as $dimensionField) {
             if (mb_strpos($attrCode, $dimensionField) !== false) {
                 return [$dimensionField => $attrCode];
             }
