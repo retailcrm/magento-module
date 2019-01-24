@@ -16,6 +16,7 @@ class Data extends AbstractHelper
     const XML_PATH_DEFAULT_SITE = 'retailcrm_site/default';
     const XML_PATH_SITES = 'retailcrm_sites/';
     const XML_PATH_DAEMON_COLLECTOR = 'daemon_collector/';
+    const XML_PATH_INVENTORIES = 'inventories_upload/';
 
     public function __construct(
         Context $context,
@@ -126,6 +127,20 @@ class Data extends AbstractHelper
                 'website' => 0,
                 'active' => $forDefault
             ];
+        }
+
+        return false;
+    }
+
+    public function getInventoriesUpload()
+    {
+        $inventories = $this->scopeConfig->getValue(
+            self::XML_PATH_RETAILCRM . self::XML_PATH_INVENTORIES . 'active',
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+        );
+
+        if ($inventories) {
+            return true;
         }
 
         return false;
