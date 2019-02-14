@@ -7,6 +7,8 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
     private $mockData;
     private $mockCustomer;
     private $unit;
+    private $mockOrder;
+    private $mockBillingAddress;
 
     public function setUp()
     {
@@ -29,6 +31,59 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
                 'getAddressesCollection'
             ])
             ->getMock();
+
+        $this->mockOrder = $this->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getBillingAddress',
+            ])
+            ->getMock();
+
+        $this->mockBillingAddress = $this->getMockBuilder(\Magento\Customer\Model\Address\AddressModelInterface::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getTelephone',
+                'getEmail',
+                'getData',
+                'getFirstname',
+                'getMiddlename',
+                'getLastname',
+                'getCountryId',
+                'getPostcode',
+                'getRegion',
+                'getCity',
+                'getStreet'
+            ])
+            ->getMockForAbstractClass();
+
+        $this->unit = new \Retailcrm\Retailcrm\Model\Service\Customer(
+            $this->mockData
+        );
+    }
+
+    public function testPrepareCustomerFromOrder()
+    {
+        $this->mockOrder->expects($this->any())
+            ->method('getBillingAddress')
+            ->willReturn($this->mockBillingAddress);
+
+        $result = $this->unit->prepareCustomerFromOrder($this->mockOrder);
+
+        $this->assertNotEmpty($result);
+        $this->assertInternalType('array', $result);
+        $this->assertArrayNotHasKey('externalId', $result);
+        $this->assertArrayHasKey('email', $result);
+        $this->assertArrayHasKey('firstName', $result);
+        $this->assertArrayHasKey('lastName', $result);
+        $this->assertArrayHasKey('patronymic', $result);
+        $this->assertArrayHasKey('address', $result);
+        $this->assertInternalType('array', $result['address']);
+        $this->assertArrayHasKey('countryIso', $result['address']);
+        $this->assertArrayHasKey('index', $result['address']);
+        $this->assertArrayHasKey('region', $result['address']);
+        $this->assertArrayHasKey('city', $result['address']);
+        $this->assertArrayHasKey('street', $result['address']);
+        $this->assertArrayHasKey('text', $result['address']);
     }
 
     /**
@@ -106,10 +161,6 @@ class CustomerTest extends \PHPUnit\Framework\TestCase
         $this->mockCustomer->expects($this->any())
             ->method('getAddressesCollection')
             ->willReturn([$mockAddress]);
-
-        $this->unit = new \Retailcrm\Retailcrm\Model\Service\Customer(
-            $this->mockData
-        );
 
         $result = $this->unit->process($this->mockCustomer);
 

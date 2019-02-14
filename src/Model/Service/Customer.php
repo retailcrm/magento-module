@@ -69,7 +69,6 @@ class Customer implements CustomerManagerInterface
         $billing = $order->getBillingAddress();
 
         $preparedCustomer = [
-            'externalId' => uniqid(),
             'email' => $billing->getEmail(),
             'firstName' => $billing->getFirstname(),
             'patronymic' => $billing->getMiddlename(),
