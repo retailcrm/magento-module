@@ -11,8 +11,7 @@ class DaemonCollectorTest extends \PHPUnit\Framework\TestCase
 
     public function setUp()
     {
-        $objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
-        $context = $objectManager->getObject(\Magento\Framework\View\Element\Template\Context::class);
+        $context = $this->createMock(\Magento\Framework\View\Element\Template\Context::class);
         $customerSession = $this->createMock(\Magento\Customer\Model\Session::class);
         $storeManager = $this->createMock(\Magento\Store\Model\StoreManager::class);
         $storeResolver = $this->createMock(\Magento\Store\Model\StoreResolver::class);
@@ -36,10 +35,13 @@ class DaemonCollectorTest extends \PHPUnit\Framework\TestCase
             ->method('getSiteKey')
             ->willReturn(self::SITE_KEY);
 
+        $context->expects($this->any())
+            ->method('getStoreManager')
+            ->willReturn($storeManager);
+
         $this->unit = new \Retailcrm\Retailcrm\Block\Frontend\DaemonCollector(
             $context,
             $customerSession,
-            $storeManager,
             $storeResolver,
             $helper
         );
