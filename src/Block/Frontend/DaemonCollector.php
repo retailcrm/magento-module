@@ -6,7 +6,6 @@ class DaemonCollector extends \Magento\Framework\View\Element\Template
 {
     private $customer;
     private $helper;
-    private $storeManager;
     private $storeResolver;
     private $js = '';
 
@@ -23,7 +22,6 @@ EOT;
      *
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param \Magento\Customer\Model\Session $customerSession
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Store\Api\StoreResolverInterface $storeResolver
      * @param \Retailcrm\Retailcrm\Helper\Data $helper
      * @param array $data
@@ -31,14 +29,12 @@ EOT;
     public function __construct(
         \Magento\Framework\View\Element\Template\Context $context,
         \Magento\Customer\Model\Session $customerSession,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Store\Api\StoreResolverInterface $storeResolver,
         \Retailcrm\Retailcrm\Helper\Data $helper,
         array $data = []
     ) {
         parent::__construct($context, $data);
         $this->customer = $customerSession->getCustomer();
-        $this->storeManager = $storeManager;
         $this->storeResolver = $storeResolver;
         $this->helper = $helper;
     }
@@ -64,7 +60,7 @@ EOT;
 
         try {
             $siteKey = $this->helper->getSiteKey(
-                $this->storeManager->getStore(
+                $this->_storeManager->getStore(
                     $this->storeResolver->getCurrentStoreId()
                 )->getWebsiteId()
             );
