@@ -36,4 +36,4 @@ composer require retailcrm/api-client-php ~5.0
 В конфигурационный файл `composer.json` вашего проекта будет добавлена библиотека [retailcrm/api-client-php](https://github.com/retailcrm/api-client-php), которая будет установлена в директорию `vendor/`.
 
 
-Этот модуль совместим с Magento 2 до версии 2.2.3
+Этот модуль совместим с Magento 2 до версии 2.2.8
