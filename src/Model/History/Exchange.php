@@ -242,7 +242,7 @@ class Exchange
         //add items in quote
         foreach ($ditems as $id =>$item) {
             $product = $productRepository->getById($id,false, $store->getId(), false);
-            $product->setPrice($item['initialPrice']);
+            $product->setPrice($item['price_item']);
             $quote->addProduct(
                 $product,
                 (int)$item['quantity']
@@ -411,7 +411,7 @@ class Exchange
         //add items in quote
         foreach ($ditems as $id => $item) {
             $product = $productRepository->getById($id,false, $store->getId(), false);
-            $product->setPrice($item['initialPrice']);
+            $product->setPrice($item['price_item']);
             $quote->addProduct(
                 $product,
                 (int)$item['quantity']
