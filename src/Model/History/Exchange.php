@@ -165,7 +165,7 @@ class Exchange
         $shippings = $this->config->getValue('retailcrm/retailcrm_shipping');
         $sites = $this->helper->getMappingSites();
 
-        if ($sites) {
+        if ($sites && in_array($order['site'], $sites)) {
             $store = $this->storeManager->getStore($sites[$order['site']]);
             $websiteId = $store->getWebsiteId();
         } else {
@@ -178,7 +178,7 @@ class Exchange
         $customer->setWebsiteId($websiteId);
 
         if (isset($order['customer']['externalId'])) {
-            $customer->load($order['customer']['externalId']);
+            $customer = $this->customerRepository->getById($order['customer']['externalId']);
         }
 
         if (!$customer->getId()) {
@@ -190,7 +190,7 @@ class Exchange
                 ->setEmail($order['email'])
                 ->setPassword($order['email']);
             try {
-                $customer->save();
+                $this->customerRepository->save($customer);
             } catch (\Exception $exception) {
                 $this->logger->writeRow($exception->getMessage());
             }
@@ -216,10 +216,33 @@ class Exchange
         $quote->setCurrency();
         $quote->assignCustomer($customer); //Assign quote to customer
 
-        //add items in quote
+        $manager = \Magento\Framework\App\ObjectManager::getInstance();
+        /** @var \Magento\Catalog\Api\ProductRepositoryInterface $productRepository */
+        $productRepository = $manager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+
+        $ditems = [];
         foreach ($order['items'] as $item) {
-            $product = $this->product->load($item['offer']['externalId']);
-            $product->setPrice($item['initialPrice']);
+            if (!isset($ditems[$item['offer']['externalId']]['quantity'])) {
+                $ditems[$item['offer']['externalId']] = [
+                    'quantity' => null,
+                    'discountTotal' => null,
+                    'initialPrice' => null,
+                    'price_sum' => null,
+                    'price_item' => null
+                ];
+            }
+
+            $ditems[$item['offer']['externalId']]['quantity'] += $item['quantity'];
+            $ditems[$item['offer']['externalId']]['discountTotal'] += $item['quantity'] * $item['discountTotal'];
+            $ditems[$item['offer']['externalId']]['initialPrice'] = (float)$item['initialPrice'];
+            $ditems[$item['offer']['externalId']]['price_sum'] = $ditems[$item['offer']['externalId']]['initialPrice'] * $ditems[$item['offer']['externalId']]['quantity'] - $ditems[$item['offer']['externalId']]['discountTotal'];
+            $ditems[$item['offer']['externalId']]['price_item'] = $ditems[$item['offer']['externalId']]['price_sum'] / $ditems[$item['offer']['externalId']]['quantity'];
+        }
+
+        //add items in quote
+        foreach ($ditems as $id =>$item) {
+            $product = $productRepository->getById($id,false, $store->getId(), false);
+            $product->setPrice($item['price_item']);
             $quote->addProduct(
                 $product,
                 (int)$item['quantity']
@@ -228,8 +251,8 @@ class Exchange
 
         $products = [];
 
-        foreach ($order['items'] as $item) {
-            $products[$item['offer']['externalId']] = ['qty' => $item['quantity']];
+        foreach ($ditems as $id => $item) {
+            $products[$id] = ['product_id'=>$id,'qty' => $item['quantity']];
         }
 
         $orderData = [
@@ -280,17 +303,19 @@ class Exchange
         $quote->setPaymentMethod($payments[$paymentType]);
         $quote->setInventoryProcessed(false);
 
-        $quote->save();
+        /** @var \Magento\Quote\Api\CartRepositoryInterface $quoteRepository */
+        $quoteRepository = $manager->create(\Magento\Quote\Api\CartRepositoryInterface::class);
+        $quoteRepository->save($quote);
 
         // Set Sales Order Payment
         $quote->getPayment()->importData(['method' => $payments[$paymentType]]);
 
         // Collect Totals & Save Quote
-        $quote->collectTotals()->save();
+        $quote->collectTotals();
+        $quoteRepository->save($quote);
 
         // Create Order From Quote
         $magentoOrder = $this->quoteManagement->submit($quote);
-
         $increment_id = $magentoOrder->getId();
 
         $this->api->ordersFixExternalIds(
@@ -312,8 +337,8 @@ class Exchange
      */
     private function doCreateUp($order)
     {
+        $manager = \Magento\Framework\App\ObjectManager::getInstance();
         $this->logger->writeDump($order, 'doCreateUp');
-
         $response = $this->api->ordersGet($order['id'], $by = 'id');
 
         if (!$response->isSuccessful()) {
@@ -330,7 +355,7 @@ class Exchange
         $region = $this->regionFactory->create();
         $sites = $this->helper->getMappingSites();
 
-        if ($sites) {
+        if ($sites && in_array($order['site'], $sites)) {
             $store = $this->storeManager->getStore($sites[$order['site']]);
             $websiteId = $store->getWebsiteId();
         } else {
@@ -342,7 +367,7 @@ class Exchange
         $customer->setWebsiteId($websiteId);
 
         if (isset($order['customer']['externalId'])) {
-            $customer->load($order['customer']['externalId']); // load customer by external id
+            $customer = $this->customerRepository->getById($order['customer']['externalId']);
         }
 
         //Create object of quote
@@ -361,10 +386,32 @@ class Exchange
             $quote->setCustomerIsGuest(1);
         }
 
-        //add items in quote
+        $ditems = [];
         foreach ($order['items'] as $item) {
-            $product = $this->product->load($item['offer']['externalId']);
-            $product->setPrice($item['initialPrice']);
+            if (!isset($ditems[$item['offer']['externalId']]['quantity'])) {
+                $ditems[$item['offer']['externalId']] = [
+                    'quantity' => null,
+                    'discountTotal' => null,
+                    'initialPrice' => null,
+                    'price_sum' => null,
+                    'price_item' => null
+                ];
+            }
+
+            $ditems[$item['offer']['externalId']]['quantity'] += $item['quantity'];
+            $ditems[$item['offer']['externalId']]['discountTotal'] += $item['quantity'] * $item['discountTotal'];
+            $ditems[$item['offer']['externalId']]['initialPrice'] = (float)$item['initialPrice'];
+            $ditems[$item['offer']['externalId']]['price_sum'] = $ditems[$item['offer']['externalId']]['initialPrice'] * $ditems[$item['offer']['externalId']]['quantity'] - $ditems[$item['offer']['externalId']]['discountTotal'];
+            $ditems[$item['offer']['externalId']]['price_item'] = $ditems[$item['offer']['externalId']]['price_sum'] / $ditems[$item['offer']['externalId']]['quantity'];
+        }
+
+        /** @var \Magento\Catalog\Api\ProductRepositoryInterface $productRepository */
+        $productRepository = $manager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+
+        //add items in quote
+        foreach ($ditems as $id => $item) {
+            $product = $productRepository->getById($id,false, $store->getId(), false);
+            $product->setPrice($item['price_item']);
             $quote->addProduct(
                 $product,
                 (int)$item['quantity']
@@ -373,8 +420,8 @@ class Exchange
 
         $products = [];
 
-        foreach ($order['items'] as $item) {
-            $products[$item['offer']['externalId']] = ['qty' => $item['quantity']];
+        foreach ($ditems as $id => $item) {
+            $products[$id] = ['product_id'=>$id,'qty' => $item['quantity']];
         }
 
         $orderData = [
@@ -435,16 +482,20 @@ class Exchange
         ];
 
         $quote->setReservedOrderId($orderDataUp['increment_id']);
-        $quote->save();
+        /** @var \Magento\Quote\Api\CartRepositoryInterface $quoteRepository */
+        $quoteRepository = $manager->create(\Magento\Quote\Api\CartRepositoryInterface::class);
+        $quoteRepository->save($quote);
 
         // Set Sales Order Payment
         $quote->getPayment()->importData(['method' => $payments[$paymentType]]);
 
         // Collect Totals & Save Quote
-        $quote->collectTotals()->save();
+        $quote->collectTotals();
+        $quoteRepository->save($quote);
 
         // Create Order From Quote
         $magentoOrder = $this->quoteManagement->submit($quote, $orderDataUp);
+
         $oldOrder->setStatus('canceled')->save();
         $increment_id = $magentoOrder->getId();
 
@@ -508,11 +559,11 @@ class Exchange
 
         foreach ($orderHistory as $change) {
             $orderId = $change['order']['id'];
+
             $change['order'] = self::removeEmpty($change['order']);
 
             if (isset($change['order']['items'])) {
                 $items = [];
-
                 foreach ($change['order']['items'] as $item) {
                     if (isset($change['created'])) {
                         $item['create'] = 1;
@@ -551,7 +602,7 @@ class Exchange
 
             if (isset($change['item'])) {
                 if (isset($orders[$change['order']['id']]['items'])
-                    && $orders[$change['order']['id']]['items'][$change['item']['id']]
+                    && isset($orders[$change['order']['id']]['items'][$change['item']['id']])
                 ) {
                     $orders[$change['order']['id']]['items'][$change['item']['id']] = array_merge(
                         $orders[$change['order']['id']]['items'][$change['item']['id']],

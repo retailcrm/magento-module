@@ -81,9 +81,13 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
         $html .= $this->_getHeaderHtml($element);
 
         if ($this->client->isConfigured()) {
-            $paymentMethods = $this->paymentConfig->getActiveMethods();
+            $manager = \Magento\Framework\App\ObjectManager::getInstance();
+            $paymentMethodListInterface = $manager->get(\Magento\Payment\Api\PaymentMethodListInterface::class);
+            $storeManagerInterface = $manager->get('Magento\Store\Model\StoreManagerInterface');
+            $storeId = $storeManagerInterface->getStore()->getId();
+            $paymentMethodList = $paymentMethodListInterface->getActiveList($storeId);
 
-            foreach ($paymentMethods as $code => $payment) {
+            foreach ($paymentMethodList as $code => $payment) {
                 $html .= $this->_getFieldHtml($element, $payment);
             }
         } else {
@@ -137,7 +141,7 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
      * Get field html
      *
      * @param \Magento\Framework\Data\Form\Element\AbstractElement $fieldset
-     * @param \Magento\Payment\Model\Method\AbstractMethod $payment
+     * @param \Magento\Payment\Api\Data\PaymentMethodInterface $payment
      *
      * @return string
      */
@@ -145,9 +149,7 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     {
         $configData = $this->getConfigData();
         $path = 'retailcrm/' . $fieldset->getId() . '/' . $payment->getCode();
-
         $data = isset($configData[$path]) ? $configData[$path] : [];
-
         $e = $this->_getDummyElement();
 
         $field = $fieldset->addField(

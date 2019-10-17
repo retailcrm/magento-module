@@ -72,6 +72,8 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
             ]
         ];
 
+        $codeShop = $this->config->getValue('retailcrm/retailcrm_site/default');
+
         if ($shippingAddress->getData('country_id')) {
             $preparedOrder['countryIso'] = $shippingAddress->getData('country_id');
         }
@@ -87,7 +89,7 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
                 'type' => $this->config->getValue(
                     'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
                 ),
-                'externalId' => $order->getId(),
+                'externalId' => $codeShop.$order->getId(),
                 'order' => [
                     'externalId' => $order->getId(),
                 ]
