@@ -15,14 +15,12 @@ env:
 
 matrix:
   include:
-  - php: 7.0
-    env: BRANCH=2.2-develop
   - php: 7.1
     env: BRANCH=2.2-develop
-  - php: 7.1
-    env: BRANCH=2.3-develop
   - php: 7.2
-    env: BRANCH=2.3-develop
+    env: BRANCH=2.2-develop
+  - php: 7.3
+    env: BRANCH=2.2-develop
 
 before_script:
   - bash bin/install.sh
