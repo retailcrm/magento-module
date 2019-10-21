@@ -54,7 +54,8 @@ class OrderTest extends \PHPUnit\Framework\TestCase
             ->with($this->logicalOr(
                 $this->equalTo('retailcrm/retailcrm_status/processing'),
                 $this->equalTo('retailcrm/retailcrm_payment/checkmo'),
-                $this->equalTo('retailcrm/retailcrm_shipping/flatrate')
+                $this->equalTo('retailcrm/retailcrm_shipping/flatrate'),
+                $this->equalTo('retailcrm/retailcrm_site/default')
             ))->will($this->returnCallback([$this, 'getCallbackDataConfig']));
 
         $mockProduct = $this->getMockBuilder(\Magento\Catalog\Model\Product::class)
@@ -167,7 +168,8 @@ class OrderTest extends \PHPUnit\Framework\TestCase
         $data = [
             'retailcrm/retailcrm_status/processing' => 'new',
             'retailcrm/retailcrm_payment/checkmo' => 'test',
-            'retailcrm/retailcrm_shipping/flatrate' => 'test'
+            'retailcrm/retailcrm_shipping/flatrate' => 'test',
+            'retailcrm/retailcrm_site/default' => 'test'
         ];
 
         return $data[$key];

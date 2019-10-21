@@ -81,13 +81,8 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
         $html .= $this->_getHeaderHtml($element);
 
         if ($this->client->isConfigured()) {
-            $manager = \Magento\Framework\App\ObjectManager::getInstance();
-            $paymentMethodListInterface = $manager->get(\Magento\Payment\Api\PaymentMethodListInterface::class);
-            $storeManagerInterface = $manager->get('Magento\Store\Model\StoreManagerInterface');
-            $storeId = $storeManagerInterface->getStore()->getId();
-            $paymentMethodList = $paymentMethodListInterface->getActiveList($storeId);
-
-            foreach ($paymentMethodList as $code => $payment) {
+            $paymentMethods = $this->paymentConfig->getActiveMethods();
+            foreach ($paymentMethods as $code => $payment) {
                 $html .= $this->_getFieldHtml($element, $payment);
             }
         } else {
