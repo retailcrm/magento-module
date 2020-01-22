@@ -53,9 +53,11 @@ class OrderUpdate implements \Magento\Framework\Event\ObserverInterface
         $order = $observer->getEvent()->getOrder();
 
         if ($order) {
+            $statusList = $this->helper->getCongigStatus();
+
             $this->order = [
                 'externalId' => $order->getId(),
-                'status' => $this->config->getValue('retailcrm/retailcrm_status/' . $order->getStatus())
+                'status' => $statusList[$order->getStatus()]
             ];
 
             if ($order->getBaseTotalDue() == 0) {

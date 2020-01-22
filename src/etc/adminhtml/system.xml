@@ -34,17 +34,29 @@
                     <source_model>Retailcrm\Retailcrm\Model\Setting\Attribute</source_model>
                 </field>
             </group>
-            <group id="shipping" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="shippingList" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Delivery types</label>
-                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Shipping</frontend_model>
+                <field id="shippingList" translate="label" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>shipping settings</label>
+                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\ShippingList</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
             </group>
-            <group id="payment" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="paymentList" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Payment types</label>
-                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Payment</frontend_model>
+                <field id="paymentList" translate="label" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>payment settings</label>
+                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\PaymentList</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
             </group>
-            <group id="status" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Order statuses</label>
-                <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\Status</frontend_model>
+            <group id="statusList" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Status types</label>
+                <field id="statusList" translate="label" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>status settings</label>
+                    <frontend_model>Retailcrm\Retailcrm\Block\Adminhtml\System\Config\Form\Fieldset\StatusList</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
             </group>
             <group id="load" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Uploading orders</label>

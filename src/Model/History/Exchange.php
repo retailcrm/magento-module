@@ -161,8 +161,8 @@ class Exchange
     {
         $this->logger->writeDump($order, 'doCreate');
 
-        $payments = $this->config->getValue('retailcrm/retailcrm_payment');
-        $shippings = $this->config->getValue('retailcrm/retailcrm_shipping');
+        $payments = $this->helper->getConfigPayments();
+        $shippings =  $this->helper->getCongigShipping();
         $sites = $this->helper->getMappingSites();
 
         if ($sites && in_array($order['site'], $sites)) {
@@ -242,7 +242,7 @@ class Exchange
         //add items in quote
         foreach ($ditems as $id =>$item) {
             $product = $productRepository->getById($id,false, $store->getId(), false);
-            $product->setPrice($item['price_item']);
+            $product->setPrice($item['initialPrice']);
             $quote->addProduct(
                 $product,
                 (int)$item['quantity']
@@ -349,8 +349,8 @@ class Exchange
             $order = $response['order'];
         }
 
-        $payments = $this->config->getValue('retailcrm/retailcrm_payment');
-        $shippings = $this->config->getValue('retailcrm/retailcrm_shipping');
+        $payments = $this->helper->getConfigPayments();
+        $shippings =  $this->helper->getCongigShipping();
 
         $region = $this->regionFactory->create();
         $sites = $this->helper->getMappingSites();
@@ -411,7 +411,7 @@ class Exchange
         //add items in quote
         foreach ($ditems as $id => $item) {
             $product = $productRepository->getById($id,false, $store->getId(), false);
-            $product->setPrice($item['price_item']);
+            $product->setPrice($item['initialPrice']);
             $quote->addProduct(
                 $product,
                 (int)$item['quantity']
@@ -520,7 +520,7 @@ class Exchange
     {
         $this->logger->writeDump($order, 'doUpdate');
 
-        $Status = $this->config->getValue('retailcrm/retailcrm_status');
+        $Status = $this->helper->getCongigStatus();
         $Status = array_flip(array_filter($Status));
 
         $magentoOrder = $this->order->load($order['externalId']);

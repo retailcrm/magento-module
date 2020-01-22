@@ -37,6 +37,10 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
         $shippingAddress = $order->getShippingAddress();
         $shipping = $this->getShippingCode($order->getShippingMethod());
 
+        $shipList = $this->helper->getCongigShipping();
+        $statusList = $this->helper->getCongigStatus();
+        $paymentList = $this->helper->getConfigPayments();
+
         $preparedOrder = [
             'externalId' => $order->getId(),
             'number' => $order->getRealOrderId(),
@@ -46,10 +50,10 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
             'patronymic' => $shippingAddress->getMiddlename(),
             'email' => $shippingAddress->getEmail(),
             'phone' => $shippingAddress->getTelephone(),
-            'status' => $this->config->getValue('retailcrm/retailcrm_status/' . $order->getStatus()),
+            'status' => $statusList[$order->getStatus()],
             'items' => $products,
             'delivery' => [
-                'code' => $this->config->getValue('retailcrm/retailcrm_shipping/' . $shipping),
+                'code' => $shipList[$shipping],
                 'cost' => $order->getShippingAmount(),
                 'address' => [
                     'index' => $shippingAddress->getData('postcode'),
@@ -80,15 +84,11 @@ class Order implements \Retailcrm\Retailcrm\Api\OrderManagerInterface
 
         if ($this->helper->getGeneralSettings('api_version') == 'v4') {
             $preparedOrder['discount'] = abs($order->getDiscountAmount());
-            $preparedOrder['paymentType'] = $this->config->getValue(
-                'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
-            );
+            $preparedOrder['paymentType'] = $paymentList[$order->getPayment()->getMethodInstance()->getCode()];
         } elseif ($this->helper->getGeneralSettings('api_version') == 'v5') {
             $preparedOrder['discountManualAmount'] = abs($order->getDiscountAmount());
             $payment = [
-                'type' => $this->config->getValue(
-                    'retailcrm/retailcrm_payment/' . $order->getPayment()->getMethodInstance()->getCode()
-                ),
+                'type'=> $paymentList[$order->getPayment()->getMethodInstance()->getCode()],
                 'externalId' => $codeShop.$order->getId(),
                 'order' => [
                     'externalId' => $order->getId(),
