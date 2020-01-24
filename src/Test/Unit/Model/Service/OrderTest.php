@@ -50,11 +50,12 @@ class OrderTest extends \PHPUnit\Framework\TestCase
         $this->mockHelper->expects($this->any())->method('getGeneralSettings')
             ->with('api_version')->willReturn($apiVersion);
 
+        $this->mockHelper->expects($this->any())->method('getConfigPayments')->willReturn(['checkmo'=>'test']);
+        $this->mockHelper->expects($this->any())->method('getCongigStatus')->willReturn(['processing'=>'test']);
+        $this->mockHelper->expects($this->any())->method('getCongigShipping')->willReturn(['flatrate'=>'test']);
+
         $this->mockConfig->expects($this->any())->method('getValue')
             ->with($this->logicalOr(
-                $this->equalTo('retailcrm/retailcrm_status/processing'),
-                $this->equalTo('retailcrm/retailcrm_payment/checkmo'),
-                $this->equalTo('retailcrm/retailcrm_shipping/flatrate'),
                 $this->equalTo('retailcrm/retailcrm_site/default')
             ))->will($this->returnCallback([$this, 'getCallbackDataConfig']));
 
@@ -166,9 +167,6 @@ class OrderTest extends \PHPUnit\Framework\TestCase
     public function getCallbackDataConfig($key)
     {
         $data = [
-            'retailcrm/retailcrm_status/processing' => 'new',
-            'retailcrm/retailcrm_payment/checkmo' => 'test',
-            'retailcrm/retailcrm_shipping/flatrate' => 'test',
             'retailcrm/retailcrm_site/default' => 'test'
         ];
 

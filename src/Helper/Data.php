@@ -11,7 +11,6 @@ use Magento\Store\Model\ScopeInterface;
 class Data extends AbstractHelper
 {
     private $storeManager;
-    private $json;
 
     const XML_PATH_RETAILCRM = 'retailcrm/';
     const XML_PATH_DEFAULT_SITE = 'retailcrm_site/default';
@@ -20,11 +19,9 @@ class Data extends AbstractHelper
     const XML_PATH_INVENTORIES = 'inventories_upload/';
 
     public function __construct(
-        \Magento\Framework\Serialize\Serializer\Json $json,
         Context $context,
         StoreManagerInterface $storeManager
     ) {
-        $this->json = $json;
         $this->storeManager  = $storeManager;
         parent::__construct($context);
     }
@@ -216,7 +213,7 @@ class Data extends AbstractHelper
     public function getConfigPayments()
     {
         $json = $this->scopeConfig->getValue('retailcrm/paymentList/paymentList');
-        $List = $this->json->unserialize($json);
+        $List = $this->getConfigJsonUnserialize($json);
         foreach ($List as $code => $el) {
             $payments[$el['payment_cms']] = $el['payment_crm'];
         }
@@ -230,7 +227,7 @@ class Data extends AbstractHelper
     public function getCongigShipping()
     {
         $json = $this->scopeConfig->getValue('retailcrm/shippingList/shippingList');
-        $shippingList = $this->json->unserialize($json);
+        $shippingList = $this->getConfigJsonUnserialize($json);
         foreach ($shippingList as $code => $el) {
             $shippings[$el['shipping_cms']] = $el['shipping_crm'];
         }
@@ -244,11 +241,28 @@ class Data extends AbstractHelper
     public function getCongigStatus()
     {
         $json = $this->scopeConfig->getValue('retailcrm/statusList/statusList');
-        $List = $this->json->unserialize($json);
+        $List = $this->getConfigJsonUnserialize($json);
         foreach ($List as $code => $el) {
             $statusList[$el['status_cms']] = $el['status_crm'];
         }
 
         return $statusList;
     }
+
+    /**
+     * @param $json
+     *
+     * @return mixed
+     */
+    public function getConfigJsonUnserialize($json)
+    {
+        if (class_exists(\Magento\Framework\Serialize\Serializer\Json::class)) {
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $serializer = $objectManager->create(\Magento\Framework\Serialize\Serializer\Json::class);
+            return $serializer->unserialize($json);
+        } else {
+            return json_decode($json);
+        }
+    }
+
 }
