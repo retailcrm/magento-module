@@ -2,6 +2,11 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Model\Service;
 
+// backward compatibility with phpunit < v.6
+if (!class_exists('\PHPUnit\Framework\TestCase') && class_exists('\PHPUnit_Framework_TestCase')) {
+    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
+}
+
 class InventoriesUploadTest extends \PHPUnit\Framework\TestCase
 {
     private $mockApi;
@@ -18,12 +23,12 @@ class InventoriesUploadTest extends \PHPUnit\Framework\TestCase
                 'isConfigured'
             ])
             ->getMock();
-        
+
         $this->mockProductRepository = $this->getMockBuilder(\Magento\Catalog\Api\ProductRepositoryInterface::class)
             ->disableOriginalConstructor()
             ->setMethods(['getById'])
             ->getMockForAbstractClass();
-        
+
         $this->mockResponse = $this->getMockBuilder(\RetailCrm\Response\ApiResponse::class)
             ->disableOriginalConstructor()
             ->setMethods(['isSuccessful'])
@@ -88,9 +93,9 @@ class InventoriesUploadTest extends \PHPUnit\Framework\TestCase
     }
 
     public function dataProviderLoadStocks()
-    {   
+    {
         $response = $this->getResponseData();
-        
+
         return array(
             array(
                 'response' => $response['true']
@@ -100,7 +105,7 @@ class InventoriesUploadTest extends \PHPUnit\Framework\TestCase
             )
         );
     }
-    
+
     private function getApiInventories()
     {
         return array(

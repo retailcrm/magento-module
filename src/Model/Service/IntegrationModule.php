@@ -3,6 +3,7 @@
 namespace Retailcrm\Retailcrm\Model\Service;
 
 use Retailcrm\Retailcrm\Helper\Data as Helper;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 
 class IntegrationModule
 {
@@ -110,9 +111,15 @@ class IntegrationModule
         }
 
         if ($response->isSuccessful() && $active == true) {
+
+            $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
+            $scopeId = 0;
+
             $this->resourceConfig->saveConfig(
                 Helper::XML_PATH_RETAILCRM . 'general/client_id_in_crm',
-                $this->clientId
+                $this->clientId,
+                $scope,
+                $scopeId
             );
 
             return true;

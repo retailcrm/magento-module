@@ -2,6 +2,11 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Model\Service;
 
+// backward compatibility with phpunit < v.6
+if (!class_exists('\PHPUnit\Framework\TestCase') && class_exists('\PHPUnit_Framework_TestCase')) {
+    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
+}
+
 class IntegrationModuleTest extends \PHPUnit\Framework\TestCase
 {
     private $mockResourceConfig;
