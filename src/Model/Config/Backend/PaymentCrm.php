@@ -8,6 +8,12 @@ class PaymentCrm extends \Magento\Framework\View\Element\Html\Select
      * @var \Retailcrm\Retailcrm\Helper\Proxy
      */
     private $client;
+
+    /**
+     * @var \Retailcrm\Retailcrm\Model\Logger\Logger
+     */
+    private $logger;
+
     /**
      * Activation constructor.
      *
@@ -17,11 +23,13 @@ class PaymentCrm extends \Magento\Framework\View\Element\Html\Select
     public function __construct(
         \Magento\Framework\View\Element\Context $context,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
         $this->client = $client;
+        $this->logger = $logger;
     }
 
     /**
@@ -41,17 +49,25 @@ class PaymentCrm extends \Magento\Framework\View\Element\Html\Select
     public function _toHtml()
     {
         if (!$this->getOptions()) {
+            $paymentsTypes = array();
 
-            $response = $this->client->paymentTypesList();
+            try {
+                $response = $this->client->paymentTypesList();
+            } catch (\Exception $exception) {
+                $this->logger->writeRow($exception->getMessage());
+            }
 
-            if ($response->isSuccessful()) {
+            if (isset($response) && $response->isSuccessful()) {
                 $paymentsTypes = $response['paymentTypes'];
             }
 
-            $this->addOption( 'null',  " ");
-            foreach ($paymentsTypes as $paymentsType) {
-                $this->addOption($paymentsType['code'], $paymentsType['name']);
+            $this->addOption( 'null',  "not selected");
+            if ($paymentsTypes) {
+                foreach ($paymentsTypes as $paymentsType) {
+                    $this->addOption($paymentsType['code'], $paymentsType['name']);
+                }
             }
+
         }
 
         return parent::_toHtml();

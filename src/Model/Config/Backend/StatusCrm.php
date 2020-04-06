@@ -8,6 +8,12 @@ class StatusCrm extends \Magento\Framework\View\Element\Html\Select
      * @var \Retailcrm\Retailcrm\Helper\Proxy
      */
     private $client;
+
+    /**
+     * @var \Retailcrm\Retailcrm\Model\Logger\Logger
+     */
+    private $logger;
+
     /**
      * Activation constructor.
      *
@@ -17,11 +23,13 @@ class StatusCrm extends \Magento\Framework\View\Element\Html\Select
     public function __construct(
         \Magento\Framework\View\Element\Context $context,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
         $this->client = $client;
+        $this->logger = $logger;
     }
 
     /**
@@ -41,17 +49,25 @@ class StatusCrm extends \Magento\Framework\View\Element\Html\Select
     public function _toHtml()
     {
         if (!$this->getOptions()) {
+            $statuses = array();
 
-            $response = $this->client->statusesList();
+            try {
+                $response = $this->client->statusesList();
+            } catch (\Exception $exception) {
+                $this->logger->writeRow($exception->getMessage());
+            }
 
-            if ($response->isSuccessful()) {
+            if (isset($response) && $response->isSuccessful()) {
                 $statuses = $response['statuses'];
             }
 
-            $this->addOption( 'null',  " ");
-            foreach ($statuses as $status) {
-                $this->addOption($status['code'], $status['name']);
+            $this->addOption( 'null',  "not selected");
+            if ($statuses) {
+                foreach ($statuses as $status) {
+                    $this->addOption($status['code'], $status['name']);
+                }
             }
+
         }
 
         return parent::_toHtml();

@@ -10,6 +10,11 @@ class PaymentCms extends \Magento\Framework\View\Element\Html\Select
     private $paymentConfig;
 
     /**
+     * @var \Retailcrm\Retailcrm\Model\Logger\Logger
+     */
+    private $logger;
+
+    /**
      * PaymentCms constructor.
      *
      * @param \Magento\Framework\View\Element\Context $context
@@ -19,11 +24,13 @@ class PaymentCms extends \Magento\Framework\View\Element\Html\Select
     public function __construct(
         \Magento\Framework\View\Element\Context $context,
         \Magento\Payment\Model\Config $paymentConfig,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
         $this->paymentConfig = $paymentConfig;
+        $this->logger = $logger;
     }
 
     /**
@@ -43,11 +50,19 @@ class PaymentCms extends \Magento\Framework\View\Element\Html\Select
     public function _toHtml()
     {
         if (!$this->getOptions()) {
+            $paymentMethods = array();
 
-            $paymentMethods = $this->paymentConfig->getActiveMethods();
+            try {
+                $paymentMethods = $this->paymentConfig->getActiveMethods();
+            } catch (\Exception $exception) {
+                $this->logger->writeRow($exception->getMessage());
+            }
 
-            foreach ($paymentMethods as $code => $payment) {
-                $this->addOption($payment->getCode(), $payment->getTitle());
+            $this->addOption( 'null',  "not selected");
+            if ($paymentMethods) {
+                foreach ($paymentMethods as $code => $payment) {
+                    $this->addOption($payment->getCode(), $payment->getTitle());
+                }
             }
         }
 

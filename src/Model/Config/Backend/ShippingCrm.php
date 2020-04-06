@@ -8,6 +8,12 @@ class ShippingCrm extends \Magento\Framework\View\Element\Html\Select
      * @var \Retailcrm\Retailcrm\Helper\Proxy
      */
     private $client;
+
+    /**
+     * @var \Retailcrm\Retailcrm\Model\Logger\Logger
+     */
+    private $logger;
+
     /**
      * Activation constructor.
      *
@@ -17,11 +23,13 @@ class ShippingCrm extends \Magento\Framework\View\Element\Html\Select
     public function __construct(
         \Magento\Framework\View\Element\Context $context,
         \Retailcrm\Retailcrm\Helper\Proxy $client,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
         $this->client = $client;
+        $this->logger = $logger;
     }
 
     /**
@@ -41,16 +49,23 @@ class ShippingCrm extends \Magento\Framework\View\Element\Html\Select
     public function _toHtml()
     {
         if (!$this->getOptions()) {
+            $deliveryTypes = array();
 
-            $response = $this->client->deliveryTypesList();
+            try {
+                $response = $this->client->deliveryTypesList();
+            } catch (\Exception $exception) {
+                $this->logger->writeRow($exception->getMessage());
+            }
 
-            if ($response->isSuccessful()) {
+            if (isset($response) && $response->isSuccessful()) {
                 $deliveryTypes = $response['deliveryTypes'];
             }
 
-            $this->addOption( 'null',  " ");
-            foreach ($deliveryTypes as $deliveryType) {
-                $this->addOption($deliveryType['code'], $deliveryType['name']);
+            $this->addOption( 'null',  "not selected");
+            if ($deliveryTypes) {
+                foreach ($deliveryTypes as $deliveryType) {
+                    $this->addOption($deliveryType['code'], $deliveryType['name']);
+                }
             }
         }
 

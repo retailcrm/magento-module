@@ -10,6 +10,11 @@ class StatusCms extends \Magento\Framework\View\Element\Html\Select
     private $statusCollection;
 
     /**
+     * @var \Retailcrm\Retailcrm\Model\Logger\Logger
+     */
+    private $logger;
+
+    /**
      * StatusCms constructor.
      *
      * @param \Magento\Framework\View\Element\Context                    $context
@@ -19,11 +24,13 @@ class StatusCms extends \Magento\Framework\View\Element\Html\Select
     public function __construct(
         \Magento\Framework\View\Element\Context $context,
         \Magento\Sales\Model\ResourceModel\Order\Status\Collection $statusCollection,
+        \Retailcrm\Retailcrm\Model\Logger\Logger $logger,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
         $this->statusCollection = $statusCollection;
+        $this->logger = $logger;
     }
 
     /**
@@ -43,10 +50,19 @@ class StatusCms extends \Magento\Framework\View\Element\Html\Select
     public function _toHtml()
     {
         if (!$this->getOptions()) {
-            $statuses = $this->statusCollection->toOptionArray();
+            $statuses = array();
 
-            foreach ($statuses as $code => $status) {
-                $this->addOption( $status['value'],  $status['label']);
+            try {
+                $statuses = $this->statusCollection->toOptionArray();
+            } catch (\Exception $exception) {
+                $this->logger->writeRow($exception->getMessage());
+            }
+
+            $this->addOption( 'null',  "not selected");
+            if ($statuses) {
+                foreach ($statuses as $code => $status) {
+                    $this->addOption( $status['value'],  $status['label']);
+                }
             }
         }
 
