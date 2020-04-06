@@ -15,7 +15,7 @@ delete_archive:
 	rm -f $(ARCHIVE_NAME)
 
 ci:
-ifeq ($(USE_COMPOSER,1))
+ifeq ($(USE_COMPOSER),1)
 	php $(MAGE_ROOT)/vendor/phpunit/phpunit/phpunit -c $(MAGE_ROOT)/dev/tests/unit/phpunit.xml.dist $(MAGE_ROOT)/app/code/Retailcrm/Retailcrm/Test/Unit
 else
 	phpunit -c $(MAGE_ROOT)/dev/tests/unit/phpunit.xml.dist $(MAGE_ROOT)/app/code/Retailcrm/Retailcrm/Test/Unit

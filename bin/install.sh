@@ -15,7 +15,7 @@ magento_clone() {
 	git clone https://github.com/magento/magento2
 	cd magento2
 	git checkout $BRANCH
-	composer install
+	composer update
 	composer require retailcrm/api-client-php
 }
 
