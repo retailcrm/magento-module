@@ -2,12 +2,9 @@
 
 namespace Retailcrm\Retailcrm\Test\Helpers;
 
-// backward compatibility with phpunit < v.6
-if (!class_exists('\PHPUnit\Framework\TestCase') && class_exists('\PHPUnit_Framework_TestCase')) {
-    class_alias('\PHPUnit_Framework_TestCase', '\PHPUnit\Framework\TestCase');
-}
+use Retailcrm\Retailcrm\Test\TestCase;
 
-class FieldsetTest extends \PHPUnit\Framework\TestCase
+class FieldsetTest extends TestCase
 {
     protected $elementMock;
     protected $authSessionMock;
