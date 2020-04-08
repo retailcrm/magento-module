@@ -13,14 +13,27 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
         if (method_exists(\PHPUnit\Framework\TestCase::class, 'createMock')) {
             return parent::createMock($originalClassName);
-        } elseif (method_exists(\PHPUnit\Framework\TestCase::class, 'getMock')) {
+        } else {
             return $this->getMockBuilder($originalClassName)
                 ->disableOriginalConstructor()
                 ->disableOriginalClone()
                 ->disableArgumentCloning()
                 ->getMock();
+        }
+    }
+
+    protected function createPartialMock($originalClassName, $methods)
+    {
+        if (method_exists(\PHPUnit\Framework\TestCase::class, 'createPartialMock')) {
+            return parent::createMock($originalClassName);
         } else {
-            throw new \RuntimeException('Not supported phpunit version');
+            return $this->getMockBuilder($originalClassName)
+                ->disableOriginalConstructor()
+                ->disableOriginalClone()
+                ->disableArgumentCloning()
+//            ->disallowMockingUnknownTypes()
+                ->setMethods(empty($methods) ? null : $methods)
+                ->getMock();
         }
     }
 }
