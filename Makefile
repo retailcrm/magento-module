@@ -16,4 +16,3 @@ delete_archive:
 
 ci:
 	php $(MAGE_ROOT)/vendor/phpunit/phpunit/phpunit -c $(MAGE_ROOT)/dev/tests/unit/phpunit.xml.dist $(MAGE_ROOT)/app/code/Retailcrm/Retailcrm/Test/Unit
-
