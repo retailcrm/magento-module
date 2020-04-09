@@ -109,13 +109,17 @@ class Site extends \Magento\Config\Block\System\Config\Form\Fieldset
 
         $values = [];
 
-        $response = $this->client->sitesList();
+        try {
+            $response = $this->client->sitesList();
+        } catch (\Exception $exception) {
+            return $defaultValues;
+        }
 
         if ($response === false) {
             return $defaultValues;
         }
 
-        if ($response->isSuccessful()) {
+        if (isset($response['sites']) && $response->isSuccessful()) {
             $sites = $response['sites'];
         } else {
             return $defaultValues;

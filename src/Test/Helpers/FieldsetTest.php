@@ -102,7 +102,7 @@ class FieldsetTest extends TestCase
             \Magento\Config\Block\System\Config\Form::class,
             ['getElements', 'getRequest']
         );
-        $this->form->expects($this->any())->method('getElements')->willReturn($elementCollection);
+        //$this->form->expects($this->any())->method('getElements')->willReturn($elementCollection);
         $this->form->expects($this->any())->method('getRequest')->willReturn($this->requestMock);
     }
 }

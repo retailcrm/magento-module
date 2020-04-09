@@ -49,6 +49,7 @@ class InventoriesUploadTest extends TestCase
     {
         if ($response != false) {
             $responseInventories = new \RetailCrm\Response\ApiResponse(200, json_encode($response));
+            $responseInventories->asJsonResponse($response);
 
             $this->mockResponse->expects($this->any())
                 ->method('isSuccessful')

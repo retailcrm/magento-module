@@ -116,7 +116,7 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
             return $defaultValues;
         }
 
-        if ($response->isSuccessful()) {
+        if (isset($response['paymentTypes']) && $response->isSuccessful()) {
             $paymentsTypes = $response['paymentTypes'];
         } else {
             return $defaultValues;
