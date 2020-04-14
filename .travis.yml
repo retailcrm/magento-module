@@ -210,8 +210,6 @@ jobs:
     - php: 7.3
       env: BRANCH=2.3.3
 
-    - php: 7.1
-      env: BRANCH=2.3.4
     - php: 7.2
       env: BRANCH=2.3.4
     - php: 7.3
