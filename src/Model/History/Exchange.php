@@ -627,34 +627,6 @@ class Exchange
                     $orders[$change['order']['id']]['order_edit'] = 1;
                 }
             } else {
-                if (isset($fields['delivery'][$change['field']])
-                    && $fields['delivery'][$change['field']] == 'service'
-                ) {
-                    $orders[$orderId]['delivery']['service']['code'] = self::newValue($change['newValue']);
-                } elseif (isset($fields['delivery'][$change['field']])) {
-                    $field = $fields['delivery'][$change['field']];
-                    $orders[$orderId]['delivery'][$field] = self::newValue($change['newValue']);
-                    unset($field);
-                } elseif (isset($fields['orderAddress'][$change['field']])) {
-                    $field = $fields['orderAddress'][$change['field']];
-                    $orders[$orderId]['delivery']['address'][$field] = self::newValue($change['newValue']);
-                    unset($field);
-                } elseif (isset($fields['integrationDelivery'][$change['field']])) {
-                    $field = $fields['integrationDelivery'][$change['field']];
-                    $orders[$orderId]['delivery']['service'][$field] = self::newValue($change['newValue']);
-                    unset($field);
-                } elseif (isset($fields['customerContragent'][$change['field']])) {
-                    $field = $fields['customerContragent'][$change['field']];
-                    $orders[$orderId][$field] = self::newValue($change['newValue']);
-                    unset($field);
-                } elseif (strripos($change['field'], 'custom_') !== false) {
-                    $field = str_replace('custom_', '', $change['field']);
-                    $orders[$orderId]['customFields'][$field] = self::newValue($change['newValue']);
-                    unset($field);
-                } elseif (isset($fields['order'][$change['field']])) {
-                    $orders[$orderId][$fields['order'][$change['field']]] = self::newValue($change['newValue']);
-                }
-
                 if (isset($change['created'])) {
                     $orders[$orderId]['create'] = 1;
                 }
