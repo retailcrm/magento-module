@@ -17,8 +17,38 @@ env:
 
 stages:
   - test
+  - deploy
+
+before_install:
+  - export LAST_TAG=`git describe --abbrev=0 --tags`
+  - export CURRENT_VERSION=v`cat VERSION`
+
+before_script:
+  - bash bin/install.sh
+
+script: make ci
 
 jobs:
+  allow_failures:
+    - if: fork = true
+      env: BRANCH=2.0.2
+    - if: fork = true
+      env: BRANCH=2.0.4
+    - if: fork = true
+      env: BRANCH=2.0.5
+    - if: fork = true
+      env: BRANCH=2.0.6
+    - if: fork = true
+      env: BRANCH=2.0.7
+    - if: fork = true
+      env: BRANCH=2.0.8
+    - if: fork = true
+      env: BRANCH=2.0.9
+    - if: fork = true
+      env: BRANCH=2.0.10
+    - if: fork = true
+      env: BRANCH=2.0.11
+
   include:
     - php: 7.0
       env: BRANCH=2.0.2
@@ -215,16 +245,22 @@ jobs:
     - php: 7.3
       env: BRANCH=2.3.4
 
-before_script:
-  - bash bin/install.sh
-
-script: make ci
-
-# deploy:
-#  skip_cleanup: true
-#  provider: script
-#  script: make
-#  on:
-#    php: 7.2
-#    branch: master
-#    condition: "$DEPLOY = true"
+    - stage: deploy
+      before_script: skip
+      script: make build_archive
+      before_deploy:
+        - export VERSION=`cat VERSION`
+        - export ARCHIVE_NAME=/tmp/retailcrm-retailcrm-$VERSION.zip
+        - git config --local user.name "retailCRM"
+        - git config --local user.email "support@retailcrm.ru"
+        - export TRAVIS_TAG=v$VERSION
+        - git tag $TRAVIS_TAG
+      deploy:
+        provider: releases
+        token: $GITHUB_OAUTH_TOKEN
+        cleanup: false
+        file: $ARCHIVE_NAME
+        on:
+          condition: "$LAST_TAG != $CURRENT_VERSION"
+      if: branch = master AND type = push AND fork = false
+      after_deploy: make delete_archive
