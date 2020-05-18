@@ -2,7 +2,9 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Observer;
 
-class OrderUpdateTest extends \PHPUnit\Framework\TestCase
+use Retailcrm\Retailcrm\Test\TestCase;
+
+class OrderUpdateTest extends TestCase
 {
     private $unit;
     private $objectManager;

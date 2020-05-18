@@ -2,7 +2,9 @@
 
 namespace Retailcrm\Retailcrm\Test\Helpers;
 
-class FieldsetTest extends \PHPUnit\Framework\TestCase
+use Retailcrm\Retailcrm\Test\TestCase;
+
+class FieldsetTest extends TestCase
 {
     protected $elementMock;
     protected $authSessionMock;
@@ -100,7 +102,7 @@ class FieldsetTest extends \PHPUnit\Framework\TestCase
             \Magento\Config\Block\System\Config\Form::class,
             ['getElements', 'getRequest']
         );
-        $this->form->expects($this->any())->method('getElements')->willReturn($elementCollection);
+        //$this->form->expects($this->any())->method('getElements')->willReturn($elementCollection);
         $this->form->expects($this->any())->method('getRequest')->willReturn($this->requestMock);
     }
 }

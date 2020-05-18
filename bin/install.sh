@@ -15,7 +15,23 @@ magento_clone() {
 	git clone https://github.com/magento/magento2
 	cd magento2
 	git checkout $BRANCH
-	composer install
+
+	touch auth.json
+	echo '
+      {
+         "http-basic": {
+            "repo.magento.com": {
+               "username": "<public-key>",
+               "password": "<private-key>"
+            }
+         }
+      }
+	' > auth.json
+
+  sudo sed -e "s?<public-key>?$PUBLIC_KEY?g" --in-place auth.json
+  sudo sed -e "s?<private-key>?$PRIVATE_KEY?g" --in-place auth.json
+
+	composer install --no-interaction --prefer-dist
 	composer require retailcrm/api-client-php
 }
 

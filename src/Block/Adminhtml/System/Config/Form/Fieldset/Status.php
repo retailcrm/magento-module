@@ -111,13 +111,17 @@ class Status extends \Magento\Config\Block\System\Config\Form\Fieldset
 
         $values = [];
 
-        $response = $this->client->statusesList();
+        try {
+            $response = $this->client->statusesList();
+        } catch (\Exception $exception) {
+            return $defaultValues;
+        }
 
         if ($response === false) {
             return $defaultValues;
         }
 
-        if ($response->isSuccessful()) {
+        if (isset($response['statuses']) && $response->isSuccessful()) {
             $statuses = $response['statuses'];
         } else {
             return $defaultValues;

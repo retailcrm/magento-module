@@ -206,4 +206,63 @@ class Data extends AbstractHelper
 
         return $haystack;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getConfigPayments()
+    {
+        $json = $this->scopeConfig->getValue('retailcrm/paymentList/paymentList');
+        $List = $this->getConfigJsonUnserialize($json);
+        foreach ($List as $code => $el) {
+            $payments[$el['payment_cms']] = $el['payment_crm'];
+        }
+
+        return $payments;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCongigShipping()
+    {
+        $json = $this->scopeConfig->getValue('retailcrm/shippingList/shippingList');
+        $shippingList = $this->getConfigJsonUnserialize($json);
+        foreach ($shippingList as $code => $el) {
+            $shippings[$el['shipping_cms']] = $el['shipping_crm'];
+        }
+
+        return $shippings;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCongigStatus()
+    {
+        $json = $this->scopeConfig->getValue('retailcrm/statusList/statusList');
+        $List = $this->getConfigJsonUnserialize($json);
+        foreach ($List as $code => $el) {
+            $statusList[$el['status_cms']] = $el['status_crm'];
+        }
+
+        return $statusList;
+    }
+
+    /**
+     * @param $json
+     *
+     * @return mixed
+     */
+    public function getConfigJsonUnserialize($json)
+    {
+        if (class_exists(\Magento\Framework\Serialize\Serializer\Json::class)) {
+            $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+            $serializer = $objectManager->create(\Magento\Framework\Serialize\Serializer\Json::class);
+            return $serializer->unserialize($json);
+        } else {
+            return json_decode($json);
+        }
+    }
+
 }

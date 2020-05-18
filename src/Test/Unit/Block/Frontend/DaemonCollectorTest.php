@@ -2,7 +2,9 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Block\Frontend;
 
-class DaemonCollectorTest extends \PHPUnit\Framework\TestCase
+use Retailcrm\Retailcrm\Test\TestCase;
+
+class DaemonCollectorTest extends TestCase
 {
     private $unit;
     private $customer;

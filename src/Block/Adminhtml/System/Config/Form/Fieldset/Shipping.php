@@ -117,13 +117,17 @@ class Shipping extends \Magento\Config\Block\System\Config\Form\Fieldset
 
         $values = [];
 
-        $response = $this->client->deliveryTypesList();
+        try {
+            $response = $this->client->deliveryTypesList();
+        } catch (\Exception $exception) {
+            return $defaultValues;
+        }
 
         if ($response === false) {
             return $defaultValues;
         }
 
-        if ($response->isSuccessful()) {
+        if (isset($response['deliveryTypes']) && $response->isSuccessful()) {
             $deliveryTypes = $response['deliveryTypes'];
         } else {
             return $defaultValues;

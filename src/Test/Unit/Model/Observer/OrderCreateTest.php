@@ -2,10 +2,12 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Observer;
 
+use Retailcrm\Retailcrm\Test\TestCase;
+
 /**
  * Order create observer test class
  */
-class OrderCreateTest extends \PHPUnit\Framework\TestCase
+class OrderCreateTest extends TestCase
 {
     private $unit;
     private $mockEvent;

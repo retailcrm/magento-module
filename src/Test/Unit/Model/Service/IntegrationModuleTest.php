@@ -2,7 +2,9 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Model\Service;
 
-class IntegrationModuleTest extends \PHPUnit\Framework\TestCase
+use Retailcrm\Retailcrm\Test\TestCase;
+
+class IntegrationModuleTest extends TestCase
 {
     private $mockResourceConfig;
     private $mockApiClient;

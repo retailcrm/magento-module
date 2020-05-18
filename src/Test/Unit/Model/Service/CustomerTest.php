@@ -2,7 +2,9 @@
 
 namespace Retailcrm\Retailcrm\Test\Unit\Model\Service;
 
-class CustomerTest extends \PHPUnit\Framework\TestCase
+use Retailcrm\Retailcrm\Test\TestCase;
+
+class CustomerTest extends TestCase
 {
     private $mockData;
     private $mockCustomer;
