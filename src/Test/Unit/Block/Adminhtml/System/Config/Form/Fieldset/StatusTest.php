@@ -52,7 +52,8 @@ class StatusTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'client' => $client,
             'statusCollection' => $statusCollection,
             'context' => $this->context,
-            'objectFactory' => $this->objectFactory
+            'objectFactory' => $this->objectFactory,
+            'secureRenderer' => $this->secureRenderer
         ];
 
         $status = $this->objectManager->getObject(

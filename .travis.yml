@@ -237,12 +237,8 @@ jobs:
       env: BRANCH=2.3.3
     - php: 7.2
       env: BRANCH=2.3.3
-    - php: 7.3
-      env: BRANCH=2.3.3
 
     - php: 7.2
-      env: BRANCH=2.3.4
-    - php: 7.3
       env: BRANCH=2.3.4
 
     - stage: deploy
@@ -251,7 +247,7 @@ jobs:
       before_deploy:
         - export VERSION=`cat VERSION`
         - export ARCHIVE_NAME=/tmp/retailcrm-retailcrm-$VERSION.zip
-        - git config --local user.name "retailCRM"
+        - git config --local user.name "RetailCRM"
         - git config --local user.email "support@retailcrm.ru"
         - export TRAVIS_TAG=v$VERSION
         - git tag $TRAVIS_TAG

@@ -52,7 +52,8 @@ class ShippingTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'client' => $client,
             'shippingConfig' => $shippingConfig,
             'context' => $this->context,
-            'objectFactory' => $this->objectFactory
+            'objectFactory' => $this->objectFactory,
+            'secureRenderer' => $this->secureRenderer
         ];
 
         $shipping = $this->objectManager->getObject(

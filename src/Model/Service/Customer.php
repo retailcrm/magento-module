@@ -79,13 +79,17 @@ class Customer implements CustomerManagerInterface
                 'index' => $billing->getPostcode(),
                 'region' => $billing->getRegion(),
                 'city' => $billing->getCity(),
-                'street' => $billing->getStreet(),
+                'street' => is_array($billing->getStreet())
+                    ? implode(', ', $billing->getStreet())
+                    : $billing->getStreet(),
                 'text' => sprintf(
                     '%s %s %s %s',
                     $billing->getPostcode(),
                     $billing->getRegion(),
                     $billing->getCity(),
-                    $billing->getStreet()
+                    is_array($billing->getStreet())
+                        ? implode(', ', $billing->getStreet())
+                        : $billing->getStreet()
                 )
             ]
         ];

@@ -37,7 +37,7 @@ class OrdersExport extends Command
     protected function configure()
     {
         $this->setName('retailcrm:orders:export')
-            ->setDescription('Upload archive orders to retailCRM from Magento')
+            ->setDescription('Upload archive orders to RetailCRM from Magento')
             ->addArgument('from', InputArgument::OPTIONAL, 'Beginning order number')
             ->addArgument('to', InputArgument::OPTIONAL, 'End order number');
 
@@ -45,7 +45,7 @@ class OrdersExport extends Command
     }
 
     /**
-     * Upload orders to retailCRM
+     * Upload orders to RetailCRM
      *
      * @param InputInterface $input
      * @param OutputInterface $output

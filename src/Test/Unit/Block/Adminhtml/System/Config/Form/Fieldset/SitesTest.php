@@ -55,7 +55,8 @@ class SitesTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'client' => $client,
             'storeManager' => $storeManager,
             'context' => $this->context,
-            'objectFactory' => $this->objectFactory
+            'objectFactory' => $this->objectFactory,
+            'secureRenderer' => $this->secureRenderer
         ];
 
         $sites = $this->objectManager->getObject(

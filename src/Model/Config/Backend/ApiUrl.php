@@ -82,7 +82,7 @@ class ApiUrl extends \Magento\Framework\App\Config\Value
         } elseif (!$response->isSuccessful() && $response['errorMsg'] == $api->getErrorText('errorApiKey')) {
             throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect API key'));
         } elseif (isset($response['errorMsg']) && $response['errorMsg'] == $api->getErrorText('errorAccount')) {
-            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect URL of retailCRM'));
+            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect URL of RetailCRM'));
         }
 
         return true;
