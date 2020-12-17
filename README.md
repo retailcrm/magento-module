@@ -5,13 +5,13 @@
 Magento module
 ==============
 
-Magento 2 module for interaction with [retailCRM](http://www.retailcrm.ru).
+Magento 2 module for interaction with [RetailCRM](http://www.retailcrm.ru) ([Documentation](https://docs.retailcrm.pro/Users/Integration/SiteModules/Magento) page)
 
 Module allows:
 
-* Exchange the orders data with retailCRM
+* Exchange the orders data with RetailCRM
 * Configure relations between dictionaries of retailCRM and Magento (statuses, payments, delivery types and etc)
-* Generate [ICML](http://www.retailcrm.ru/docs/Developers/ICML) (Intaro Markup Language) export file for catalog loading by retailCRM
+* Generate [ICML](http://www.retailcrm.ru/docs/Developers/ICML) (Intaro Markup Language) export file for catalog loading by RetailCRM
 
 ## ICML
 

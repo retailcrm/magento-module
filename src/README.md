@@ -1,1 +1,1 @@
-Magento 2 module for interaction with retailCRM
+Magento 2 module for interaction with RetailCRM
