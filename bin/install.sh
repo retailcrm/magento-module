@@ -28,11 +28,13 @@ magento_clone() {
       }
 	' > auth.json
 
-  sudo sed -e "s?<public-key>?$PUBLIC_KEY?g" --in-place auth.json
-  sudo sed -e "s?<private-key>?$PRIVATE_KEY?g" --in-place auth.json
+    sudo sed -e "s?<public-key>?$PUBLIC_KEY?g" --in-place auth.json
+    sudo sed -e "s?<private-key>?$PRIVATE_KEY?g" --in-place auth.json
 
-	composer install --no-interaction --prefer-dist
-	composer require retailcrm/api-client-php
+    php -r "copy('https://getcomposer.org/download/1.10.17/composer.phar', 'composer.phar');"
+
+    php composer.phar install --ignore-platform-reqs --no-interaction --prefer-dist
+    php composer.phar require retailcrm/api-client-php
 }
 
 magento_install() {
