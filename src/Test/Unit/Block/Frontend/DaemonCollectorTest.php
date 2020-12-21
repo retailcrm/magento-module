@@ -11,7 +11,7 @@ class DaemonCollectorTest extends TestCase
 
     const SITE_KEY = 'RC-XXXXXXX-X';
 
-    public function setUp()
+    public function setUp(): void
     {
         $context = $this->createMock(\Magento\Framework\View\Element\Template\Context::class);
         $customerSession = $this->createMock(\Magento\Customer\Model\Session::class);
@@ -57,11 +57,11 @@ class DaemonCollectorTest extends TestCase
 
         $js = $this->unit->buildScript()->getJs();
 
-        $this->assertContains('<script type="text/javascript">', $js);
-        $this->assertContains('</script>', $js);
-        $this->assertContains('_rc(\'send\', \'pageView\');', $js);
-        $this->assertContains(self::SITE_KEY, $js);
-        $this->assertContains('customerId', $js);
+        $this->assertStringContainsString('<script type="text/javascript">', $js);
+        $this->assertStringContainsString('</script>', $js);
+        $this->assertStringContainsString('_rc(\'send\', \'pageView\');', $js);
+        $this->assertStringContainsString(self::SITE_KEY, $js);
+        $this->assertStringContainsString('customerId', $js);
     }
 
     public function testGetJSWithoutCustomer()
@@ -72,10 +72,10 @@ class DaemonCollectorTest extends TestCase
 
         $js = $this->unit->buildScript()->getJs();
 
-        $this->assertContains('<script type="text/javascript">', $js);
-        $this->assertContains('</script>', $js);
-        $this->assertContains('_rc(\'send\', \'pageView\');', $js);
-        $this->assertContains(self::SITE_KEY, $js);
-        $this->assertNotContains('customerId', $js);
+        $this->assertStringContainsString('<script type="text/javascript">', $js);
+        $this->assertStringContainsString('</script>', $js);
+        $this->assertStringContainsString('_rc(\'send\', \'pageView\');', $js);
+        $this->assertStringContainsString(self::SITE_KEY, $js);
+        $this->assertStringNotContainsString('customerId', $js);
     }
 }

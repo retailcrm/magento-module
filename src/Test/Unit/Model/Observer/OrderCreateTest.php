@@ -25,7 +25,7 @@ class OrderCreateTest extends TestCase
     private $mockServiceCustomer;
     private $mockCustomer;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockApi = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Proxy::class)
             ->disableOriginalConstructor()

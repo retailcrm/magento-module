@@ -20,8 +20,9 @@ class FieldsetTest extends TestCase
     protected $testElementId = 'test_element_id';
     protected $testFieldSetCss = 'test_fieldset_css';
     protected $objectFactory;
+    protected $secureRenderer;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
         $factoryMock = $this->createMock(\Magento\Framework\Data\Form\Element\Factory::class);
@@ -88,6 +89,20 @@ class FieldsetTest extends TestCase
         $factoryCollection->expects($this->any())->method('create')->willReturn($elementCollection);
         $rendererMock = $this->createMock(\Magento\Framework\Data\Form\Element\Renderer\RendererInterface::class);
 
+        $this->secureRenderer = $this->createMock(\Magento\Framework\View\Helper\SecureHtmlRenderer::class);
+        $this->secureRenderer->method('renderEventListenerAsTag')
+            ->willReturnCallback(
+                function (string $event, string $js, string $selector): string {
+                    return "<script>document.querySelector('$selector').$event = function () { $js };</script>";
+                }
+            );
+        $this->secureRenderer->method('renderStyleAsTag')
+            ->willReturnCallback(
+                function (string $style, string $selector): string {
+                    return "<style>$selector { $style }</style>";
+                }
+            );
+
         $this->urlModelMock = $this->createMock(\Magento\Backend\Model\Url::class);
         $this->layoutMock = $this->createMock(\Magento\Framework\View\Layout::class);
         $this->groupMock = $this->createMock(\Magento\Config\Model\Config\Structure\Element\Group::class);
@@ -100,7 +115,8 @@ class FieldsetTest extends TestCase
         $this->helperMock = $this->createMock(\Magento\Framework\View\Helper\Js::class);
         $this->form = $this->createPartialMock(
             \Magento\Config\Block\System\Config\Form::class,
-            ['getElements', 'getRequest']
+            //['getElements', 'getRequest']
+            ['getRequest']
         );
         //$this->form->expects($this->any())->method('getElements')->willReturn($elementCollection);
         $this->form->expects($this->any())->method('getRequest')->willReturn($this->requestMock);

@@ -13,7 +13,7 @@ class OrderTest extends TestCase
     private $mockOrder;
     private $unit;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockProductRepository = $this->getMockBuilder(\Magento\Catalog\Model\ProductRepository::class)
             ->disableOriginalConstructor()

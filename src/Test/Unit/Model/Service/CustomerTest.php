@@ -12,7 +12,7 @@ class CustomerTest extends TestCase
     private $mockOrder;
     private $mockBillingAddress;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockData = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Data::class)
             ->disableOriginalConstructor()
@@ -72,14 +72,14 @@ class CustomerTest extends TestCase
         $result = $this->unit->prepareCustomerFromOrder($this->mockOrder);
 
         $this->assertNotEmpty($result);
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertArrayNotHasKey('externalId', $result);
         $this->assertArrayHasKey('email', $result);
         $this->assertArrayHasKey('firstName', $result);
         $this->assertArrayHasKey('lastName', $result);
         $this->assertArrayHasKey('patronymic', $result);
         $this->assertArrayHasKey('address', $result);
-        $this->assertInternalType('array', $result['address']);
+        $this->assertIsArray($result['address']);
         $this->assertArrayHasKey('countryIso', $result['address']);
         $this->assertArrayHasKey('index', $result['address']);
         $this->assertArrayHasKey('region', $result['address']);
@@ -167,7 +167,7 @@ class CustomerTest extends TestCase
         $result = $this->unit->process($this->mockCustomer);
 
         $this->assertNotEmpty($result);
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertArrayHasKey('externalId', $result);
         $this->assertNotEmpty($result['externalId']);
         $this->assertEquals($this->getAfterSaveCustomerTestData()['id'], $result['externalId']);

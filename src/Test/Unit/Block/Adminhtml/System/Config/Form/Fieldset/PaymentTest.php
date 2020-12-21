@@ -52,7 +52,8 @@ class PaymentTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'client' => $client,
             'paymentConfig' => $paymentConfig,
             'context' => $this->context,
-            'objectFactory' => $this->objectFactory
+            'objectFactory' => $this->objectFactory,
+            'secureRenderer' => $this->secureRenderer
         ];
 
         $payment = $this->objectManager->getObject(
@@ -65,15 +66,15 @@ class PaymentTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
 
         $html = $payment->render($this->elementMock);
 
-        $this->assertContains($this->testElementId, $html);
-        $this->assertContains($this->testFieldSetCss, $html);
+        $this->assertStringContainsString($this->testElementId, $html);
+        $this->assertStringContainsString($this->testFieldSetCss, $html);
 
         if (!$isConfigured) {
             $expected = sprintf(
                 '<div style="margin-left: 15px;"><b><i>%s</i></b></div>',
                 __('Enter API of your URL and API key')
             );
-            $this->assertContains($expected, $html);
+            $this->assertStringContainsString($expected, $html);
         }
     }
 

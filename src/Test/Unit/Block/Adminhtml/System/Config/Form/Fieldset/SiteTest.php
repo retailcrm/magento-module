@@ -43,7 +43,8 @@ class SiteTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'data' => ['group' => $this->groupMock],
             'client' => $client,
             'context' => $this->context,
-            'objectFactory' => $this->objectFactory
+            'objectFactory' => $this->objectFactory,
+            'secureRenderer' => $this->secureRenderer
         ];
 
         $site = $this->objectManager->getObject(
@@ -56,15 +57,15 @@ class SiteTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
 
         $html = $site->render($this->elementMock);
 
-        $this->assertContains($this->testElementId, $html);
-        $this->assertContains($this->testFieldSetCss, $html);
+        $this->assertStringContainsString($this->testElementId, $html);
+        $this->assertStringContainsString($this->testFieldSetCss, $html);
 
         if (!$isConfigured) {
             $expected = sprintf(
                 '<div style="margin-left: 15px;"><b><i>%s</i></b></div>',
                 __('Enter API of your URL and API key')
             );
-            $this->assertContains($expected, $html);
+            $this->assertStringContainsString($expected, $html);
         }
     }
 

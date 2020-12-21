@@ -13,7 +13,7 @@ class IntegrationModuleTest extends TestCase
 
     const ACCOUNT_URL = 'test';
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mockData = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Data::class)
             ->disableOriginalConstructor()
@@ -76,7 +76,7 @@ class IntegrationModuleTest extends TestCase
             $configuration['logo']
         );
         $this->assertArrayHasKey('code', $configuration);
-        $this->assertContains(
+        $this->assertStringContainsString(
             \Retailcrm\Retailcrm\Model\Service\IntegrationModule::INTEGRATION_CODE,
             $configuration['code']
         );
@@ -90,7 +90,7 @@ class IntegrationModuleTest extends TestCase
             $this->assertArrayHasKey('accountUrl', $configuration);
             $this->assertEquals(self::ACCOUNT_URL, $configuration['accountUrl']);
             $this->assertArrayHasKey('integrationCode', $configuration);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 \Retailcrm\Retailcrm\Model\Service\IntegrationModule::INTEGRATION_CODE,
                 $configuration['integrationCode']
             );
