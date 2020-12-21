@@ -8,7 +8,7 @@ if (!class_exists('\PHPUnit\Framework\TestCase')) {
 
     abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
-        public function createMock(string $originalClassName): \PHPUnit\Framework\MockObject\MockObject
+        public function createMock(string $originalClassName)
         {
             if (method_exists(\PHPUnit\Framework\TestCase::class, 'createMock')) {
                 return parent::createMock($originalClassName);
@@ -40,7 +40,7 @@ if (!class_exists('\PHPUnit\Framework\TestCase')) {
 
     abstract class TestCase extends \PHPUnit\Framework\TestCase
     {
-        public function createMock(string $originalClassName): \PHPUnit\Framework\MockObject\MockObject
+        public function createMock(string $originalClassName)
         {
             if (method_exists(\PHPUnit\Framework\TestCase::class, 'createMock')) {
                 return parent::createMock($originalClassName);
