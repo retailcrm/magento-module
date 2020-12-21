@@ -13,7 +13,7 @@ class IntegrationModuleTest extends TestCase
 
     const ACCOUNT_URL = 'test';
 
-    public function setUp(): void
+    public function setUp()
     {
         $this->mockData = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Data::class)
             ->disableOriginalConstructor()

@@ -16,7 +16,7 @@ class OrderUpdateTest extends TestCase
     private $mockPayment;
     private $registry;
 
-    public function setUp(): void
+    public function setUp()
     {
         $this->mockApi = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Proxy::class)
             ->disableOriginalConstructor()

@@ -11,7 +11,7 @@ class InventoriesUploadTest extends TestCase
     private $mockResponse;
     private $mockProduct;
 
-    public function setUp(): void
+    public function setUp()
     {
         $this->mockApi = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Proxy::class)
             ->disableOriginalConstructor()

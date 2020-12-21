@@ -12,7 +12,7 @@ class CustomerTest extends TestCase
     private $mockOrder;
     private $mockBillingAddress;
 
-    public function setUp(): void
+    public function setUp()
     {
         $this->mockData = $this->getMockBuilder(\Retailcrm\Retailcrm\Helper\Data::class)
             ->disableOriginalConstructor()

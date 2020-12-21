@@ -22,7 +22,7 @@ class FieldsetTest extends TestCase
     protected $objectFactory;
     protected $secureRenderer;
 
-    public function setUp(): void
+    public function setUp()
     {
         $this->objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
         $factoryMock = $this->createMock(\Magento\Framework\Data\Form\Element\Factory::class);

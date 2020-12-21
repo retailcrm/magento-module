@@ -11,7 +11,7 @@ class DaemonCollectorTest extends TestCase
 
     const SITE_KEY = 'RC-XXXXXXX-X';
 
-    public function setUp(): void
+    public function setUp()
     {
         $context = $this->createMock(\Magento\Framework\View\Element\Template\Context::class);
         $customerSession = $this->createMock(\Magento\Customer\Model\Session::class);
