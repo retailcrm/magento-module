@@ -1,6 +1,6 @@
 {
   "name": "retailcrm/retailcrm",
-  "description": "Retailcrm",
+  "description": "RetailCRM",
   "require": {
     "retailcrm/api-client-php": "~5.0"
   },

@@ -82,7 +82,7 @@ class ApiVersion extends \Magento\Framework\App\Config\Value
         if ($response->isSuccessful()) {
             $availableVersions = $response['versions'];
         } else {
-            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect URL of retailCRM or API key'));
+            throw new \Magento\Framework\Exception\ValidatorException(__('Incorrect URL of RetailCRM or API key'));
         }
 
         if (isset($availableVersions)) {

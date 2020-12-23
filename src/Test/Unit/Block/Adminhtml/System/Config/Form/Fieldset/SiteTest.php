@@ -43,7 +43,8 @@ class SiteTest extends \Retailcrm\Retailcrm\Test\Helpers\FieldsetTest
             'data' => ['group' => $this->groupMock],
             'client' => $client,
             'context' => $this->context,
-            'objectFactory' => $this->objectFactory
+            'objectFactory' => $this->objectFactory,
+            'secureRenderer' => $this->secureRenderer
         ];
 
         $site = $this->objectManager->getObject(

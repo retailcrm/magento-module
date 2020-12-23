@@ -1,27 +1,16 @@
 Magento module
 
-Модуль Magento 2 для интеграции с [retailCRM](http://www.retailcrm.ru).
+Модуль Magento 2 для интеграции с [RetailCRM](http://www.retailcrm.ru) ([Документация](https://docs.retailcrm.ru/Users/Integration/SiteModules/Magento))
 
 Модуль позволяет:
 
-* Производить обмен заказами с retailCRM
-* Настроить соответствие справочников retailCRM и Magento (статусы, оплаты, типы доставки и т.д.)
-* Создать [ICML](http://www.retailcrm.ru/docs/Developers/ICML) (Intaro Markup Language) для загрузки каталога товаров в retailCRM
-
-### ICML
-
-По умолчанию ICML-файл генерируется модулем каждые 4 часа. Вы можете найти файл в корневой директории с именем «retailcrm_{{shop_code}}.xml". Например, http://example.org/retailcrm_default.xml
-
-### Ручная установка
-
-1) Находясь в корневой директории проекта выполните команду:
-
-* Настроить соответствие справочников retailCRM и Magento (статусы, оплаты, типы доставки и т.д.)
-* Создать [ICML] (http://www.retailcrm.ru/docs/Developers/ICML) (Intaro Markup Language) для загрузки каталога товаров в RetailCRM
+* Производить обмен заказами с RetailCRM
+* Настроить соответствие справочников RetailCRM и Magento (статусы, оплаты, типы доставки и т.д.)
+* Создать [ICML](http://www.retailcrm.ru/docs/Developers/ICML) (Intaro Markup Language) для загрузки каталога товаров в RetailCRM
 
 ## ICML
 
-По умолчанию ICML-файл генерируется модулем каждые 4 часа. Вы можете найти файл в корневой папке с именем «retailcrm_{{shop_code}}.xml". Например, http://retailcrm.ru/retailcrm_default.xml
+По умолчанию ICML-файл генерируется модулем каждые 4 часа. Вы можете найти файл в корневой папке с именем «retailcrm_{{shop_code}}.xml". Например, http://example.ru/retailcrm_default.xml
 
 ## Ручная установка
 
