@@ -1,4 +1,6 @@
-Magento module
+DEPRECATED Magento module
+
+**Модуль устарел и больше не поддерживается**
 
 Модуль Magento 2 для интеграции с [RetailCRM](http://www.retailcrm.ru) ([Документация](https://docs.retailcrm.ru/Users/Integration/SiteModules/Magento))
 

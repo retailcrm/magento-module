@@ -1,10 +1,13 @@
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 [![Build Status](https://github.com/retailcrm/magento-module/workflows/magento/badge.svg)](https://github.com/retailcrm/magento-module/actions)
 [![Coverage](https://img.shields.io/codecov/c/gh/retailcrm/magento-module/master.svg?logo=github)](https://codecov.io/gh/retailcrm/magento-module)
 [![GitHub release](https://img.shields.io/github/release/retailcrm/magento-module.svg?logo=codecov)](https://github.com/retailcrm/magento-module/)
 [![PHP version](https://img.shields.io/badge/PHP->=5.6-blue.svg?style=flat-square)](https://php.net/)
 
-Magento module
+DEPRECATED Magento module
 ==============
+
+**The module is deprecated and no longer supported**
 
 Magento 2 module for interaction with [RetailCRM](http://www.retailcrm.ru) ([Documentation](https://docs.retailcrm.pro/Users/Integration/SiteModules/Magento) page)
 
